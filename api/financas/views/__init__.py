@@ -1,0 +1,3 @@
+from .categoria_views import CategoriaListCreateView, CategoriaRetrieveUpdateDestroyView
+from .movimenta_views import MovimentacaoListCreateView, MovimentacaoRetrieveUpdateDestroyView
+from .movimentacaoRecorrente_views import MovimentacaoRecorrenteListCreateView, MovimentacaoRecorrenteRetrieveUpdateDestroyView
