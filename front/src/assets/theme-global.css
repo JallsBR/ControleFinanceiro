@@ -1,0 +1,34 @@
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--p-surface-ground);
+  color: var(--p-text-color);
+}
+
+/* ===== TEMA ESCURO (default) ===== */
+:root {
+  --bg-primario: #14161c;
+  --bg-secundario: #1f242d;
+
+  --texto-primario: #f8f9fa;
+  --texto-secundario: #adb5bd;
+
+  --sucesso: #20c997;
+  --perigo: #ff6b6b;
+  --neutro: #e9ecef;
+}
+
+/* ===== TEMA CLARO ===== */
+[data-tema="claro"] {
+  --bg-primario: #f8f9fa;
+  --bg-secundario: #ffffff;
+
+  --texto-primario: #212529;
+  --texto-secundario: #6c757d;
+
+  --sucesso: #198754;
+  --perigo: #dc3545;
+  --neutro: #212529;
+}

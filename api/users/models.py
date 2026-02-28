@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from decimal import Decimal
 
 
 class User(AbstractUser):
@@ -12,4 +11,4 @@ class User(AbstractUser):
         ordering = ['username']
         
     def __str__(self):
-        return self.email
+        return self.username

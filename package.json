@@ -1,0 +1,26 @@
+{
+  "name": "controlefinanceiro",
+  "version": "1.0.0",
+  "description": "App de Controle Financeiro",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "backend": "cd api && .\\venv\\Scripts\\python.exe manage.py runserver",
+    "frontend": "cd front && npm run dev",
+    "dev": "concurrently --names \"DJANGO,FRONT\" --prefix-colors \"blue,green\" \"npm run backend\" \"npm run frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JallsBR/ControleFinanceiro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/JallsBR/ControleFinanceiro/issues"
+  },
+  "homepage": "https://github.com/JallsBR/ControleFinanceiro#readme"
+}
