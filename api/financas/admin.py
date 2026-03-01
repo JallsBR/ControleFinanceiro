@@ -18,3 +18,21 @@ class MovimentacaoRecorrenteAdmin(admin.ModelAdmin):
     list_display = ('valor', 'tipo', 'data_inicio', 'data_fim', 'categoria', 'created_by')
     search_fields = ('valor', 'tipo', 'data_inicio', 'data_fim', 'categoria', 'created_by')
     ordering = ('data_inicio',)
+
+@admin.register(Meta)
+class MetaAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'valor_meta', 'data_meta', 'prioridade', 'created_by')
+    search_fields = ('nome', 'valor_meta', 'data_meta', 'prioridade', 'created_by')
+    ordering = ('data_meta',)
+
+@admin.register(ConsolidadoMensal)
+class ConsolidadoMensalAdmin(admin.ModelAdmin):
+    list_display = ('ano', 'mes', 'total_entradas', 'total_saidas', 'created_by')
+    search_fields = ('ano', 'mes', 'total_entradas', 'total_saidas', 'created_by')
+    ordering = ('ano', 'mes',)
+
+@admin.register(Icone)
+class IconeAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'classe_css', 'categoria_visual', 'created_by')
+    search_fields = ('nome', 'classe_css', 'categoria_visual', 'created_by')
+    ordering = ('nome',)

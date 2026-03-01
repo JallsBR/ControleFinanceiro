@@ -4,54 +4,34 @@ from users.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-# lidar com imagens
-from PIL import Image
-import os
-from io import BytesIO
-from django.core.files.base import ContentFile
 
+class Icone(models.Model):
+    nome = models.CharField(max_length=100)
+    classe_css = models.CharField(max_length=100)  # ex: "pi pi-wallet"
+    categoria_visual = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    class Meta:
+        ordering = ['nome']
+        unique_together = ('nome', 'created_by')
+    def __str__(self):
+        return self.nome
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
     tipo = models.CharField(max_length=1, choices=(('E','Entrada'),('S','Saída')))
     descricao = models.TextField(blank=True)   
-    icone = models.ImageField(upload_to='categorias/', null=True, blank=True)
+    icone = models.ForeignKey(Icone, on_delete=models.PROTECT, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     class Meta:
         ordering = ['nome']
-        unique_together = ('nome', 'created_by')
-    def save(self, *args, **kwargs):
-        try:
-            super().save(*args, **kwargs)
-
-            if self.icone:
-                img = Image.open(self.icone)
-                if img.mode in ("RGBA", "P"):
-                    img = img.convert("RGB")
-                width, height = img.size
-                min_dim = min(width, height)
-                left = (width - min_dim) // 2
-                top = (height - min_dim) // 2
-                right = (width + min_dim) // 2
-                bottom = (height + min_dim) // 2
-                img = img.crop((left, top, right, bottom))
-                img = img.resize((60, 60), Image.Resampling.LANCZOS)
-                buffer = BytesIO()
-                img.save(buffer, format='JPEG', quality=85, optimize=True)
-                buffer.seek(0)
-                self.icone.save(
-                    self.icone.name,
-                    ContentFile(buffer.read()),
-                    save=False
-                )
-                super().save(update_fields=['icone'])
-        except Exception as e:
-            print(f"[ERRO] Falha ao otimizar imagem: {e}")
-
-    def __str__(self):    
-        return self.nome  
+        unique_together = ('nome', 'created_by')   
+    def __str__(self):           
+        if self.icone:
+            return f"{self.nome} - {self.icone.nome}"
+        return self.nome 
     
 class Movimentacao(models.Model):
     tipo = models.CharField(max_length=1, choices=(('E','Entrada'),('S','Saída')))
@@ -107,3 +87,42 @@ class MovimentacaoRecorrente(models.Model):
     
     def __str__(self):
         return f"{self.valor} - {self.data_inicio} - {self.data_fim} - {self.categoria} - {self.descricao}"
+
+
+class Meta(models.Model):
+    PRIORIDADE_CHOICES = (
+        ('R', 'Rápida'),
+        ('M', 'Média'),
+        ('L', 'Longa'),
+    )
+    nome = models.CharField(max_length=120)
+    valor_meta = models.DecimalField(max_digits=12, decimal_places=2)
+    data_meta = models.DateField()
+    prioridade = models.CharField(max_length=1, choices=PRIORIDADE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    concluida = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-data_meta']
+        indexes = [
+            models.Index(fields=['data_meta']),
+            models.Index(fields=['created_by']),
+            models.Index(fields=['prioridade']),
+        ]
+    def __str__(self):
+        return f"{self.nome} - {self.valor_meta} - {self.data_meta} - {self.prioridade}"
+
+
+class ConsolidadoMensal(models.Model):
+    ano = models.IntegerField()
+    mes = models.IntegerField()
+    total_entradas = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    total_saidas = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    class Meta:
+        unique_together = ('ano', 'mes', 'created_by')
+    def __str__(self):
+        return f"{self.ano} - {self.mes} - {self.total_entradas} - {self.total_saidas}"
+
+

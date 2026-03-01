@@ -54,6 +54,7 @@ class CategoriaRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             status=status.HTTP_200_OK
         )
 """
+Modo de usar:
     Trazer só entradas:
     /api/categorias/?tipo=E
 

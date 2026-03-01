@@ -191,6 +191,9 @@ JAZZMIN_SETTINGS = {
         "financas.categoria": "fas fa-money-bill",
         "financas.movimentacao": "fas fa-money-bill",
         "financas.movimentacaorecorrente": "fas fa-money-bill",
+        "financas.meta": "fas fa-chart-line",
+        "financas.consolidado-mensal": "fas fa-money-bill",
+        "financas.icone": "fas fa-icons",
         "users.user": "fas fa-user",
     },
 
