@@ -1,21 +1,36 @@
 <template>
-    <div class="card-status">
+    <div
+      class="card-status"
+      :class="{ 'card-status--link': to }"
+      :role="to ? 'link' : undefined"
+      :tabindex="to ? 0 : undefined"
+      @click="onCardClick"
+      @keydown.enter="to && onCardClick()"
+    >
   
       <!-- HEADER -->
       <div class="card-header">
       <!-- ÍCONE opcional -->
-      <div v-if="icone" class="icone-container">
-        <i :class="icone"></i>
+        <div class="card-header-content">
+          <div v-if="icone" class="icone-container">
+            <i :class="icone"></i>
+          </div>
+          <p class="card-tituloPrincipal" style="margin-bottom: 0px;">
+            {{ tituloPrincipal }}
+          </p>
+        </div>
+        <!-- Botão opcional: @click.stop evita que o clique dispare a navegação do card -->
+        <div v-if="mostrarAcao" @click.stop>
+          <BotaoAcao
+            :icone="iconeAcao"
+            :variante="variante"
+            @click="$emit('acao')"
+          />
+        </div>
       </div>
-  
-        <!-- Botão opcional -->
-        <BotaoAcao
-          v-if="mostrarAcao"
-          :icone="iconeAcao"
-          :variante="variante"
-          @click="$emit('acao')"
-        />
-      </div>
+      <p class="card-subtitulo">
+        {{ subtitulo }}
+      </p>
   
       <!-- CONTEÚDO -->
       <p class="card-label" style="margin-bottom: 0px;">
@@ -25,8 +40,8 @@
       <p class="card-descricao" style="margin-top: 0px;">
         {{ descricao }}
       </p>
-      <h2 class="card-valor" :class="classeValor">
-        {{ valor }}
+      <h2  v-if="valor" class="card-valor" :class="classeValor">
+        <span style="font-size: 1.0rem;">R$</span>{{ valor }}
       </h2>
   
     </div>
@@ -34,9 +49,21 @@
   
   <script setup>
   import { computed } from 'vue'
+  import { useRouter } from 'vue-router'
   import BotaoAcao from './botoes/BotaoAcao.vue'
   
+  const router = useRouter()
+  
   const props = defineProps({
+
+    tituloPrincipal: {
+        type: String,
+        required: true
+    },
+    subtitulo: {
+      type: String,
+      default: ''
+    },
     titulo: {
       type: String,
       required: true
@@ -64,8 +91,18 @@
     iconeAcao: {
       type: String,
       default: 'pi pi-plus'
+    },
+    /** Rota ou caminho para navegação. Se definido, o card fica clicável (exceto nos botões internos). */
+    to: {
+      type: [String, Object],
+      default: undefined
     }
   })
+  
+  function onCardClick() {
+    if (!props.to) return
+    router.push(props.to)
+  }
   
   const classeValor = computed(() => {
     return {
@@ -86,9 +123,18 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     transition: all 0.2s ease;
   }
+  .card-subtitulo {
+    color: #adb5bd;
+    font-size: 1.0rem;
+    margin-top: -15px;
+  }
   
   .card-status:hover {
     transform: translateY(-4px);
+  }
+  
+  .card-status--link {
+    cursor: pointer;
   }
   
   .card-descricao {
@@ -103,6 +149,11 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+  }
+  .card-header-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
   
   .icone-container {
@@ -125,6 +176,11 @@
     color: #adb5bd;
     font-size: 0.8rem;
     margin-bottom: 8px;
+  }
+  .card-tituloPrincipal {
+    font-size: 2.0rem;
+    font-weight: 700;
+    margin: 0;
   }
   
   .card-valor {
@@ -149,6 +205,7 @@
   </style>
 
 <!-- Como usar:
+ Sem link (só conteúdo e botão):
  <CardStatus
     titulo="Entradas Fevereiro 2026"
     valor="R$ 9.600,00"
@@ -159,6 +216,16 @@
     @acao="abrirModalEntrada"
   />
 
-
+ Com rota (card clicável; o botão continua emitindo @acao):
+ <CardStatus
+    titulo="Entradas Fevereiro 2026"
+    valor="R$ 9.600,00"
+    to="/financas/entradas"
+    icone="pi pi-wallet"
+    variante="entrada"
+    :mostrarAcao="true"
+    iconeAcao="pi pi-plus"
+    @acao="abrirModalEntrada"
+  />
 
 -->

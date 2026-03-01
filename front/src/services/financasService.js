@@ -66,6 +66,15 @@ const financasService = {
       const response = await api.post('/financas/categorias/', data);
       return response.data;
     },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/categorias/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/categorias/${id}/`);
+    },
   },
 
   // =========================
@@ -130,6 +139,15 @@ const financasService = {
     create: async (data) => {
       const response = await api.post('/financas/movimentacoes/', data);
       return response.data;
+    },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/movimentacoes/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/movimentacoes/${id}/`);
     },
   },
 
@@ -196,6 +214,160 @@ const financasService = {
     create: async (data) => {
       const response = await api.post('/financas/movimentacoes-recorrentes/', data);
       return response.data;
+    },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/movimentacoes-recorrentes/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/movimentacoes-recorrentes/${id}/`);
+    },
+  },
+
+  // =========================
+  // --- METAS ---
+  // =========================
+  metas: {
+    getAll: async () => {
+      const response = await api.get('/financas/metas/');
+      return response.data;
+    },
+
+    getById: async (id) => {
+      const response = await api.get(`/financas/metas/${id}/`);
+      return response.data;
+    },
+
+    create: async (data) => {
+      const response = await api.post('/financas/metas/', data);
+      return response.data;
+    },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/metas/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/metas/${id}/`);
+    },
+  },
+
+  // =========================
+  // --- CONSOLIDADOS MENSAIS ---
+  // =========================
+  consolidadosMensais: {
+    getAll: async () => {
+      const response = await api.get('/financas/consolidados-mensais/');
+      return response.data;
+    },
+
+    getById: async (id) => {
+      const response = await api.get(`/financas/consolidados-mensais/${id}/`);
+      return response.data;
+    },
+
+    create: async (data) => {
+      const response = await api.post('/financas/consolidados-mensais/', data);
+      return response.data;
+    },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/consolidados-mensais/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/consolidados-mensais/${id}/`);
+    },
+  },
+
+  // =========================
+  // --- ICONE ---
+  // =========================
+  icone: {
+    getAll: async () => {
+      const response = await api.get('/financas/icone/');
+      return response.data;
+    },
+
+    getById: async (id) => {
+      const response = await api.get(`/financas/icone/${id}/`);
+      return response.data;
+    },
+
+    create: async (data) => {
+      const response = await api.post('/financas/icone/', data);
+      return response.data;
+    },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/icone/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/icone/${id}/`);
+    },
+  },
+
+  // =========================
+  // --- RESERVAS ---
+  // =========================
+  reservas: {
+    getAll: async () => {
+      const response = await api.get('/financas/reservas/');
+      return response.data;
+    },
+
+    getById: async (id) => {
+      const response = await api.get(`/financas/reservas/${id}/`);
+      return response.data;
+    },
+
+    create: async (data) => {
+      const response = await api.post('/financas/reservas/', data);
+      return response.data;
+    },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/reservas/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/reservas/${id}/`);
+    },
+  },
+
+  // =========================
+  // --- INVESTIMENTOS ---
+  // =========================
+  investimentos: {
+    getAll: async () => {
+      const response = await api.get('/financas/investimentos/');
+      return response.data;
+    },
+
+    getById: async (id) => {
+      const response = await api.get(`/financas/investimentos/${id}/`);
+      return response.data;
+    },
+
+    create: async (data) => {
+      const response = await api.post('/financas/investimentos/', data);
+      return response.data;
+    },
+
+    update: async (id, data) => {
+      const response = await api.put(`/financas/investimentos/${id}/`, data);
+      return response.data;
+    },
+
+    delete: async (id) => {
+      await api.delete(`/financas/investimentos/${id}/`);
     },
   },
 };

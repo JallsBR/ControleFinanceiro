@@ -22,16 +22,21 @@
                     <span>Categorias</span>
                 </RouterLink>
 
-                <RouterLink to="/Reservas" class="nav-item">
+                <RouterLink to="/reservas" class="nav-item">
                     <i class="pi pi-folder-plus"></i>
                     <span>Reservas</span>
                 </RouterLink>
 
-                <RouterLink to="/Investimentos" class="nav-item">
+                <RouterLink to="/investimentos" class="nav-item">
                     <i class="pi pi-chart-line"></i>
                     <span>Investimentos</span>
                 </RouterLink>
 
+                <RouterLink to="/metas" class="nav-item">
+                    <i class="pi pi-bullseye"></i>
+                    <span>Metas</span>
+                </RouterLink>
+                
             </div>
         </template>        
 

@@ -3,7 +3,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AuthLayout from '../layouts/AuthLayout.vue'
 import PublicLayout from '../layouts/PublicLayout.vue'
 import LogoutPage from '../pages/auth/LogoutPage.vue'
-import HomePage from '../pages/home/HomePage.vue'
+import HomePage from '../pages/home/index.vue'
+import EntradasPage from '../pages/entradas/index.vue'
+import SaidasPage from '../pages/saidas/index.vue'
+import SaldoPage from '../pages/saldo/index.vue'
+import ReservasPage from '../pages/reservas/index.vue'
+import InvestimentosPage from '../pages/investimentos/index.vue'
+import MetasPage from '../pages/metas/index.vue'
+import CategoriasPage from '../pages/categorias/index.vue'
 import SiginPage from '../pages/auth/SiginPage.vue'
 import SigupPage from '../pages/auth/SigupPage.vue'
 import store from '../store'
@@ -37,7 +44,7 @@ const routes = [
     component: LogoutPage
   },
   {
-    path: '/homepage',
+    path: '/',
     component: AuthLayout,
     meta: { requiresAuth: true },
     children: [
@@ -45,9 +52,45 @@ const routes = [
         path: '',
         name: 'home',
         component: HomePage
+      },
+      {
+        path: '/entradas',
+        name: 'entradas',
+        component: EntradasPage
+      },
+      {
+        path: '/saidas',
+        name: 'saidas',
+        component: SaidasPage
+      },
+      {
+        path: '/saldo',
+        name: 'saldo',
+        component: SaldoPage
+      },
+      {
+        path: '/reservas',
+        name: 'reservas',
+        component: ReservasPage
+      },
+      {
+        path: '/investimentos',
+        name: 'investimentos',
+        component: InvestimentosPage
+      },
+      {
+        path: '/metas',
+        name: 'metas',
+        component: MetasPage
+      },
+      {
+        path: '/categorias',
+        name: 'categorias',
+        component: CategoriasPage
       }
     ]
-  }
+  },
+  
 ]
 
 const router = createRouter({

@@ -7,9 +7,10 @@
 
       <CardStatus
         :titulo="'Entradas ' + data().mesAtual"
-        :valor="'R$ 9.600,00'"
+        :valor="'9.600,00'"
         icone="pi pi-wallet"
         variante="entrada"
+        to="/entradas"
         :mostrarAcao="true"
         iconeAcao="pi pi-plus"
         @acao="abrirModalEntrada"
@@ -17,9 +18,10 @@
 
       <CardStatus
         :titulo="'Saídas ' + data().mesAtual"
-        :valor="'R$ 1.600,00'"
+        :valor="'1.600,00'"
         icone="pi pi-credit-card"
         variante="saida"
+        to="/saidas"
         :mostrarAcao="true"
         iconeAcao="pi pi-minus"
         @acao="abrirModalSaida"
@@ -27,15 +29,17 @@
 
       <CardStatus
         :titulo="'Saldo ' + data().mesAtual"
-        :valor="'R$ 7.000,00'"
+        :valor="'7.000,00'"
         icone="pi pi-dollar"
         variante="entrada"
+        to="/saldo"
       />
       <CardStatus
         :titulo="'Reserva Total '"
-        :valor="'R$ 17.000,00'"
+        :valor="'17.000,00'"
         icone="pi pi-folder-plus"
         variante="entrada"
+        to="/reservas"
       />
 
 
@@ -51,12 +55,21 @@
 <div class="cards-grid">
 
   <CardStatus
+    icone="pi pi-money-bill"
+    :titulo="'Consolidado ' + data().mesPassado"
+    :valor="data().ConsolidadoMesPassado"
+    variante="neutro"
+  />
+  
+  <CardStatus
+    icone="pi pi-money-bill"
     titulo="Gasto dos últimos 7 dias"
     :valor="data().resumoSemana"
     variante="saida"
   />
 
   <CardStatus
+    icone="pi pi-money-bill"
     titulo="Gasto dos últimos 30 dias"
     :valor="data().resumoMes"
     variante="saida"
@@ -65,21 +78,23 @@
   <CardStatus
         titulo="Maior Gasto do mês"
         :descricao="'Aluguel'"
-        :valor="'R$ 2.700,00'"
+        :valor="'2.700,00'"
         variante="saida"
   />
 
   <CardStatus
         titulo="Investimentos"
-        :valor="'R$ 1.600,00'"
+        :valor="'1.600,00'"
         icone="pi pi-chart-line"
         variante="entrada"
+        to="/investimentos"
   />
 
   <CardStatus
         titulo="Meta Geral"
-        :valor="'R$ 103.000,00'"
+        :valor="'103.000,00'"
         icone="pi pi-bullseye"
+        to="/metas"
         variante="neutro"
   />
 
@@ -101,9 +116,10 @@ dayjs.locale('pt-br')
 const data = () => {
   return {    
     mesAtual: dayjs().format('MMMM YYYY'),
-    resumoSemana: 'R$ 1.600,00',
-    resumoMes: 'R$ 7.600,00',
-
+    mesPassado: dayjs().subtract(1, 'month').format('MMMM'),
+    resumoSemana: '1.600,00',
+    resumoMes: '7.600,00',
+    ConsolidadoMesPassado: '10.000,00',
   }
 }
 
