@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from decimal import Decimal
 
 
 class Icone(models.Model):
@@ -20,7 +21,7 @@ class Icone(models.Model):
 class Categoria(models.Model):
     nome = models.CharField(max_length=100)
     tipo = models.CharField(max_length=1, choices=(('E','Entrada'),('S','Saída')))
-    descricao = models.TextField(blank=True)   
+    descricao = models.TextField(null=True, blank=True)   
     icone = models.ForeignKey(Icone, on_delete=models.PROTECT, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
@@ -69,9 +70,9 @@ class MovimentacaoRecorrente(models.Model):
     tipo = models.CharField(max_length=1, choices=(('E','Entrada'),('S','Saída')))
     valor = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
-    descricao = models.TextField(blank=True)
-    data_inicio = models.DateField()
-    data_fim = models.DateField(null=True, blank=True)
+    descricao = models.TextField()
+    data_inicio = models.DateField(default=timezone.now)
+    data_fim = models.DateField()
     ativa = models.BooleanField(default=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
 
@@ -96,7 +97,7 @@ class Meta(models.Model):
         ('L', 'Longa'),
     )
     nome = models.CharField(max_length=120)
-    valor_meta = models.DecimalField(max_digits=12, decimal_places=2)
+    valor_meta = models.DecimalField(max_digits=12, decimal_places=2, default=0,validators=[MinValueValidator(0)])
     data_meta = models.DateField()
     prioridade = models.CharField(max_length=1, choices=PRIORIDADE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -126,3 +127,79 @@ class ConsolidadoMensal(models.Model):
         return f"{self.ano} - {self.mes} - {self.total_entradas} - {self.total_saidas}"
 
 
+class Reserva(models.Model):
+    nome = models.CharField(max_length=100)
+    valor = models.DecimalField(max_digits=12, decimal_places=2, default=0,validators=[MinValueValidator(0)])
+    ativa = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return f"{self.nome} - {self.valor} - {self.ativa}"
+
+
+class Investimento(models.Model):
+
+    class TipoInvestimento(models.TextChoices):
+        CDB = 'CDB', 'CDB'
+        ACAO = 'ACAO', 'Ação'
+        FII = 'FII', 'Fundo Imobiliário'
+        CRIPTO = 'CRIPTO', 'Criptomoeda'
+        TESOURO = 'TESOURO', 'Tesouro Direto'
+        OUTRO = 'OUTRO', 'Outro'
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    nome = models.CharField(max_length=150)
+
+    tipo = models.CharField(
+        max_length=20,
+        choices=TipoInvestimento.choices
+    )
+
+    valor_inicial = models.DecimalField(max_digits=12, decimal_places=2)
+    taxa_rendimento = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    data_aplicacao = models.DateField()
+    data_vencimento = models.DateField(null=True, blank=True)
+
+    ativo = models.BooleanField(default=True)
+
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="investimentos_criados"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def calcular_valor_atual(self):
+        if not self.taxa_rendimento:
+            return self.valor_inicial
+
+        dias = (timezone.now().date() - self.data_aplicacao).days
+        taxa = self.taxa_rendimento / Decimal('100')
+        tempo = Decimal(dias) / Decimal('365')
+
+        rendimento = self.valor_inicial * taxa * tempo
+        return self.valor_inicial + rendimento
+
+    def clean(self):
+        if self.valor_inicial <= 0:
+            raise ValidationError("Valor deve ser maior que zero.")
+
+        if self.data_vencimento and self.data_vencimento < self.data_aplicacao:
+            raise ValidationError("Data de vencimento inválida.")
+
+    def __str__(self):
+        return f"{self.nome} ({self.get_tipo_display()})"

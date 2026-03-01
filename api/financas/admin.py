@@ -36,3 +36,15 @@ class IconeAdmin(admin.ModelAdmin):
     list_display = ('nome', 'classe_css', 'categoria_visual', 'created_by')
     search_fields = ('nome', 'classe_css', 'categoria_visual', 'created_by')
     ordering = ('nome',)
+
+@admin.register(Reserva)
+class ReservaAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'valor', 'created_by')
+    search_fields = ('nome', 'valor', 'created_by')
+    ordering = ('nome',)
+
+@admin.register(Investimento)
+class InvestimentoAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'tipo', 'valor_inicial', 'taxa_rendimento', 'data_aplicacao', 'data_vencimento', 'ativo', 'created_by')
+    search_fields = ('nome', 'tipo', 'valor_inicial', 'taxa_rendimento', 'data_aplicacao', 'data_vencimento', 'ativo', 'created_by')
+    ordering = ('nome',)

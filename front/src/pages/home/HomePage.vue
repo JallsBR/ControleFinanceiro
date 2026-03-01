@@ -6,7 +6,7 @@
     <div class="cards-grid">
 
       <CardStatus
-        :titulo="'Entradas ' + dataResumo().mesAtual"
+        :titulo="'Entradas ' + data().mesAtual"
         :valor="'R$ 9.600,00'"
         icone="pi pi-wallet"
         variante="entrada"
@@ -16,7 +16,7 @@
       />
 
       <CardStatus
-        :titulo="'Saídas ' + dataResumo().mesAtual"
+        :titulo="'Saídas ' + data().mesAtual"
         :valor="'R$ 1.600,00'"
         icone="pi pi-credit-card"
         variante="saida"
@@ -26,9 +26,15 @@
       />
 
       <CardStatus
-        :titulo="'Saldo ' + dataResumo().mesAtual"
+        :titulo="'Saldo ' + data().mesAtual"
         :valor="'R$ 7.000,00'"
         icone="pi pi-dollar"
+        variante="entrada"
+      />
+      <CardStatus
+        :titulo="'Reserva Total '"
+        :valor="'R$ 17.000,00'"
+        icone="pi pi-folder-plus"
         variante="entrada"
       />
 
@@ -46,13 +52,13 @@
 
   <CardStatus
     titulo="Gasto dos últimos 7 dias"
-    :valor="dataResumo().resumoSemana"
+    :valor="data().resumoSemana"
     variante="saida"
   />
 
   <CardStatus
     titulo="Gasto dos últimos 30 dias"
-    :valor="dataResumo().resumoMes"
+    :valor="data().resumoMes"
     variante="saida"
   />
 
@@ -71,14 +77,11 @@
   />
 
   <CardStatus
-        titulo="Guitarra elétrica (Meta)"
-        :valor="'R$ 3.000,00'"
+        titulo="Meta Geral"
+        :valor="'R$ 103.000,00'"
         icone="pi pi-bullseye"
         variante="neutro"
   />
-
-
-
 
 
 </div>
@@ -95,7 +98,7 @@ import { ref } from 'vue'
 
 dayjs.locale('pt-br')
 
-const dataResumo = () => {
+const data = () => {
   return {    
     mesAtual: dayjs().format('MMMM YYYY'),
     resumoSemana: 'R$ 1.600,00',

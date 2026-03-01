@@ -4,3 +4,5 @@ from .movimentacaoRecorrente_views import MovimentacaoRecorrenteListCreateView, 
 from .metas_views import MetaListCreateView, MetaRetrieveUpdateDestroyView
 from .consolidado_mensal_views import ConsolidadoMensalListCreateView, ConsolidadoMensalRetrieveUpdateDestroyView
 from .icone_views import IconeListCreateView, IconeRetrieveUpdateDestroyView
+from .reserva_views import ReservaListCreateView, ReservaRetrieveUpdateDestroyView
+from .investimento_views import InvestimentoListCreateView, InvestimentoRetrieveUpdateDestroyView

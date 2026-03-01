@@ -22,5 +22,10 @@ urlpatterns = [
     path('icone/', views.IconeListCreateView.as_view(), name='icone-list-create'),
     path('icone/<int:pk>/', views.IconeRetrieveUpdateDestroyView.as_view(), name='icone-retrieve-update-destroy'),
     
+    path('reservas/', views.ReservaListCreateView.as_view(), name='reserva-list-create'),
+    path('reservas/<int:pk>/', views.ReservaRetrieveUpdateDestroyView.as_view(), name='reserva-retrieve-update-destroy'),
+
+    path('investimentos/', views.InvestimentoListCreateView.as_view(), name='investimento-list-create'),
+    path('investimentos/<int:pk>/', views.InvestimentoRetrieveUpdateDestroyView.as_view(), name='investimento-retrieve-update-destroy'),
 ]
 

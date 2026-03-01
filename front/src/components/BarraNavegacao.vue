@@ -2,33 +2,36 @@
     <Menubar class="custom-menubar">        
         <template #start>
             <div class="nav-left">
-                <img src="/logoFinancasApp.png" alt="Logo Financas" class="logo-img" />
-                <h2 class="brand-title">Finanças <span>APP</span></h2>
-
-                <RouterLink to="/" class="nav-item">
-                    <i class="pi pi-home"></i>
-                    <span>Início</span>
+                <RouterLink to="/" class="brand-link">
+                    <img src="/logoFinancasApp.png" alt="Logo Financas" class="logo-img" />
+                    <h2 class="brand-title">Finanças <span>APP</span></h2>
                 </RouterLink>
 
-                <RouterLink to="/entrada" class="nav-item">
+                <RouterLink to="/entradas" class="nav-item">
                     <i class="pi pi-wallet"></i>
-                    <span>Entrada</span>
+                    <span>Entradas</span>
                 </RouterLink>
 
-                <RouterLink to="/saida" class="nav-item">
+                <RouterLink to="/saidas" class="nav-item">
                     <i class="pi pi-credit-card"></i>
                     <span>Saídas</span>
                 </RouterLink>
 
-                <RouterLink to="/recorrencia" class="nav-item">
-                    <i class="pi pi-refresh"></i>
-                    <span>Recorrências</span>
+                <RouterLink to="/categorias" class="nav-item">
+                    <i class="pi pi-tags"></i>
+                    <span>Categorias</span>
                 </RouterLink>
 
-                <RouterLink to="/categoria" class="nav-item">
-                    <i class="pi pi-tags"></i>
-                    <span>Categoria</span>
+                <RouterLink to="/Reservas" class="nav-item">
+                    <i class="pi pi-folder-plus"></i>
+                    <span>Reservas</span>
                 </RouterLink>
+
+                <RouterLink to="/Investimentos" class="nav-item">
+                    <i class="pi pi-chart-line"></i>
+                    <span>Investimentos</span>
+                </RouterLink>
+
             </div>
         </template>        
 
@@ -86,6 +89,22 @@ const logout = () => {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+/* Link do logo + título: mesma aparência, sem estilo de link */
+.brand-link {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.brand-link:hover,
+.brand-link:visited,
+.brand-link:focus {
+    text-decoration: none;
+    color: inherit;
 }
 
 .logo-img {

@@ -36,3 +36,16 @@ class IconeSerializer(serializers.ModelSerializer):
         model = Icone
         fields = '__all__'
         read_only_fields = ['created_at']
+
+
+class ReservaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reserva
+        fields = '__all__'
+        read_only_fields = ['created_by', 'created_at', 'last_updated']
+
+class InvestimentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Investimento
+        fields = '__all__'
+        read_only_fields = ['created_by', 'created_at', 'last_updated']
