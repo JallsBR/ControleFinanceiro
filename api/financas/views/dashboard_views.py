@@ -121,7 +121,10 @@ class DashboardView(generics.GenericAPIView):
 
         if maior_movimentacao_saida:
             maior_saida = maior_movimentacao_saida.valor
-            descricao_maior_saida = maior_movimentacao_saida.descricao
+            descricao_maior_saida = (
+                (maior_movimentacao_saida.descricao or "").strip()
+                or maior_movimentacao_saida.categoria.nome
+            )
         else:
             maior_saida = Decimal("0")
             descricao_maior_saida = ""

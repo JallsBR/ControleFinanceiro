@@ -5,7 +5,7 @@
     :closable="false"
     :dismissableMask="true"
     :closeOnEscape="true"
-    :style="{ width: '22rem' }"
+    :style="{ width: '30rem' }"
   >
     <template #header>
       <div class="filtro-header">
@@ -141,17 +141,31 @@ function onFechar() {
 
 .field {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.field:last-child {
+  margin-bottom: 0;
 }
 
 .field-label {
+  flex: 0 0 90px;
   font-weight: 600;
   color: #e5e7eb;
   font-size: 0.9rem;
+  padding-top: 0.4rem;
+  min-width: 90px;
 }
 
 .field-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-input .w-full {
   width: 100%;
 }
 

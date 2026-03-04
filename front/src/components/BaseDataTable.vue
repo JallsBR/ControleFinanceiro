@@ -42,11 +42,14 @@
           <slot name="expansion" :data="slotProps.data" />
         </template>
       </DataTable>
+      <div class="table-footer">
+        {{ contagemTexto }}
+      </div>
     </div>
   </template>
 
   <script setup>
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import DataTable from 'primevue/datatable'
   import { PAGE_SIZE } from '@/constants/pagination'
 
@@ -80,6 +83,11 @@
     filters.value = {}
     emit('filterClear')
   }
+
+  const contagemTexto = computed(() => {
+    const total = props.lazy ? props.totalRecords : (props.items?.length ?? 0)
+    return total === 1 ? '1 registro' : `${total} registros`
+  })
   </script>
   
   <style scoped>
@@ -93,5 +101,21 @@
     display: flex;
     justify-content: flex-end;
     margin-bottom: 0.75rem;
+  }
+
+  .table-footer {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color, #94a3b8);
+  }
+
+  /* Altura uniforme: cabeçalho e linhas de dados com o mesmo espaço vertical */
+  :deep(.p-datatable thead th),
+  :deep(.p-datatable tbody td) {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    min-height: 2.5rem;
+    vertical-align: middle;
+    box-sizing: border-box;
   }
   </style>

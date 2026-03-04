@@ -128,7 +128,7 @@ export default {
         })
 
         if (success) {
-          this.$router.push('/')
+          this.$router.push({ name: 'home' })
         }
       } catch (err) {
         if (err.response?.data?.detail) {

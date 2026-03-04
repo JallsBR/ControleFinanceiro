@@ -7,7 +7,10 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
-from rest_framework import status   
+from rest_framework import status
+
+CONSOLIDADOS_ULTIMOS_MESES = 12
+
 
 class ConsolidadoMensalListCreateView(generics.ListCreateAPIView):
     serializer_class = ConsolidadoMensalSerializer
@@ -26,9 +29,15 @@ class ConsolidadoMensalListCreateView(generics.ListCreateAPIView):
         'total_entradas',
         'total_saidas',
     ]
-    ordering = ['-ano', '-mes']  # padrão
+    ordering = ['-ano', '-mes']  # padrão: mais recentes primeiro
+
     def get_queryset(self):
         return ConsolidadoMensal.objects.filter(created_by=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset()).order_by('-ano', '-mes')[:CONSOLIDADOS_ULTIMOS_MESES]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 

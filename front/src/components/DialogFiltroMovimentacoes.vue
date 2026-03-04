@@ -17,50 +17,48 @@
     </template>
 
     <div class="filtro-body">
-      <div class="field-row">
-        <div class="field">
-          <label class="field-label">Período</label>
-          <div class="field-input period">
-            <DatePicker
-              v-model="dataInicial"
-              dateFormat="dd/mm/yy"
-              placeholder="Data inicial"
-              showIcon
-            />
-            <span class="period-separator">até</span>
-            <DatePicker
-              v-model="dataFinal"
-              dateFormat="dd/mm/yy"
-              placeholder="Data final"
-              showIcon
-            />
-          </div>
+      <div class="field">
+        <label class="field-label">Período</label>
+        <div class="field-input period">
+          <DatePicker
+            v-model="dataInicial"
+            dateFormat="dd/mm/yy"
+            placeholder="Data inicial"
+            showIcon
+          />
+          <span class="period-separator">até</span>
+          <DatePicker
+            v-model="dataFinal"
+            dateFormat="dd/mm/yy"
+            placeholder="Data final"
+            showIcon
+          />
         </div>
+      </div>
 
-        <div class="field">
-          <label class="field-label">Categoria</label>
-          <div class="field-input">
-            <Select
-              v-model="categoria"
-              :options="categorias"
-              optionLabel="nome"
-              optionValue="id"
-              placeholder="Todas"
-              class="w-full"
-              :showClear="true"
-            >
-              <template #option="slotProps">
-                <div class="categoria-option">
-                  <i
-                    v-if="slotProps.option.icone && classeIcone(slotProps.option.icone)"
-                    :class="classeIcone(slotProps.option.icone)"
-                    class="categoria-option__icon"
-                  />
-                  <span>{{ slotProps.option.nome }}</span>
-                </div>
-              </template>
-            </Select>
-          </div>
+      <div class="field">
+        <label class="field-label">Categoria</label>
+        <div class="field-input">
+          <Select
+            v-model="categoria"
+            :options="categorias"
+            optionLabel="nome"
+            optionValue="id"
+            placeholder="Todas"
+            class="w-full"
+            :showClear="true"
+          >
+            <template #option="slotProps">
+              <div class="categoria-option">
+                <i
+                  v-if="slotProps.option.icone && classeIcone(slotProps.option.icone)"
+                  :class="classeIcone(slotProps.option.icone)"
+                  class="categoria-option__icon"
+                />
+                <span>{{ slotProps.option.nome }}</span>
+              </div>
+            </template>
+          </Select>
         </div>
       </div>
     </div>
@@ -227,25 +225,33 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.field-row {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-}
-
 .field {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.field:last-child {
+  margin-bottom: 0;
 }
 
 .field-label {
+  flex: 0 0 90px;
   font-weight: 600;
   color: #e5e7eb;
   font-size: 0.9rem;
+  padding-top: 0.4rem;
+  min-width: 90px;
 }
 
 .field-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-input .w-full {
   width: 100%;
 }
 

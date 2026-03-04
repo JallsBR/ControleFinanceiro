@@ -27,18 +27,18 @@
             </div>
         </template>
         <template #columns>
-            <Column field="id" columnKey="id" header="ID" style="min-width: 3rem; max-width: 3rem" sortable />
-            <Column field="valor" columnKey="valor" header="Valor" style="min-width: 7rem; max-width: 7rem" sortable>
+            <Column field="id" columnKey="id" header="ID" style="min-width: 1.5rem; max-width: 1.5rem" sortable />
+            <Column field="valor" columnKey="valor" header="Valor" style="min-width: 2rem; max-width: 2rem" sortable>
                 <template #body="{ data }">
                     {{ Money.format(data.valor) }}
                 </template>
             </Column>
-            <Column field="data" columnKey="data" header="Data" style="min-width: 6rem; max-width: 6rem" sortable>
+            <Column field="data" columnKey="data" header="Data" style="min-width: 2rem; max-width: 2rem" sortable>
                 <template #body="{ data }">
                     {{ formatarData(data.data) }}
                 </template>
             </Column>
-            <Column field="categoria" columnKey="categoria" header="Categoria" style="min-width: 13rem; max-width: 13rem" sortable>
+            <Column field="categoria" columnKey="categoria" header="Categoria" style="min-width: 4rem; max-width: 4rem" sortable>
                 <template #body="{ data }">
                     <span class="categoria-cell">
                         <i

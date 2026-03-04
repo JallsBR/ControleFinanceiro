@@ -28,9 +28,9 @@
                             <i v-if="classeIcone(data.icone)" :class="classeIcone(data.icone)"></i>
                         </template>
                     </Column>
-                    <Column field="nome" columnKey="nome" header="Nome" style="min-width: 12rem; max-width: 12rem" sortable />
+                    <Column field="nome" columnKey="nome" header="Nome" sortable />
                     <Column field="descricao" columnKey="descricao" header="Descrição" sortable />
-                    <Column header="Ações" columnKey="acoesE" style="width: 8rem" :reorderableColumn="false">
+                    <Column header="Ações" columnKey="acoesE" :reorderableColumn="false">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" text @click="editarCategoria('E', slotProps.data)" />
                             <Button icon="pi pi-trash" text severity="danger" @click="deletarCategoria('E', slotProps.data)" />
@@ -61,9 +61,9 @@
                             <i v-if="classeIcone(data.icone)" :class="classeIcone(data.icone)"></i>
                         </template>
                     </Column>
-                    <Column field="nome" columnKey="nome" header="Nome" style="min-width: 12rem; max-width: 12rem" sortable />
+                    <Column field="nome" columnKey="nome" header="Nome" sortable />
                     <Column field="descricao" columnKey="descricao" header="Descrição" sortable />
-                    <Column header="Ações" columnKey="acoesS" style="width: 8rem" :reorderableColumn="false">
+                    <Column header="Ações" columnKey="acoesS" :reorderableColumn="false">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" text @click="editarCategoria('S', slotProps.data)" />
                             <Button icon="pi pi-trash" text severity="danger" @click="deletarCategoria('S', slotProps.data)" />

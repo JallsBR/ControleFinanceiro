@@ -15,11 +15,26 @@ class InvestimentoListCreateView(generics.ListCreateAPIView):
     # Filtros e ordenação
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = {
-        'ativo': ['exact'],           # ?ativo=True ou ?ativo=False
+        # ?ativo=True ou ?ativo=False
+        'ativo': ['exact'],
+        # ?tipo=CDB, ?tipo=FII, etc.
+        'tipo': ['exact'],
+        # ?data_aplicacao=2025-01-01, ou usando sufixos: data_aplicacao__gte, data_aplicacao__lte
+        'data_aplicacao': ['exact', 'gte', 'lte'],
+        # ?data_vencimento=2025-12-31, ou data_vencimento__gte / __lte
+        'data_vencimento': ['exact', 'gte', 'lte'],
+        # ?valor_inicial=1000, ou valor_inicial__gte / __lte
+        'valor_inicial': ['exact', 'gte', 'lte'],
+        # ?taxa_rendimento=10, ou taxa_rendimento__gte / __lte
+        'taxa_rendimento': ['exact', 'gte', 'lte'],
     }
     ordering_fields = [
-        'valor',
-        'created_by'
+        'data_aplicacao',
+        'data_vencimento',
+        'valor_inicial',
+        'taxa_rendimento',
+        'created_at',
+        
     ]
     ordering = ['-created_at']  # padrão
     def get_queryset(self):
@@ -52,12 +67,26 @@ class InvestimentoRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
 
 
 """
-    Trazer só ativos:
-    /api/investimentos/?ativo=True
+    Exemplos de filtros e ordenação para investimentos:
 
-    Trazer só inativos:
-    /api/investimentos/?ativo=False
+    - Trazer só ativos:
+      /api/v1/financas/investimentos/?ativo=True
 
-    Ordenar por valor crescente:
-    /api/investimentos/?ordering=valor
+    - Trazer só inativos:
+      /api/v1/financas/investimentos/?ativo=False
+
+    - Filtrar por tipo (ex: CDB):
+      /api/v1/financas/investimentos/?tipo=CDB
+
+    - Filtrar por período de aplicação:
+      /api/v1/financas/investimentos/?data_aplicacao__gte=2025-01-01&data_aplicacao__lte=2025-12-31
+
+    - Filtrar por valor inicial mínimo:
+      /api/v1/financas/investimentos/?valor_inicial__gte=1000
+
+    - Ordenar por data de aplicação crescente:
+      /api/v1/financas/investimentos/?ordering=data_aplicacao
+
+    - Ordenar por valor inicial decrescente:
+      /api/v1/financas/investimentos/?ordering=-valor_inicial
 """
