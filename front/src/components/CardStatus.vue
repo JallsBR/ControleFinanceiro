@@ -15,7 +15,7 @@
           <div v-if="icone" class="icone-container">
             <i :class="icone"></i>
           </div>
-          <p class="card-tituloPrincipal" style="margin-bottom: 0px;">
+          <p v-if="tituloPrincipal" class="card-tituloPrincipal" style="margin-bottom: 0px;">
             {{ tituloPrincipal }}
           </p>
         </div>
@@ -57,8 +57,8 @@
   const props = defineProps({
 
     tituloPrincipal: {
-        type: String,
-        required: true
+      type: String,
+      default: ''
     },
     subtitulo: {
       type: String,

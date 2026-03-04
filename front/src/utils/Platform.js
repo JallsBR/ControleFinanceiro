@@ -1,29 +1,22 @@
-function getPlatform () {
-    const { platform } = window.navigator
+const getPlatform = () => {
+    const ua = navigator.userAgent.toLowerCase();
 
-    if (platform.indexOf('Mac') === 0) return 'macos'
+    if (ua.includes('mac')) return 'macos';
+    if (ua.includes('linux')) return 'linux';
+    if (ua.includes('android')) return 'android';
+    if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) return 'ios';
+    if (ua.includes('win')) return 'windows';
 
-    if (platform.indexOf('Linux') === 0) return 'linux'
-
-    if (platform.indexOf('Android') === 0) return 'android'
-
-    if (
-        platform.indexOf('iPhone') ||
-        platform.indexOf('iPad') ||
-        platform.indexOf('iPod')
-    ) return 'ios'
-
-    return 'windows'
-}
+    return 'unknown';
+};
 
 export default {
-    is (platform) {
-        if (!platform) return false
-
-        return platform === getPlatform()
+    is(platform) {
+        if (!platform) return false;
+        return platform === getPlatform();
     },
 
-    in (platforms = []) {
-        return platforms.includes(getPlatform())
+    in(platforms = []) {
+        return platforms.includes(getPlatform());
     }
-}
+};

@@ -6,8 +6,8 @@
     <div class="cards-grid">
 
       <CardStatus
-        :titulo="'Entradas ' + data().mesAtual"
-        :valor="'9.600,00'"
+        :titulo="'Entradas ' + mesAtualLabel"
+        :valor="Money.format(dashboard.entradas)"
         icone="pi pi-wallet"
         variante="entrada"
         to="/entradas"
@@ -17,8 +17,8 @@
       />
 
       <CardStatus
-        :titulo="'Saídas ' + data().mesAtual"
-        :valor="'1.600,00'"
+        :titulo="'Saídas ' + mesAtualLabel"
+        :valor="Money.format(dashboard.saidas)"
         icone="pi pi-credit-card"
         variante="saida"
         to="/saidas"
@@ -28,17 +28,17 @@
       />
 
       <CardStatus
-        :titulo="'Saldo ' + data().mesAtual"
-        :valor="'7.000,00'"
+        :titulo="'Saldo ' + mesAtualLabel"
+        :valor="Money.format(dashboard.saldo)"
         icone="pi pi-dollar"
-        variante="entrada"
+        :variante="getVarianteByValor(dashboard.saldo)"
         to="/saldo"
       />
       <CardStatus
         :titulo="'Reserva Total '"
-        :valor="'17.000,00'"
+        :valor="Money.format(dashboard.reservas)"
         icone="pi pi-folder-plus"
-        variante="entrada"
+        :variante="getVarianteByValor(dashboard.reservas)"
         to="/reservas"
       />
 
@@ -56,43 +56,43 @@
 
   <CardStatus
     icone="pi pi-money-bill"
-    :titulo="'Consolidado ' + data().mesPassado"
-    :valor="data().ConsolidadoMesPassado"
-    variante="neutro"
+    :titulo="'Consolidado ' + mesPassadoLabel"
+    :valor="Money.format(dashboard.consolidado)"
+    :variante="getVarianteByValor(dashboard.consolidado)"
   />
   
   <CardStatus
     icone="pi pi-money-bill"
     titulo="Gasto dos últimos 7 dias"
-    :valor="data().resumoSemana"
+    :valor="Money.format(dashboard.ultimos7dias)"
     variante="saida"
   />
 
   <CardStatus
     icone="pi pi-money-bill"
     titulo="Gasto dos últimos 30 dias"
-    :valor="data().resumoMes"
+    :valor="Money.format(dashboard.ultimos30dias)"
     variante="saida"
   />
 
   <CardStatus
         titulo="Maior Gasto do mês"
-        :descricao="'Aluguel'"
-        :valor="'2.700,00'"
+        :descricao="dashboard.descricao_maior_saida"
+        :valor="Money.format(dashboard.maior_saida)"
         variante="saida"
   />
 
   <CardStatus
         titulo="Investimentos"
-        :valor="'1.600,00'"
+        :valor="Money.format(dashboard.investimentos)"
         icone="pi pi-chart-line"
-        variante="entrada"
+        :variante="getVarianteByValor(dashboard.investimentos)"
         to="/investimentos"
   />
 
   <CardStatus
         titulo="Meta Geral"
-        :valor="'103.000,00'"
+        :valor="Money.format(dashboard.meta_geral)"
         icone="pi pi-bullseye"
         to="/metas"
         variante="neutro"
@@ -101,7 +101,8 @@
 
 </div>
 
-
+<DialogEntradas v-model:visible="visibleEntrada" @saved="carregarDashboard" />
+<DialogSaida v-model:visible="visibleSaida" @saved="carregarDashboard" />
 </template>
 
 <script setup>
@@ -109,24 +110,58 @@ import CardStatus from '@/components/CardStatus.vue'
 import DiaHoje from '@/components/DiaHoje.vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/pt-br'
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import financasService from '@/services/financasService'
+import Money from '@/utils/Money'
+import DialogEntradas from '@/pages/home/DialogEntradas.vue'
+import DialogSaida from '@/pages/home/DialogSaida.vue'
 
 dayjs.locale('pt-br')
 
-const data = () => {
-  return {    
-    mesAtual: dayjs().format('MMMM YYYY'),
-    mesPassado: dayjs().subtract(1, 'month').format('MMMM'),
-    resumoSemana: '1.600,00',
-    resumoMes: '7.600,00',
-    ConsolidadoMesPassado: '10.000,00',
+const visibleEntrada = ref(false)
+const visibleSaida = ref(false)
+const dashboard = ref({
+  entradas: 0,
+  saidas: 0,
+  saldo: 0,
+  reservas: 0,
+  consolidado: 0,
+  ultimos7dias: 0,
+  ultimos30dias: 0,
+  maior_saida: 0,
+  descricao_maior_saida: '',
+  investimentos: 0,
+  meta_geral: 0
+})
+
+const mesAtualLabel = computed(() => dayjs().format('MMMM'))
+const mesPassadoLabel = computed(() => dayjs().subtract(1, 'month').format('MMMM'))
+
+const getVarianteByValor = (valor) => {
+  const num = Number(valor || 0)
+  if (num > 0) return 'entrada'
+  if (num < 0) return 'saida'
+  return 'neutro'
+}
+
+const carregarDashboard = async () => {
+  try {
+    const data = await financasService.dashboard.getDashboard()
+    dashboard.value = data
+  } catch (error) {
+    console.error('Erro ao carregar dashboard:', error)
   }
 }
+
+onMounted(() => {
+  carregarDashboard()
+})
 
 
 const abrirModalEntrada = () => {
   try {
     console.log('Abrir modal entrada')
+    visibleEntrada.value = true
   } catch (error) {
     console.error('Erro ao abrir modal entrada:', error)
   }
@@ -135,6 +170,7 @@ const abrirModalEntrada = () => {
 const abrirModalSaida = () => {
   try {
     console.log('Abrir modal saída')
+    visibleSaida.value = true
   } catch (error) {
     console.error('Erro ao abrir modal saída:', error)
   }

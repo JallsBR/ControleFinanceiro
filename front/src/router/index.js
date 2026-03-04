@@ -99,19 +99,17 @@ const router = createRouter({
 })
 
 /* Navigation Guard */
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isAuthenticated = store.getters.isAuthenticated
 
   if (requiresAuth && !isAuthenticated) {
-    next({ name: 'signin' })
-  } 
-  else if ((to.name === 'signin' || to.name === 'signup') && isAuthenticated) {
-    next({ name: 'home' })
-  } 
-  else {
-    next()
+    return { name: 'signin' }
   }
+  if ((to.name === 'signin' || to.name === 'signup') && isAuthenticated) {
+    return { name: 'home' }
+  }
+  return true
 })
 
 export default router

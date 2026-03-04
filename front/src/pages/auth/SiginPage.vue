@@ -107,7 +107,7 @@ export default {
       })
 
       if (success) {
-        this.$router.push('/homepage')
+        this.$router.push('/')
       } else {
         this.error = true
       }

@@ -27,5 +27,7 @@ urlpatterns = [
 
     path('investimentos/', views.InvestimentoListCreateView.as_view(), name='investimento-list-create'),
     path('investimentos/<int:pk>/', views.InvestimentoRetrieveUpdateDestroyView.as_view(), name='investimento-retrieve-update-destroy'),
+
+    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
 ]
 

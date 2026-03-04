@@ -1,14 +1,21 @@
 import api from '@/services/APIService';
+import { PAGE_SIZE } from '@/constants/pagination';
 
 const financasService = {
 
   // =========================
   // --- CATEGORIAS ---
   // =========================
+  dashboard: {
+    getDashboard: async () => {
+      const response = await api.get('/financas/dashboard/');
+      return response.data;
+    },
+  },
   categorias: {
 
-    getAll: async () => {
-      const response = await api.get('/financas/categorias/');
+    getAll: async (params = {}) => {
+      const response = await api.get('/financas/categorias/', { params });
       return response.data;
     },
 
@@ -82,9 +89,26 @@ const financasService = {
   // =========================
   movimentacoes: {
 
-    getAll: async () => {
-      const response = await api.get('/financas/movimentacoes/');
+    getAll: async (params = {}) => {
+      const response = await api.get('/financas/movimentacoes/', { params });
       return response.data;
+    },
+
+    /**
+     * Lista paginada (page size fixo = PAGE_SIZE da app, alinhado ao Django).
+     * @param {number} page - Página (1-based)
+     * @param {object} params - Filtros (ex: { tipo: 'E' })
+     * @returns {{ data: array, total: number }}
+     */
+    getPage: async (page = 1, params = {}) => {
+      const response = await api.get('/financas/movimentacoes/', {
+        params: { ...params, page }
+      });
+      const body = response.data;
+      return {
+        data: body.results || [],
+        total: body.count ?? 0
+      };
     },
 
     getAllPaginated: async (params = {}) => {
@@ -119,7 +143,7 @@ const financasService = {
       const response = await api.get(`/financas/movimentacoes/?${queryParams.toString()}`);
 
       const results = response.data.results || [];
-      const perPage = response.data.page_size || 10;
+      const perPage = response.data.page_size ?? PAGE_SIZE;
       const total = response.data.count || 0;
 
       return {

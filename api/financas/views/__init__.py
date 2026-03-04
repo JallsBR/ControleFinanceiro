@@ -6,3 +6,4 @@ from .consolidado_mensal_views import ConsolidadoMensalListCreateView, Consolida
 from .icone_views import IconeListCreateView, IconeRetrieveUpdateDestroyView
 from .reserva_views import ReservaListCreateView, ReservaRetrieveUpdateDestroyView
 from .investimento_views import InvestimentoListCreateView, InvestimentoRetrieveUpdateDestroyView
+from .dashboard_views import DashboardView

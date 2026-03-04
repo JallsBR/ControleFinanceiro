@@ -1,8 +1,13 @@
-export default {
-    format(value){
-        value = parseFloat(value);
-        if(isNaN(value)) value = 0;
-        // 4 casas decimais sem arredondar
-        return (Math.trunc(value * 10000) / 10000).toFixed(4).replace('.',',');
-    }
-}
+const format = (value) => {
+    if (!value) return "0,0000";
+
+    const stringValue = value.toString().replace(',', '.');
+
+    const [inteiro, decimal = ""] = stringValue.split('.');
+
+    const decimalTruncado = decimal.padEnd(4, '0').substring(0, 4);
+
+    return `${inteiro},${decimalTruncado}`;
+};
+
+export default { format };
