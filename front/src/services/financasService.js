@@ -19,6 +19,23 @@ const financasService = {
       return response.data;
     },
 
+    /**
+     * Lista paginada (page size fixo = PAGE_SIZE).
+     * @param {number} page - Página (1-based)
+     * @param {object} params - Filtros (ex: { tipo: 'E' })
+     * @returns {{ data: array, total: number }}
+     */
+    getPage: async (page = 1, params = {}) => {
+      const response = await api.get('/financas/categorias/', {
+        params: { ...params, page }
+      });
+      const body = response.data;
+      return {
+        data: body.results || [],
+        total: body.count ?? 0
+      };
+    },
+
     getAllPaginated: async (params = {}) => {
       const { page = 1, order = {}, filter = {} } = params;
 
@@ -259,6 +276,18 @@ const financasService = {
       return response.data;
     },
 
+    /** Lista paginada de metas (usa paginação padrão do DRF). */
+    getPage: async (page = 1, params = {}) => {
+      const response = await api.get('/financas/metas/', {
+        params: { ...params, page }
+      });
+      const body = response.data;
+      return {
+        data: body.results || [],
+        total: body.count ?? 0
+      };
+    },
+
     getById: async (id) => {
       const response = await api.get(`/financas/metas/${id}/`);
       return response.data;
@@ -317,6 +346,27 @@ const financasService = {
       return response.data;
     },
 
+    /** Retorna todos os ícones (varrendo todas as páginas de forma transparente). */
+    getAllFlat: async () => {
+      const results = [];
+      let nextUrl = '/financas/icone/';
+
+      while (nextUrl) {
+        const response = await api.get(nextUrl);
+        const body = response.data;
+
+        if (Array.isArray(body)) {
+          results.push(...body);
+          break;
+        }
+
+        results.push(...(body.results || []));
+        nextUrl = body.next || null;
+      }
+
+      return results;
+    },
+
     getById: async (id) => {
       const response = await api.get(`/financas/icone/${id}/`);
       return response.data;
@@ -346,6 +396,18 @@ const financasService = {
       return response.data;
     },
 
+    /** Lista paginada de reservas (usa paginação padrão do DRF). */
+    getPage: async (page = 1, params = {}) => {
+      const response = await api.get('/financas/reservas/', {
+        params: { ...params, page }
+      });
+      const body = response.data;
+      return {
+        data: body.results || [],
+        total: body.count ?? 0
+      };
+    },
+
     getById: async (id) => {
       const response = await api.get(`/financas/reservas/${id}/`);
       return response.data;
@@ -370,6 +432,18 @@ const financasService = {
   // --- INVESTIMENTOS ---
   // =========================
   investimentos: {
+    /** Lista paginada de investimentos (usa paginação padrão do DRF). */
+    getPage: async (page = 1, params = {}) => {
+      const response = await api.get('/financas/investimentos/', {
+        params: { ...params, page }
+      });
+      const body = response.data;
+      return {
+        data: body.results || [],
+        total: body.count ?? 0
+      };
+    },
+
     getAll: async () => {
       const response = await api.get('/financas/investimentos/');
       return response.data;

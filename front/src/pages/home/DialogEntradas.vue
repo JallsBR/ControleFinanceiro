@@ -33,7 +33,7 @@
       <div class="field">
         <label for="data" class="field-label">Data</label>
         <div class="field-input">
-          <Calendar
+          <DatePicker
             id="data"
             v-model="form.data"
             dateFormat="dd/mm/yy"
@@ -102,7 +102,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import InputGroup from 'primevue/inputgroup'
 import InputGroupAddon from 'primevue/inputgroupaddon'
-import Calendar from 'primevue/calendar'
+import DatePicker from 'primevue/datepicker'
 import MultiSelect from 'primevue/multiselect'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'

@@ -7,7 +7,8 @@
         :rows="rows"
         :first="first"
         :totalRecords="totalRecords"
-        :lazy="true"
+        :lazy="lazy"
+        :reorderableColumns="reorderableColumns"
         stripedRows
         showGridlines
         responsiveLayout="scroll"
@@ -19,6 +20,16 @@
         @page="$emit('page', $event)"
         v-model:selection="selection"
       >
+        <template #header>
+          <div class="table-header">
+            <slot
+              name="toolbar"
+              :filters="filters"
+              :aplicarBusca="aplicarBusca"
+              :limparBusca="limparBusca"
+            />
+          </div>
+        </template>
         <slot name="columns" />
 
         <template #empty>
@@ -39,22 +50,36 @@
   import DataTable from 'primevue/datatable'
   import { PAGE_SIZE } from '@/constants/pagination'
 
-  defineProps({
+  const props = defineProps({
     items: { type: Array, default: () => [] },
     loading: { type: Boolean, default: false },
     dataKey: { type: String, default: 'id' },
-    /** Total de registros (backend). Usado pelo paginador. */
+    /** Total de registros (backend). Usado pelo paginador em modo lazy. */
     totalRecords: { type: Number, default: 0 },
     /** Índice do primeiro registro da página atual (para modo lazy). */
     first: { type: Number, default: 0 },
     /** Linhas por página. Padrão: constante da app (10). */
-    rows: { type: Number, default: PAGE_SIZE }
+    rows: { type: Number, default: PAGE_SIZE },
+    /** Quando true, espera paginação/sort no backend. Quando false, DataTable faz tudo no client. */
+    lazy: { type: Boolean, default: true },
+    /** Habilita arrastar colunas para reordenar. */
+    reorderableColumns: { type: Boolean, default: false }
   })
 
-  defineEmits(['rowClick', 'rowSelect', 'page'])
+  const emit = defineEmits(['rowClick', 'rowSelect', 'page', 'filterApply', 'filterClear'])
 
   const selection = ref([])
   const expandedRows = ref({})
+  const filters = ref({})
+
+  const aplicarBusca = () => {
+    emit('filterApply', filters.value)
+  }
+
+  const limparBusca = () => {
+    filters.value = {}
+    emit('filterClear')
+  }
   </script>
   
   <style scoped>
@@ -62,5 +87,11 @@
     background: #1f242d;
     border-radius: 18px;
     padding: 20px;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
   }
   </style>

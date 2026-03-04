@@ -24,8 +24,12 @@ class InvestimentoListCreateView(generics.ListCreateAPIView):
     ordering = ['-created_at']  # padrão
     def get_queryset(self):
         return Investimento.objects.filter(created_by=self.request.user)
+
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        serializer.save(
+            usuario=self.request.user,
+            created_by=self.request.user,
+        )
 
 
 class InvestimentoRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):

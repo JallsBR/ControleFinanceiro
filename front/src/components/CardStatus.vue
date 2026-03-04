@@ -66,11 +66,11 @@
     },
     titulo: {
       type: String,
-      required: true
+      default: ''
     },
     valor: {
       type: [String, Number],
-      required: true
+      default: null
     },
     descricao: {
       type: String,

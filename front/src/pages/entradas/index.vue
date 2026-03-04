@@ -9,39 +9,49 @@
         style="margin-bottom: 1rem;"
     />
 
-    <div class="table-toolbar">
-        <div class="right">
-            <Button icon="pi pi-refresh" text @click="atualizarLista" label="Atualizar" />
-            <Button icon="pi pi-search" text @click="filtrarLista" label="Filtrar" />
-        </div>
-    </div>
-
     <BaseDataTable
       :items="lista"
       :loading="loading"
       :totalRecords="totalRecords"
       :first="first"
+      :lazy="false"
+      :reorderableColumns="true"
       @page="onPage"
     >
+        <template #toolbar>
+            <div class="table-toolbar">
+                <div class="right">
+                    <Button icon="pi pi-refresh" text @click="atualizarLista" label="Atualizar" />
+                    <Button icon="pi pi-search" text @click="abrirFiltro" label="Filtrar" />
+                </div>
+            </div>
+        </template>
         <template #columns>
-            <Column field="id" header="ID" style="width: 2rem" />
-            <Column field="valor" header="Valor" style="width: 6rem">
+            <Column field="id" columnKey="id" header="ID" style="min-width: 3rem; max-width: 3rem" sortable />
+            <Column field="valor" columnKey="valor" header="Valor" style="min-width: 7rem; max-width: 7rem" sortable>
                 <template #body="{ data }">
                     {{ Money.format(data.valor) }}
                 </template>
             </Column>
-            <Column field="data" header="Data" style="width: 5rem">
+            <Column field="data" columnKey="data" header="Data" style="min-width: 6rem; max-width: 6rem" sortable>
                 <template #body="{ data }">
                     {{ formatarData(data.data) }}
                 </template>
             </Column>
-            <Column field="categoria" header="Categoria" style="width: 13rem">
+            <Column field="categoria" columnKey="categoria" header="Categoria" style="min-width: 13rem; max-width: 13rem" sortable>
                 <template #body="{ data }">
-                    {{ nomeCategoria(data.categoria) }}
+                    <span class="categoria-cell">
+                        <i
+                          v-if="classeIconeCategoria(data.categoria)"
+                          :class="classeIconeCategoria(data.categoria)"
+                          class="categoria-cell__icon"
+                        />
+                        <span>{{ nomeCategoria(data.categoria) }}</span>
+                    </span>
                 </template>
             </Column>
-            <Column field="descricao" header="Descrição" />
-            <Column header="Ações" style="width: 8rem">
+            <Column field="descricao" columnKey="descricao" header="Descrição" sortable />
+            <Column header="Ações" columnKey="acoesEntradas" style="width: 8rem" :reorderableColumn="false">
                 <template #body="slotProps">
                     <Button icon="pi pi-pencil" text @click="editarMovimentacao(slotProps.data)" />
                     <Button icon="pi pi-trash" text severity="danger" @click="deletarMovimentacao(slotProps.data)" />
@@ -69,6 +79,13 @@
       :loading="excluindo"
       @confirm="executarExclusao"
     />
+
+    <DialogFiltroMovimentacoes
+      v-model="visibleFiltro"
+      tipo="E"
+      @apply="onFiltroApply"
+      @clear="onFiltroClear"
+    />
 </template>
 
 <script setup>
@@ -81,9 +98,11 @@ import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import DialogEntradas from '@/pages/home/DialogEntradas.vue'
 import DialogConfirma from '@/components/DialogConfirma.vue'
+import DialogFiltroMovimentacoes from '@/components/DialogFiltroMovimentacoes.vue'
 
 const visibleEntrada = ref(false)
 const visibleExcluir = ref(false)
+const visibleFiltro = ref(false)
 const itemParaExcluir = ref(null)
 const excluindo = ref(false)
 const entradaEmEdicao = ref(null)
@@ -92,22 +111,34 @@ const loading = ref(false)
 const totalRecords = ref(0)
 const currentPage = ref(1)
 const first = ref(0)
+const filtros = ref({})
 const categoriasMap = ref({})
+const iconesMap = ref({})
 
 const carregarCategorias = async () => {
   try {
     const data = await financasService.categorias.getAll({ tipo: 'E' })
     const arr = Array.isArray(data) ? data : (data?.results || data?.data || [])
-    categoriasMap.value = Object.fromEntries((arr || []).map(c => [c.id, c.nome]))
+    categoriasMap.value = Object.fromEntries((arr || []).map(c => [c.id, c]))
   } catch (_) {
     categoriasMap.value = {}
+  }
+}
+
+const carregarIcones = async () => {
+  try {
+    const arr = await financasService.icone.getAllFlat()
+    iconesMap.value = Object.fromEntries((arr || []).map(i => [i.id, i.classe_css]))
+  } catch (error) {
+    console.error('Erro ao carregar ícones:', error)
+    iconesMap.value = {}
   }
 }
 
 const carregarLista = async () => {
   loading.value = true
   try {
-    const { data, total } = await financasService.movimentacoes.getPage(currentPage.value, { tipo: 'E' })
+    const { data, total } = await financasService.movimentacoes.getPage(currentPage.value, { tipo: 'E', ...filtros.value })
     lista.value = data
     totalRecords.value = total
   } catch (error) {
@@ -126,7 +157,14 @@ function onPage(event) {
 }
 
 function nomeCategoria(id) {
-  return categoriasMap.value[id] ?? id ?? '—'
+  const cat = categoriasMap.value[id]
+  return cat?.nome ?? id ?? '—'
+}
+
+function classeIconeCategoria(id) {
+  const cat = categoriasMap.value[id]
+  if (!cat || !cat.icone) return ''
+  return iconesMap.value[cat.icone] || ''
 }
 
 function formatarData(val) {
@@ -159,7 +197,19 @@ function atualizarLista() {
   carregarLista()
 }
 
-function filtrarLista() {
+function abrirFiltro() {
+  visibleFiltro.value = true
+}
+
+function onFiltroApply(novosFiltros) {
+  filtros.value = novosFiltros || {}
+  currentPage.value = 1
+  carregarLista()
+}
+
+function onFiltroClear() {
+  filtros.value = {}
+  currentPage.value = 1
   carregarLista()
 }
 
@@ -185,7 +235,7 @@ async function executarExclusao() {
 }
 
 onMounted(async () => {
-  await carregarCategorias()
+  await Promise.all([carregarIcones(), carregarCategorias()])
   await carregarLista()
 })
 </script>
@@ -199,5 +249,15 @@ onMounted(async () => {
 .table-toolbar .right {
   display: flex;
   gap: 0.5rem;
+}
+
+.categoria-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.categoria-cell__icon {
+  font-size: 1rem;
 }
 </style>
