@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # JWT
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    # Apps
     'users',
     'financas',
 ]
