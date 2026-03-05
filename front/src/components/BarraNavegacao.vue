@@ -17,6 +17,11 @@
                     <span>Saídas</span>
                 </RouterLink>
 
+                <RouterLink to="/saldo" class="nav-item">
+                    <i class="pi pi-dollar"></i>
+                    <span>Saldo</span>
+                </RouterLink>
+
                 <RouterLink to="/categorias" class="nav-item">
                     <i class="pi pi-tags"></i>
                     <span>Categorias</span>

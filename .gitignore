@@ -6,6 +6,7 @@ passos.txt
 atalhos.txt
 __pycache__/
 OIG4.webp
+db.sqlite3
 
 
 # Logs
