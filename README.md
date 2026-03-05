@@ -18,11 +18,9 @@ python -m venv venv
 
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py createsuperuser
+python manage.py createsuperuser (pode criar o seu)
 ```
-
-Quando pedir, use por exemplo:
-
+Para teste já vem com:
 - **Usuário:** `admim`
 - **Senha:** `12345`
 - **E-mail:** `admin@email.com`
