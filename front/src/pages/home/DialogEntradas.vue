@@ -216,14 +216,21 @@ const validar = () => {
 const salvar = async () => {
   if (!validar()) return
 
+  const dataVal = form.value.data
+  const dataStr = dataVal
+    ? new Date(dataVal).toISOString().split('T')[0]
+    : null
+  if (!dataStr) {
+    console.error('Data da movimentação é obrigatória.')
+    return
+  }
+
   const payload = {
     tipo: 'E',
     valor: Number(form.value.valor),
-    data: form.value.data
-      ? new Date(form.value.data).toISOString().split('T')[0]
-      : null,
+    data: dataStr,
     categoria: form.value.categoriasSelecionadas[0],
-    descricao: form.value.descricao
+    descricao: (form.value.descricao ?? '').toString().trim()
   }
 
   try {
@@ -235,7 +242,10 @@ const salvar = async () => {
     dialogVisible.value = false
     emit('saved')
   } catch (error) {
-    console.error('Erro ao salvar entrada:', error)
+    const msg = error.response?.data
+    const detail = typeof msg === 'string' ? msg : msg?.detail || msg?.descricao?.[0] || msg?.categoria?.[0] || msg?.data?.[0] || JSON.stringify(msg)
+    console.error('Erro ao salvar entrada:', error.response?.status, detail, error.response?.data)
+    alert('Erro ao salvar: ' + (detail || error.message))
   }
 }
 

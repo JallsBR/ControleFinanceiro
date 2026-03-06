@@ -11,7 +11,7 @@ class Icone(models.Model):
     classe_css = models.CharField(max_length=100)  # ex: "pi pi-wallet"
     categoria_visual = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     class Meta:
         ordering = ['nome']
         unique_together = ('nome', 'created_by')
@@ -25,7 +25,7 @@ class Categoria(models.Model):
     icone = models.ForeignKey(Icone, on_delete=models.PROTECT, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     class Meta:
         ordering = ['nome']
         unique_together = ('nome', 'created_by')   
@@ -39,15 +39,16 @@ class Movimentacao(models.Model):
     valor = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
     data = models.DateField()
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
-    descricao = models.CharField(max_length=100)
+    descricao = models.CharField(max_length=100, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     
     def clean(self):    
         if self.categoria.tipo != self.tipo:
             raise ValidationError("Tipo da categoria incompatível com a movimentação.")
         super().clean()
+    
 
     class Meta:
         ordering = ['-data']
@@ -69,12 +70,12 @@ class MovimentacaoRecorrente(models.Model):
     frequencia = models.CharField(max_length=1, choices=FREQUENCIA_CHOICES)
     tipo = models.CharField(max_length=1, choices=(('E','Entrada'),('S','Saída')))
     valor = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(0)])
-    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
+    categoria = models.ForeignKey(Categoria, null=True, blank=True, on_delete=models.SET_NULL)
     descricao = models.TextField()
     data_inicio = models.DateField(default=timezone.now)
     data_fim = models.DateField()
     ativa = models.BooleanField(default=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def clean(self):
         if self.categoria.tipo != self.tipo:
@@ -101,7 +102,7 @@ class Meta(models.Model):
     data_meta = models.DateField()
     prioridade = models.CharField(max_length=1, choices=PRIORIDADE_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     concluida = models.BooleanField(default=False)
 
     class Meta:
@@ -120,7 +121,7 @@ class ConsolidadoMensal(models.Model):
     mes = models.IntegerField()
     total_entradas = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     total_saidas = models.DecimalField(max_digits=14, decimal_places=2, default=0)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     class Meta:
         unique_together = ('ano', 'mes', 'created_by')
     def __str__(self):
@@ -131,7 +132,7 @@ class Reserva(models.Model):
     nome = models.CharField(max_length=100)
     valor = models.DecimalField(max_digits=12, decimal_places=2, default=0,validators=[MinValueValidator(0)])
     ativa = models.BooleanField(default=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
     class Meta:
@@ -152,31 +153,13 @@ class Investimento(models.Model):
 
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     nome = models.CharField(max_length=150)
-
-    tipo = models.CharField(
-        max_length=20,
-        choices=TipoInvestimento.choices
-    )
-
+    tipo = models.CharField(max_length=20,choices=TipoInvestimento.choices)
     valor_inicial = models.DecimalField(max_digits=12, decimal_places=2)
-    taxa_rendimento = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        null=True,
-        blank=True
-    )
-
+    taxa_rendimento = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     data_aplicacao = models.DateField()
     data_vencimento = models.DateField(null=True, blank=True)
-
     ativo = models.BooleanField(default=True)
-
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        related_name="investimentos_criados"
-    )
-
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="investimentos_criados")
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 

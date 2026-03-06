@@ -22,7 +22,6 @@
                 :reorderableColumns="true"
             >
                 <template #columns>
-                    <Column field="id" columnKey="id" header="ID" style="min-width: 3rem; max-width: 3rem" sortable />
                     <Column field="icone" columnKey="iconeE" header="Ícone" style="min-width: 4rem; max-width: 4rem">
                         <template #body="{ data }">
                             <i v-if="classeIcone(data.icone)" :class="classeIcone(data.icone)"></i>
@@ -55,7 +54,6 @@
                 :reorderableColumns="true"
             >
                 <template #columns>
-                    <Column field="id" columnKey="id" header="ID" style="min-width: 3rem; max-width: 3rem" sortable />
                     <Column field="icone" columnKey="iconeS" header="Ícone" style="min-width: 4rem; max-width: 4rem">
                         <template #body="{ data }">
                             <i v-if="classeIcone(data.icone)" :class="classeIcone(data.icone)"></i>
