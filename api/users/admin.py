@@ -35,7 +35,7 @@ def _excluir_objetos_relacionados(queryset):
 class UserAdmin(admin.ModelAdmin):
     list_display = ('username', 'last_name', 'email')
     search_fields = ('username', 'last_name', 'email')
-    list_filter = ('is_staff', 'is_active', 'is_superuser')
+    list_filter = ('is_staff', 'is_superuser')
     ordering = ('email',)
 
     def save_model(self, request, obj, form, change):

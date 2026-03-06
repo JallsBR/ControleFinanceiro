@@ -7,6 +7,7 @@ atalhos.txt
 __pycache__/
 OIG4.webp
 *.sqlite3
+docs/
 
 
 # Logs
