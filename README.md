@@ -51,20 +51,13 @@ Edite `.env` e preencha pelo menos:
 - `SECRET_KEY` – chave secreta do Django (produção: use valor forte e seguro)
 - `DB_NAME` – nome do banco MySQL
 - `DB_USER` e `DB_PASSWORD` – usuário e senha do MySQL
-- `DB_HOST` e `DB_PORT` – host e porta (ex.: `localhost`, `3306`)
+- `DB_HOST` e `DB_PORT` – host e porta (ex.: `localhost`, `3307`)
 
 O backend usa `python-dotenv` e carrega o `.env` da raiz (a partir de `api/app/settings.py`).
 
 ### 2. Banco de dados
 
-O banco MySQL **precisa existir** antes de rodar `migrate`. Se não existir, você verá erro `(1049, "Unknown database '...'")`.
-
-Crie o banco com o **mesmo nome** que está em `DB_NAME` no `.env` (ex.: `ControleFinanceiro`). No MySQL:
-
-```sql
-CREATE DATABASE ControleFinanceiro CHARACTER SET utf8mb4;
--- use o nome exato do seu DB_NAME (maiúsculas/minúsculas devem coincidir)
-```
+**MySQL:** ao rodar `python manage.py migrate`, o projeto cria o banco padrão automaticamente se ele não existir (`CREATE DATABASE IF NOT EXISTS`), usando `DB_NAME`, `DB_USER`, `DB_HOST`, `DB_PORT` e `DB_PASSWORD` do `.env`. Não é obrigatório criar o banco manualmente; se quiser, pode rodar antes `python manage.py ensure_db`.
 
 As tabelas são criadas pelas migrations do Django; não é necessário compartilhar o banco entre máquinas.
 
@@ -83,7 +76,7 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-O superusuário criado terá acesso ao **painel admin** (Jazzmin) em `http://127.0.0.1:8000/admin/`.
+O superusuário criado terá acesso ao **painel admin** (Jazzmin) em `http://127.0.0.1:8001/admin/`.
 
 ### 4. Frontend (Vue)
 
@@ -96,10 +89,10 @@ npm run dev
 
 O script `npm run dev` sobe os dois servidores com **concurrently**:
 
-- **Django (API):** `http://127.0.0.1:8000`
-- **Vue (app):** porta do Vite (em geral `http://localhost:5173`)
+- **Django (API):** `http://127.0.0.1:8001`
+- **Vue (app):** `http://localhost:5174`
 
-Acesse o **app** pela URL que o Vite mostrar no terminal. Para o **admin**, use `http://127.0.0.1:8000/admin/` com o superusuário.
+Acesse o **app** em `http://localhost:5174`. Para o **admin**, use `http://127.0.0.1:8001/admin/` com o superusuário.
 
 ---
 
@@ -117,9 +110,9 @@ Acesse o **app** pela URL que o Vite mostrar no terminal. Para o **admin**, use 
 
 | Uso              | URL |
 |------------------|-----|
-| App (interface)  | URL do Vite (ex.: `http://localhost:5173`) |
-| API (base)       | `http://127.0.0.1:8000/api/v1/` |
-| Admin (Django)   | `http://127.0.0.1:8000/admin/` |
+| App (interface)  | `http://localhost:5174` |
+| API (base)       | `http://127.0.0.1:8001/api/v1/` |
+| Admin (Django)   | `http://127.0.0.1:8001/admin/` |
 
 ### API – Autenticação (`/api/v1/auth/`)
 
@@ -153,4 +146,4 @@ Detalhes de regras de negócio, filtros e padrões estão em `docs/ai/`.
 2. Criar o banco MySQL.
 3. Em `api/`: criar venv, instalar dependências, rodar `migrate` e `createsuperuser`.
 4. Na raiz: `npm install` e `npm run dev`.
-5. App no endereço do Vite; admin em `http://127.0.0.1:8000/admin/`.
+5. App em `http://localhost:5174`; admin em `http://127.0.0.1:8001/admin/`.

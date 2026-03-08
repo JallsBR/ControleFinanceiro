@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "backend": "cd api && .\\venv\\Scripts\\python.exe manage.py runserver",
+    "backend": "cd api && .\\venv\\Scripts\\python.exe manage.py runserver 8001",
     "frontend": "cd front && npm run dev",
     "dev": "concurrently --names \"DJANGO,FRONT\" --prefix-colors \"blue,green\" \"npm run backend\" \"npm run frontend\""
   },

@@ -8,6 +8,10 @@ def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
     try:
+        import django
+        django.setup()
+        from app.db_utils import ensure_default_database_exists
+        ensure_default_database_exists()
         from django.core.management import execute_from_command_line
     except ImportError as exc:
         raise ImportError(

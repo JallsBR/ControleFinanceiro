@@ -88,8 +88,8 @@ ROOT_URLCONF = 'app.urls'
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
 ]
 
 # Preflight: headers que o frontend pode enviar
@@ -140,7 +140,7 @@ _default_db = {
     'USER': os.getenv('DB_USER', 'root'),
     'PASSWORD': os.getenv('DB_PASSWORD', ''),
     'HOST': os.getenv('DB_HOST', 'localhost'),
-    'PORT': os.getenv('DB_PORT', '3306'),
+    'PORT': os.getenv('DB_PORT', '3307'),
     'OPTIONS': {
         'charset': 'utf8mb4',
     },

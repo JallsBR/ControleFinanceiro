@@ -1,6 +1,6 @@
 <template>
   <footer class="footer-app">
-    <span class="footer-text">Todos os direitos reservados - 2026 - O5o software -
+    <span class="footer-text">Todos os direitos reservados - 2026 - O5o software house -
     Apoie esse projeto</span>
     <a href="mailto:oswaldojales@gmail.com" class="footer-email">oswaldojales@gmail.com</a>
   </footer>
