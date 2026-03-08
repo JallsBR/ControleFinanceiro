@@ -5,6 +5,8 @@ Aplicação de controle financeiro pessoal com:
 - Movimentações (entrada e saída)
 - Movimentações recorrentes
 - Categorias
+- Metas, reservas, investimentos, consolidados mensais
+- Dashboard
 - Controle por usuário autenticado
 
 ---
@@ -12,7 +14,8 @@ Aplicação de controle financeiro pessoal com:
 ## Arquitetura
 
 - Backend: Django + Django Rest Framework
-- Autenticação: Token / JWT
+- Autenticação: JWT (Simple JWT, access + refresh)
+- Base da API: `/api/v1/financas/`
 - Cada registro pertence a um usuário (created_by)
 - Todas as queries devem filtrar por created_by
 
@@ -41,6 +44,22 @@ Aplicação de controle financeiro pessoal com:
     perform_create() setando created_by
 - Não permitir acesso a dados de outros usuários
 - Validações complexas devem ir no model.clean()
+
+---
+
+## Endpoints (base: `/api/v1/financas/`)
+
+- `categorias/` – list/create e retrieve/update/destroy
+- `movimentacoes/` – list/create e retrieve/update/destroy
+- `movimentacoes-recorrentes/` – list/create e retrieve/update/destroy
+- `metas/` – list/create e retrieve/update/destroy
+- `consolidados-mensais/` – list/create e retrieve/update/destroy
+- `reservas/` – list/create e retrieve/update/destroy
+- `investimentos/` – list/create e retrieve/update/destroy
+- `icone/` – list/create e retrieve/update/destroy (ícones para categorias etc.)
+- `dashboard/` – dados agregados para o dashboard
+
+Todos exigem autenticação JWT e filtram por `created_by`.
 
 ---
 

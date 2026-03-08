@@ -110,11 +110,15 @@ Motivação:
 
 ## Endpoints
 
-POST /signin
-POST /signup
-POST /logout
-POST /token/refresh/
-GET  /user
+Base: `/api/v1/auth/`
+
+| Método | Caminho | Descrição |
+|--------|---------|------------|
+| POST   | `/api/v1/auth/signin`       | Login (email + senha) → user, access, refresh |
+| POST   | `/api/v1/auth/signup`       | Cadastro de usuário |
+| POST   | `/api/v1/auth/logout`       | Invalida refresh token (body: `refresh`) |
+| POST   | `/api/v1/auth/token/refresh/`| Renova access token (body: `refresh`) |
+| GET    | `/api/v1/auth/user`         | Dados do usuário autenticado (JWT) |
 
 ---
 

@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from users.auth import Authentication
 from users.serializers import UserSerializer
 from rest_framework.permissions import AllowAny
@@ -7,9 +8,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 class Signin(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
+
+        if not email or not password:
+            return Response(
+                {'detail': 'Email e senha são obrigatórios.'},
+                status=HTTP_400_BAD_REQUEST
+            )
 
         user = Authentication.signin(self, email=email, password=password)
         

@@ -1,8 +1,20 @@
 from django.db import migrations
+from django.contrib.auth.hashers import make_password
 
 
 def criar_icones(apps, schema_editor):
     Icone = apps.get_model('financas', 'Icone')
+    User = apps.get_model('users', 'User')
+
+    # Usar o primeiro usuário existente ou criar um usuário sistema para os ícones iniciais
+    user = User.objects.first()
+    if user is None:
+        user = User.objects.create(
+            username='sistema',
+            email='sistema@local',
+            is_active=True,
+            password=make_password(None),  # senha unusable (modelo histórico não tem set_unusable_password)
+        )
 
     icones = [
         ("Pasta+", "pi pi-folder-plus", "Sistema"),
@@ -98,10 +110,10 @@ def criar_icones(apps, schema_editor):
     for nome, classe_css, categoria_visual in icones:
         Icone.objects.get_or_create(
             nome=nome,
+            created_by=user,
             defaults={
                 "classe_css": classe_css,
                 "categoria_visual": categoria_visual,
-                "created_by_id": 1,
             }
         )
 

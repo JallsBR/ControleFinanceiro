@@ -48,16 +48,14 @@ export default createStore({
           password
         })
 
-        const { access, refresh, username } = response.data
+        const { user, access, refresh } = response.data
 
         if (!access || !refresh) {
           throw new Error('Tokens inválidos')
         }
 
-        const userData = { username: username || email }
-
         commit('SET_AUTH', {
-          user: userData,
+          user: user || { username: email, email },
           access,
           refresh
         })

@@ -1,14 +1,65 @@
-# ControleFinanceiro
+# Controle Financeiro
 
-App de Controle Financeiro (frontend Vue + backend Django REST).
+Aplicação de controle financeiro pessoal com **frontend Vue 3** e **backend Django REST**. Cada usuário tem seus próprios dados (movimentações, categorias, metas, reservas, investimentos). O banco **não é compartilhado** entre ambientes: ao clonar, configure seu próprio MySQL e `.env`.
 
-O banco de dados **não é compartilhado**. Ao clonar o repositório, cada usuário deve criar o próprio banco e o usuário administrador através das migrations e do comando de criação de superusuário.
+---
+
+## Stack
+
+| Camada    | Tecnologia |
+|-----------|------------|
+| Backend   | Django 5.2, Django REST Framework, Simple JWT, django-filter, django-cors-headers |
+| Banco     | MySQL (configurado via variáveis de ambiente) |
+| Admin     | Django Admin com tema Jazzmin |
+| Frontend  | Vue 3, Vite 7, Vue Router, Pinia, PrimeVue, Axios |
+| Execução  | Node (scripts na raiz) + Python (venv em `api/`) |
+
+---
+
+## Estrutura do projeto
+
+```
+ControleFinanceiro/
+├── .env                 # Variáveis de ambiente (não versionado; use .env.example como base)
+├── .env.example         # Modelo de configuração
+├── package.json         # Scripts para subir backend + frontend
+├── api/                 # Backend Django
+│   ├── app/             # Settings, URLs, WSGI
+│   ├── users/           # Auth (signin, signup, logout, JWT)
+│   ├── financas/        # Categorias, movimentações, metas, reservas, investimentos, dashboard
+│   ├── manage.py
+│   └── requirements.txt
+├── front/               # Frontend Vue (Vite)
+└── docs/                # Documentação (contexto de negócio e API)
+    └── ai/              # Contexto para desenvolvimento (finanças, usuários)
+```
 
 ---
 
 ## Primeira vez (após clonar)
 
-### 1. Backend (API Django)
+### 1. Variáveis de ambiente
+
+Na **raiz do projeto**, crie um arquivo `.env` a partir do exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Edite `.env` e preencha pelo menos:
+
+- `SECRET_KEY` – chave secreta do Django (produção: use valor forte e seguro)
+- `DB_NAME` – nome do banco MySQL
+- `DB_USER` e `DB_PASSWORD` – usuário e senha do MySQL
+- `DB_HOST` e `DB_PORT` – host e porta (ex.: `localhost`, `3306`)
+
+O backend usa `python-dotenv` e carrega o `.env` da raiz (a partir de `api/app/settings.py`).
+
+### 2. Banco de dados
+
+Crie o banco MySQL com o nome definido em `DB_NAME` (ex.: `ControleFinaceiro`). As tabelas são criadas pelas migrations do Django; não é necessário compartilhar o banco entre máquinas.
+
+### 3. Backend (API Django)
 
 ```bash
 cd api
@@ -18,42 +69,84 @@ python -m venv venv
 
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py createsuperuser (pode criar o seu)
+python manage.py createsuperuser
 ```
-Para teste já vem com:
-- **Usuário:** `admim`
-- **Senha:** `12345`
-- **E-mail:** `admin@email.com`
 
-Esse superusuário terá acesso ao painel admin em `http://127.0.0.1:8000/admin/`.
+O superusuário criado terá acesso ao **painel admin** (Jazzmin) em `http://127.0.0.1:8000/admin/`.
 
-### 2. Frontend (Vue)
+### 4. Frontend (Vue)
 
-Na pasta **raiz do projeto** (não dentro de `api` nem de `front`):
+Na **raiz do projeto** (não dentro de `api` nem de `front`):
 
 ```bash
 npm install
 npm run dev
 ```
 
-O script `npm run dev` sobe os dois servidores:
+O script `npm run dev` sobe os dois servidores com **concurrently**:
 
 - **Django (API):** `http://127.0.0.1:8000`
-- **Vue (app):** na porta do Vite (em geral `http://localhost:5173`)
+- **Vue (app):** porta do Vite (em geral `http://localhost:5173`)
 
-Acesse o **app** pela URL que o Vite mostrar no terminal (ex.: `http://localhost:5173`).
-
-Para acessar o **painel administrativo** (admin do Django), use:
-
-- **URL:** [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
-- **Login:** superusuário criado no passo 1 (ex.: `admim` / `12345`)
+Acesse o **app** pela URL que o Vite mostrar no terminal. Para o **admin**, use `http://127.0.0.1:8000/admin/` com o superusuário.
 
 ---
 
-## Resumo
+## Scripts (raiz do projeto)
 
-| O quê              | Como                |
-|--------------------|---------------------|
-| Rodar projeto todo | Na pasta raiz: `npm run dev` |
-| App (interface)    | URL do Vite (ex.: `http://localhost:5173`) |
-| Admin (Django)     | `http://127.0.0.1:8000/admin/` com o superusuário |
+| Comando        | Descrição |
+|----------------|-----------|
+| `npm run dev`  | Sobe backend (Django) e frontend (Vite) juntos |
+| `npm run backend`  | Sobe apenas o servidor Django |
+| `npm run frontend` | Sobe apenas o frontend Vue |
+
+---
+
+## URLs principais
+
+| Uso              | URL |
+|------------------|-----|
+| App (interface)  | URL do Vite (ex.: `http://localhost:5173`) |
+| API (base)       | `http://127.0.0.1:8000/api/v1/` |
+| Admin (Django)   | `http://127.0.0.1:8000/admin/` |
+
+### API – Autenticação (`/api/v1/auth/`)
+
+- `POST /api/v1/auth/signin` – login (email + senha) → retorna `user`, `access`, `refresh`
+- `POST /api/v1/auth/signup` – cadastro
+- `POST /api/v1/auth/logout` – invalida refresh token (body: `refresh`)
+- `POST /api/v1/auth/token/refresh/` – renova access token (body: `refresh`)
+- `GET /api/v1/auth/user` – usuário autenticado (requer JWT)
+
+### API – Finanças (`/api/v1/financas/`)
+
+Recursos (todos exigem autenticação JWT; dados filtrados por `created_by`):
+
+- `categorias/` – categorias de movimentação
+- `movimentacoes/` – entradas e saídas
+- `movimentacoes-recorrentes/` – movimentações recorrentes
+- `metas/` – metas financeiras
+- `consolidados-mensais/` – consolidados por mês
+- `reservas/` – reservas
+- `investimentos/` – investimentos
+- `icone/` – ícones (ex.: para categorias)
+- `dashboard/` – dados para o dashboard
+
+Detalhes de regras de negócio, filtros e padrões estão em `docs/ai/`.
+
+---
+
+## Documentação
+
+- **`docs/ai/contexto-usuarios.md`** – modelo de usuário, autenticação (JWT, signin/signup/logout), endpoints de auth, serialização e segurança.
+- **`docs/ai/contexto-financas.md`** – domínio de finanças (movimentações, recorrentes, categorias), regras de negócio, filtros e padrões do projeto.
+
+---
+
+## Resumo rápido
+
+1. Copiar `.env.example` para `.env` e configurar MySQL e `SECRET_KEY`.
+2. Criar o banco MySQL.
+3. Em `api/`: criar venv, instalar dependências, rodar `migrate` e `createsuperuser`.
+4. Na raiz: `npm install` e `npm run dev`.
+5. App no endereço do Vite; admin em `http://127.0.0.1:8000/admin/`.

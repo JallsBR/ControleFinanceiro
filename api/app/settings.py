@@ -2,19 +2,22 @@ from datetime import timedelta
 from pathlib import Path
 import os
 
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Carrega variáveis do .env (raiz do projeto = parent de api/)
+load_dotenv(BASE_DIR.parent / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1q70&1=*ova79vqzky0luwizie3f9vo2sp20yo%-vb3)atuf=u'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-1q70&1=*ova79vqzky0luwizie3f9vo2sp20yo%-vb3)atuf=u')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -80,14 +83,15 @@ REST_FRAMEWORK = {
 
 ROOT_URLCONF = 'app.urls'
 
-CORS_ALLOW_ALL_ORIGINS = True
-
+# CORS: origens explícitas para funcionar com credenciais (cookies/withCredentials)
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 
-# Preflight: o navegador envia Access-Control-Request-Headers: content-type
+# Preflight: headers que o frontend pode enviar
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -96,6 +100,8 @@ CORS_ALLOW_HEADERS = [
     "origin",
     "user-agent",
 ]
+# Headers que o frontend pode ler na resposta (ex.: Authorization com JWT)
+CORS_EXPOSE_HEADERS = ["Authorization"]
 
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -129,8 +135,15 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
+        'NAME': os.getenv('DB_NAME', 'ControleFinaceiro'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
 }
 
