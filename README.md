@@ -59,10 +59,10 @@ O backend usa `python-dotenv` e carrega o `.env` da raiz (a partir de `api/app/s
 
 O banco MySQL **precisa existir** antes de rodar `migrate`. Se não existir, você verá erro `(1049, "Unknown database '...'")`.
 
-Crie o banco com o **mesmo nome** que está em `DB_NAME` no `.env` (ex.: `ControleFinaceiro`). No MySQL:
+Crie o banco com o **mesmo nome** que está em `DB_NAME` no `.env` (ex.: `ControleFinanceiro`). No MySQL:
 
 ```sql
-CREATE DATABASE ControleFinaceiro CHARACTER SET utf8mb4;
+CREATE DATABASE ControleFinanceiro CHARACTER SET utf8mb4;
 -- use o nome exato do seu DB_NAME (maiúsculas/minúsculas devem coincidir)
 ```
 
@@ -144,13 +144,6 @@ Recursos (todos exigem autenticação JWT; dados filtrados por `created_by`):
 - `dashboard/` – dados para o dashboard
 
 Detalhes de regras de negócio, filtros e padrões estão em `docs/ai/`.
-
----
-
-## Documentação
-
-- **`docs/ai/contexto-usuarios.md`** – modelo de usuário, autenticação (JWT, signin/signup/logout), endpoints de auth, serialização e segurança.
-- **`docs/ai/contexto-financas.md`** – domínio de finanças (movimentações, recorrentes, categorias), regras de negócio, filtros e padrões do projeto.
 
 ---
 
