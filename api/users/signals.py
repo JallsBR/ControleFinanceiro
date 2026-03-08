@@ -1,10 +1,35 @@
-from django.db.models.signals import post_save
+import re
+
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
+from django.db import connections
+
+from app.db_router import get_skip_categorias_signal
 from financas.service import criar_categorias_iniciais
+
+
+def _drop_tenant_db_if_exists(db_name):
+    """Remove o banco do tenant. Ignora erros (ex.: banco já não existir)."""
+    if not db_name or not db_name.strip():
+        return
+    if not re.match(r"^[a-zA-Z0-9_]+$", db_name):
+        return
+    try:
+        with connections["default"].cursor() as cursor:
+            cursor.execute(f"DROP DATABASE IF EXISTS `{db_name}`")
+    except Exception:
+        pass
+
+
+@receiver(pre_delete, sender=get_user_model())
+def drop_tenant_db_on_user_delete(sender, instance, **kwargs):
+    """Ao deletar um usuário que tem banco dedicado (tenant_db_name), remove o banco."""
+    if getattr(instance, "tenant_db_name", None):
+        _drop_tenant_db_if_exists(instance.tenant_db_name)
 
 
 @receiver(post_save, sender=get_user_model())
 def criar_categorias_usuario(sender, instance, created, **kwargs):
-    if created:
+    if created and not get_skip_categorias_signal():
         criar_categorias_iniciais(instance)

@@ -57,7 +57,18 @@ O backend usa `python-dotenv` e carrega o `.env` da raiz (a partir de `api/app/s
 
 ### 2. Banco de dados
 
-Crie o banco MySQL com o nome definido em `DB_NAME` (ex.: `ControleFinaceiro`). As tabelas são criadas pelas migrations do Django; não é necessário compartilhar o banco entre máquinas.
+O banco MySQL **precisa existir** antes de rodar `migrate`. Se não existir, você verá erro `(1049, "Unknown database '...'")`.
+
+Crie o banco com o **mesmo nome** que está em `DB_NAME` no `.env` (ex.: `ControleFinaceiro`). No MySQL:
+
+```sql
+CREATE DATABASE ControleFinaceiro CHARACTER SET utf8mb4;
+-- use o nome exato do seu DB_NAME (maiúsculas/minúsculas devem coincidir)
+```
+
+As tabelas são criadas pelas migrations do Django; não é necessário compartilhar o banco entre máquinas.
+
+**Branch `feature/auto-db-per-user` (banco por usuário):** nesta branch o sistema cria automaticamente um banco dedicado para cada novo usuário no cadastro. O usuário MySQL configurado em `DB_USER` precisa da permissão **CREATE DATABASE**. Exemplo no MySQL: `GRANT CREATE ON *.* TO 'seu_usuario'@'localhost';` (ou escopo adequado). Para voltar ao comportamento de um único banco, use a branch principal (ex.: `main`).
 
 ### 3. Backend (API Django)
 
