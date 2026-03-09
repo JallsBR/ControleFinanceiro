@@ -136,7 +136,7 @@ WSGI_APPLICATION = 'app.wsgi.application'
 
 _default_db = {
     'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
-    'NAME': os.getenv('DB_NAME', 'ControleFinaceiro'),
+    'NAME': os.getenv('DB_NAME', 'ControleFinanceiro'),
     'USER': os.getenv('DB_USER', 'root'),
     'PASSWORD': os.getenv('DB_PASSWORD', ''),
     'HOST': os.getenv('DB_HOST', 'localhost'),

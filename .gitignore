@@ -1,8 +1,6 @@
 venv/
 ref/
 .dist/
-notation.txt
-passos.txt
 atalhos.txt
 __pycache__/
 OIG4.webp

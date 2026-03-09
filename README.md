@@ -29,9 +29,7 @@ ControleFinanceiro/
 │   ├── financas/        # Categorias, movimentações, metas, reservas, investimentos, dashboard
 │   ├── manage.py
 │   └── requirements.txt
-├── front/               # Frontend Vue (Vite)
-└── docs/                # Documentação (contexto de negócio e API)
-    └── ai/              # Contexto para desenvolvimento (finanças, usuários)
+└─── front/               # Frontend Vue (Vite)
 ```
 
 ---
