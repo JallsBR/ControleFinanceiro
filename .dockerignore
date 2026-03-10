@@ -1,0 +1,25 @@
+# Dados do MySQL (permissões restritivas, causam erro no build)
+mysql_data/
+
+# Dependências e caches
+node_modules/
+front/node_modules/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Git e IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Build e distribuição
+dist/
+build/
+*.egg-info/
+
+# Env (o container usa env_file e variáveis do docker-compose)
+.env
+.env.local
