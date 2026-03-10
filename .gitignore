@@ -6,6 +6,7 @@ __pycache__/
 OIG4.webp
 *.sqlite3
 docs/
+mysql_data/
 
 
 # Logs

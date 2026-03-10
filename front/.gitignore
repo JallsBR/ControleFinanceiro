@@ -1,3 +1,7 @@
+# Env (copie .env.example para .env e ajuste)
+.env
+.env.local
+
 # Logs
 logs
 *.log

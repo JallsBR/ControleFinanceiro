@@ -12,7 +12,7 @@ Aplicação de controle financeiro pessoal com **frontend Vue 3** e **backend Dj
 | Banco     | MySQL (configurado via variáveis de ambiente) |
 | Admin     | Django Admin com tema Jazzmin |
 | Frontend  | Vue 3, Vite 7, Vue Router, Pinia, PrimeVue, Axios |
-| Execução  | Node (scripts na raiz) + Python (venv em `api/`) |
+| Execução  | Docker (backend + MySQL) + Node (frontend); ou venv em `api/` sem Docker |
 
 ---
 
@@ -22,14 +22,18 @@ Aplicação de controle financeiro pessoal com **frontend Vue 3** e **backend Dj
 ControleFinanceiro/
 ├── .env                 # Variáveis de ambiente (não versionado; use .env.example como base)
 ├── .env.example         # Modelo de configuração
-├── package.json         # Scripts para subir backend + frontend
+├── docker-compose.yml   # MySQL + Django (portas 3307, 8001)
+├── Dockerfile           # Imagem do backend
+├── package.json         # Scripts (Docker + frontend)
 ├── api/                 # Backend Django
 │   ├── app/             # Settings, URLs, WSGI
 │   ├── users/           # Auth (signin, signup, logout, JWT)
 │   ├── financas/        # Categorias, movimentações, metas, reservas, investimentos, dashboard
 │   ├── manage.py
 │   └── requirements.txt
-└─── front/               # Frontend Vue (Vite)
+└── front/               # Frontend Vue (Vite)
+    ├── .env.example     # Exemplo com VITE_API_URL (copie para .env se quiser sobrescrever)
+    └── ...
 ```
 
 ---
@@ -47,60 +51,77 @@ cp .env.example .env
 Edite `.env` e preencha pelo menos:
 
 - `SECRET_KEY` – chave secreta do Django (produção: use valor forte e seguro)
-- `DB_NAME` – nome do banco MySQL
-- `DB_USER` e `DB_PASSWORD` – usuário e senha do MySQL
-- `DB_HOST` e `DB_PORT` – host e porta (ex.: `localhost`, `3307`)
+- Para **Docker:** `DB_NAME`, `DB_USER`, `DB_PASSWORD` devem bater com `docker-compose.yml` (ex.: `controle_db`, `user`, `password`). `DB_HOST=db` e `DB_PORT=3306` são usados dentro do container; o MySQL fica exposto na porta **3307** no host.
 
-O backend usa `python-dotenv` e carrega o `.env` da raiz (a partir de `api/app/settings.py`).
+O backend usa `python-dotenv` e carrega o `.env` da raiz. O `docker-compose` também injeta variáveis de banco para o container.
 
-### 2. Banco de dados
+### 2. Rodar com Docker (recomendado)
 
-**MySQL:** ao rodar `python manage.py migrate`, o projeto cria o banco padrão automaticamente se ele não existir (`CREATE DATABASE IF NOT EXISTS`), usando `DB_NAME`, `DB_USER`, `DB_HOST`, `DB_PORT` e `DB_PASSWORD` do `.env`. Não é obrigatório criar o banco manualmente; se quiser, pode rodar antes `python manage.py ensure_db`.
+Backend (Django) e banco (MySQL) sobem em containers. O frontend continua na sua máquina (Node).
 
-As tabelas são criadas pelas migrations do Django; não é necessário compartilhar o banco entre máquinas.
+**Requisitos:** Docker e Docker Compose instalados.
 
-**Branch `feature/auto-db-per-user` (banco por usuário):** nesta branch o sistema cria automaticamente um banco dedicado para cada novo usuário no cadastro. O usuário MySQL configurado em `DB_USER` precisa da permissão **CREATE DATABASE**. Exemplo no MySQL: `GRANT CREATE ON *.* TO 'seu_usuario'@'localhost';` (ou escopo adequado). Para voltar ao comportamento de um único banco, use a branch principal (ex.: `main`).
+```bash
+# Na raiz do projeto
+npm install
+npm run docker:up:build   # primeira vez: builda a imagem e sobe MySQL + Django
+# ou: npm run dev          # sobe Docker + frontend juntos (concurrently)
+```
 
-### 3. Backend (API Django)
+- **MySQL:** porta **3307** no host (evita conflito com outro MySQL). Dados persistem em `./mysql_data/` (não versionado).
+- **Django (API):** porta **8001** → `http://127.0.0.1:8001` e `http://localhost:8001`.
+
+Dentro do container, rode as migrations e crie um superusuário:
+
+```bash
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createsuperuser
+```
+
+O superusuário acessa o **admin** em `http://127.0.0.1:8001/admin/`.
+
+### 3. Frontend (Vue)
+
+Na **raiz do projeto**:
+
+```bash
+npm run frontend
+# ou, para subir Docker + front juntos: npm run dev
+```
+
+- **App:** `http://localhost:5174` (Vite na porta 5174).
+- Se quiser mudar a URL da API, crie `front/.env` a partir de `front/.env.example` e defina `VITE_API_URL`.
+
+### 4. Rodar sem Docker (opcional)
+
+**Banco:** use um MySQL local. No `.env` use `DB_HOST=localhost` e `DB_PORT=3306` (ou 3307 se outro MySQL usar 3306).
+
+**Backend:**
 
 ```bash
 cd api
 python -m venv venv
-.\venv\Scripts\activate.ps1   # Windows PowerShell
-# ou: source venv/bin/activate  # Linux/macOS
-
+source venv/bin/activate   # Linux/macOS; no Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
 ```
 
-O superusuário criado terá acesso ao **painel admin** (Jazzmin) em `http://127.0.0.1:8001/admin/`.
-
-### 4. Frontend (Vue)
-
-Na **raiz do projeto** (não dentro de `api` nem de `front`):
-
-```bash
-npm install
-npm run dev
-```
-
-O script `npm run dev` sobe os dois servidores com **concurrently**:
-
-- **Django (API):** `http://127.0.0.1:8001`
-- **Vue (app):** `http://localhost:5174`
-
-Acesse o **app** em `http://localhost:5174`. Para o **admin**, use `http://127.0.0.1:8001/admin/` com o superusuário.
+**Branch `feature/auto-db-per-user`:** o usuário MySQL em `DB_USER` precisa de **CREATE DATABASE**. Ver `docs/branch-auto-db-per-user.md`.
 
 ---
 
 ## Scripts (raiz do projeto)
 
-| Comando        | Descrição |
-|----------------|-----------|
-| `npm run dev`  | Sobe backend (Django) e frontend (Vite) juntos |
-| `npm run backend`  | Sobe apenas o servidor Django |
-| `npm run frontend` | Sobe apenas o frontend Vue |
+| Comando              | Descrição |
+|----------------------|------------|
+| `npm run dev`        | Sobe Docker (MySQL + Django) e frontend (Vite) juntos |
+| `npm run docker:up`  | Sobe apenas os containers (MySQL + Django) |
+| `npm run docker:up:build` | Igual ao anterior, forçando rebuild da imagem |
+| `npm run docker:down`| Para e remove os containers |
+| `npm run docker:clean` | Remove containers/imagem do `web` (use antes de `docker:up:build` se aparecer erro `ContainerConfig`) |
+| `npm run backend`    | Sobe apenas os containers (equivalente a `docker-compose up web`) |
+| `npm run frontend`   | Sobe apenas o frontend Vue (Vite) |
 
 ---
 
@@ -138,10 +159,9 @@ Detalhes de regras de negócio, filtros e padrões estão em `docs/ai/`.
 
 ---
 
-## Resumo rápido
+## Resumo rápido (com Docker)
 
-1. Copiar `.env.example` para `.env` e configurar MySQL e `SECRET_KEY`.
-2. Criar o banco MySQL.
-3. Em `api/`: criar venv, instalar dependências, rodar `migrate` e `createsuperuser`.
-4. Na raiz: `npm install` e `npm run dev`.
-5. App em `http://localhost:5174`; admin em `http://127.0.0.1:8001/admin/`.
+1. Copiar `.env.example` para `.env` e configurar `SECRET_KEY` (e conferir `DB_*` para bater com o `docker-compose.yml`).
+2. Na raiz: `npm install` e `npm run docker:up:build` (ou `npm run dev` para subir Docker + frontend).
+3. Rodar migrations e criar superusuário: `docker-compose exec web python manage.py migrate` e `createsuperuser`.
+4. App em `http://localhost:5174`; API e admin em `http://127.0.0.1:8001` e `http://127.0.0.1:8001/admin/`.

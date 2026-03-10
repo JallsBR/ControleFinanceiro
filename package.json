@@ -7,9 +7,16 @@
     "doc": "docs"
   },
   "scripts": {
-    "backend": "cd api && .\\venv\\Scripts\\python.exe manage.py runserver 8001",
+    "docker:up": "docker-compose up",
+    "docker:up:build": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "docker:clean": "docker-compose down 2>/dev/null; docker rm -f $(docker ps -aq -f 'name=controlefinanceiro') 2>/dev/null || true; docker rmi controlefinanceiro_web 2>/dev/null || true",
+    "backend": "docker-compose up web",
     "frontend": "cd front && npm run dev",
-    "dev": "concurrently --names \"DJANGO,FRONT\" --prefix-colors \"blue,green\" \"npm run backend\" \"npm run frontend\""
+    "dev": "concurrently --names \"DOCKER,FRONT\" --prefix-colors \"blue,green\" \"npm run docker:up\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   },
   "repository": {
     "type": "git",
