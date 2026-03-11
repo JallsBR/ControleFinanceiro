@@ -80,6 +80,21 @@
         </form>
       </template>
     </Card>
+
+    <Dialog
+      v-model:visible="loading"
+      modal
+      :closable="false"
+      :closeOnEscape="false"
+      class="signup-loading-dialog"
+    >
+      <template #header>
+        <span class="signup-loading-title">Configurando novo usuário</span>
+      </template>
+      <div class="signup-loading-content">
+        <ProgressBar :value="progresso" :showValue="true" />
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -90,7 +105,13 @@ import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
+import Dialog from 'primevue/dialog'
+import ProgressBar from 'primevue/progressbar'
 import { RouterLink } from 'vue-router'
+
+const PROGRESSO_MAX_ANTES = 85
+const PROGRESSO_INTERVALO_MS = 150
+const PROGRESSO_INCREMENTO = 2
 
 export default {
   name: 'SignUpPage',
@@ -100,6 +121,8 @@ export default {
     Password,
     Button,
     Message,
+    Dialog,
+    ProgressBar,
     RouterLink
   },
   data() {
@@ -108,13 +131,30 @@ export default {
       email: '',
       password: '',
       error: '',
-      loading: false
+      loading: false,
+      progresso: 0,
+      progressoTimer: null
     }
   },
   methods: {
+    iniciarProgresso() {
+      this.progresso = 0
+      this.progressoTimer = setInterval(() => {
+        if (this.progresso < PROGRESSO_MAX_ANTES) {
+          this.progresso = Math.min(this.progresso + PROGRESSO_INCREMENTO, PROGRESSO_MAX_ANTES)
+        }
+      }, PROGRESSO_INTERVALO_MS)
+    },
+    pararProgresso() {
+      if (this.progressoTimer) {
+        clearInterval(this.progressoTimer)
+        this.progressoTimer = null
+      }
+    },
     async handleSignup() {
       this.error = ''
       this.loading = true
+      this.iniciarProgresso()
 
       try {
         await api.post('/auth/signup', {
@@ -123,15 +163,25 @@ export default {
           password: this.password
         })
 
+        this.progresso = 90
         const success = await this.$store.dispatch('login', {
           email: this.email,
           password: this.password
         })
 
+        this.progresso = 100
+        this.pararProgresso()
+        await new Promise(r => setTimeout(r, 400))
+
         if (success) {
+          this.loading = false
           this.$router.push({ name: 'home' })
+        } else {
+          this.loading = false
         }
       } catch (err) {
+        this.pararProgresso()
+        this.loading = false
         if (err.response?.data?.detail) {
           this.error = err.response.data.detail
         } else if (typeof err.response?.data === 'object') {
@@ -146,8 +196,6 @@ export default {
           detail: this.error,
           life: 6000
         })
-      } finally {
-        this.loading = false
       }
     }
   }
@@ -257,5 +305,19 @@ export default {
 .signup-card :deep(.p-password .p-inputtext) {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+/* Modal de loading ao configurar novo usuário */
+.signup-loading-dialog :deep(.p-dialog-header) {
+  padding-bottom: 0.5rem;
+}
+.signup-loading-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+.signup-loading-content {
+  padding: 0.5rem 0 0;
+  min-width: 280px;
 }
 </style>
