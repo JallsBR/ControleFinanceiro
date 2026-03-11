@@ -77,7 +77,7 @@
 
   <CardStatus
         titulo="Maior Gasto do mês"
-        :descricao="dashboard.descricao_maior_saida"
+        :descricao="dashboard.descricao_maior_saida || 'Nenhum'"
         :valor="Money.format(dashboard.maior_saida)"
         variante="saida"
   />
