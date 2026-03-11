@@ -3,8 +3,8 @@ body,
 #app {
   margin: 0;
   min-height: 100vh;
-  background: var(--p-surface-ground);
-  color: var(--p-text-color);
+  background: var(--bg-primario);
+  color: var(--texto-primario);
 }
 
 /* ===== TEMA ESCURO (default) ===== */
@@ -22,7 +22,7 @@ body,
 
 /* ===== TEMA CLARO ===== */
 [data-tema="claro"] {
-  --bg-primario: #f8f9fa;
+  --bg-primario: #e6eaec;
   --bg-secundario: #ffffff;
 
   --texto-primario: #212529;
@@ -31,6 +31,128 @@ body,
   --sucesso: #198754;
   --perigo: #dc3545;
   --neutro: #212529;
+}
+
+/* ===== PRIMEVUE: dialogs, inputs e datatable seguem o tema da app ===== */
+.p-dialog,
+.p-dialog .p-dialog-header,
+.p-dialog .p-dialog-content,
+.p-dialog .p-dialog-footer {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 25%, transparent) !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-title,
+.p-dialog .p-dialog-header .p-dialog-header-icon {
+  color: var(--texto-primario) !important;
+}
+
+/* Inputs: InputText, InputNumber, DatePicker, MultiSelect, etc. */
+.p-inputtext,
+.p-inputnumber input,
+.p-datepicker .p-inputtext,
+.p-multiselect .p-multiselect-label,
+.p-dropdown .p-dropdown-label,
+.p-password input {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 40%, transparent) !important;
+}
+
+.p-inputtext::placeholder,
+.p-inputnumber input::placeholder {
+  color: var(--texto-secundario);
+}
+
+.p-inputgroup-addon {
+  background: var(--bg-primario) !important;
+  color: var(--texto-secundario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 40%, transparent) !important;
+}
+
+/* DatePicker panel e dropdowns */
+.p-datepicker,
+.p-datepicker table td > span,
+.p-multiselect-panel,
+.p-dropdown-panel {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 25%, transparent) !important;
+}
+
+.p-datepicker .p-datepicker-header,
+.p-multiselect-panel .p-multiselect-header {
+  background: var(--bg-primario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 25%, transparent) !important;
+}
+
+/* DataTable */
+.p-datatable-header {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 25%, transparent) !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--bg-primario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 25%, transparent) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td,
+.p-datatable .p-datatable-tbody > tr {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 20%, transparent) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover > td {
+  background: var(--bg-primario) !important;
+}
+
+.p-datatable-wrapper {
+  background: var(--bg-secundario) !important;
+}
+
+/* Remove a linha escura entre tabela e paginador (borda vinda do tema PrimeVue) */
+.p-datatable .p-datatable-wrapper {
+  border-bottom: none !important;
+}
+.p-datatable .p-paginator.p-paginator-bottom,
+.p-datatable .p-paginator[data-p-bottom="true"] {
+  border-top: none !important;
+
+}
+
+/* Paginador da DataTable */
+.p-paginator,
+.p-paginator.p-paginator-bottom,
+.p-paginator .p-paginator-pages .p-paginator-page,
+.p-paginator .p-paginator-first,
+.p-paginator .p-paginator-prev,
+.p-paginator .p-paginator-next,
+.p-paginator .p-paginator-last {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-bottom: none !important;
+
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page:hover,
+.p-paginator .p-paginator-first:hover,
+.p-paginator .p-paginator-prev:hover,
+.p-paginator .p-paginator-next:hover,
+.p-paginator .p-paginator-last:hover {
+  background: var(--bg-primario) !important;
+  color: var(--texto-primario) !important;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: var(--sucesso) !important;
+  color: var(--texto-primario) !important;
+  border-color: var(--sucesso) !important;
 }
 
 /* ===== TOAST (PrimeVue) - cores da app ===== */

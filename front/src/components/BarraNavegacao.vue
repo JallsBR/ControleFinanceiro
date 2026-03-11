@@ -47,6 +47,14 @@
 
         <template #end>
             <div class="nav-user">
+                <button
+                    type="button"
+                    class="theme-toggle"
+                    :aria-label="temaClaro ? 'Ativar tema escuro' : 'Ativar tema claro'"
+                    @click="toggleTema"
+                >
+                    <i :class="temaClaro ? 'pi pi-moon' : 'pi pi-sun'"></i>
+                </button>
                 <i class="pi pi-user"></i>
                 <span class="username">
                     {{ user?.username || 'Visitante' }}
@@ -64,11 +72,37 @@
 <script setup>
 import Menubar from 'primevue/menubar'
 import { RouterLink, useRouter } from 'vue-router'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+
+const STORAGE_TEMA = 'financas-tema'
 
 const store = useStore()
 const router = useRouter()
+
+const temaClaro = ref(document.documentElement.getAttribute('data-tema') === 'claro')
+
+const aplicarTema = (claro) => {
+    temaClaro.value = claro
+    if (claro) {
+        document.documentElement.setAttribute('data-tema', 'claro')
+    } else {
+        document.documentElement.removeAttribute('data-tema')
+    }
+    try {
+        localStorage.setItem(STORAGE_TEMA, claro ? 'claro' : 'escuro')
+    } catch (_) {}
+}
+
+const toggleTema = () => {
+    aplicarTema(!temaClaro.value)
+}
+
+onMounted(() => {
+    const salvo = localStorage.getItem(STORAGE_TEMA)
+    if (salvo === 'claro') aplicarTema(true)
+    else if (salvo === 'escuro') aplicarTema(false)
+})
 
 const user = computed(() => store.getters.getUser)
 
@@ -157,6 +191,28 @@ const logout = () => {
     align-items: center;
     gap: 12px;
     color: var(--texto-secundario);
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--texto-secundario);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    background-color: var(--bg-primario);
+    color: var(--texto-primario);
+}
+
+.theme-toggle i {
+    font-size: 1.2rem;
 }
 
 .username {

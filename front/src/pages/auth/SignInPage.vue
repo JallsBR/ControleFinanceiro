@@ -130,7 +130,7 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 1rem;
-  background: var(--p-surface-ground);
+  background: var(--bg-primario);
 }
 
 .signin-card {
