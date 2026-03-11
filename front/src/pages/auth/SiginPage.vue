@@ -1,6 +1,6 @@
 <template>
   <div class="signin-page">
-    <Card class="signin-card">
+    <Card class="signin-card" style="width: 600px;">
       <template #content>
         <form @submit.prevent="handleLogin">
           <!-- Título -->
@@ -39,6 +39,7 @@
               placeholder="Sua senha"
               :feedback="false"
               toggleMask
+              fluid
               inputClass="w-full"
             />
           </div>
@@ -174,6 +175,16 @@ export default {
 
 .w-full {
   width: 100%;
+}
+
+/* Password: mesma largura do email, ícone do olho no fim do input */
+.signin-card :deep(.p-password) {
+  width: 100%;
+}
+.signin-card :deep(.p-password .p-password-input),
+.signin-card :deep(.p-password .p-inputtext) {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .signin-footer {

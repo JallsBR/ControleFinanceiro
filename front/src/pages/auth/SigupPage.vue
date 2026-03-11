@@ -1,6 +1,6 @@
 <template>
   <div class="signup-page">
-    <Card class="signup-card">
+    <Card class="signup-card" style="width: 600px;">
       <template #content>
         <form @submit.prevent="handleSignup">
           <!-- Logo + Título -->
@@ -55,6 +55,7 @@
               placeholder="Sua senha"
               :feedback="false"
               toggleMask
+              fluid
               inputClass="w-full"
               required
             />
@@ -246,5 +247,15 @@ export default {
     margin: 0 auto 0.5rem;
     display: block;
     object-fit: contain;
+}
+
+/* Password: mesma largura dos outros inputs, ícone do olho no fim */
+.signup-card :deep(.p-password) {
+  width: 100%;
+}
+.signup-card :deep(.p-password .p-password-input),
+.signup-card :deep(.p-password .p-inputtext) {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 </style>
