@@ -139,6 +139,12 @@ export default {
         } else {
           this.error = 'Ocorreu um erro inesperado. Tente novamente.'
         }
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Erro no cadastro',
+          detail: this.error,
+          life: 6000
+        })
       } finally {
         this.loading = false
       }

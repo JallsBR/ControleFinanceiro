@@ -106,6 +106,9 @@
   import MultiSelect from 'primevue/multiselect'
   import Button from 'primevue/button'
   import financasService from '@/services/financasService'
+  import { useToast } from '@/utils/useToast'
+  
+  const toast = useToast()
   
   const props = defineProps({
     visible: {
@@ -235,6 +238,7 @@
       emit('saved')
     } catch (error) {
       console.error('Erro ao salvar saída:', error)
+      toast.error('Erro ao salvar', 'Não foi possível salvar a saída.')
     }
   }
   

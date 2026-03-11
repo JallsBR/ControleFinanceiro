@@ -52,7 +52,7 @@
     <DialogReserva
       v-model:visible="visibleReserva"
       :reserva="reservaEmEdicao"
-      @saved="carregarLista"
+      @saved="onReservaSalva"
     />
 
     <DialogConfirma
@@ -84,9 +84,12 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogReserva from '@/pages/reservas/DialogReserva.vue'
 import DialogFiltroReservas from '@/components/DialogFiltroReservas.vue'
+
+const toast = useToast()
 
 const visibleReserva = ref(false)
 const visibleExcluir = ref(false)
@@ -112,6 +115,7 @@ const carregarLista = async () => {
     console.error('Erro ao carregar reservas:', error)
     lista.value = []
     totalRecords.value = 0
+    toast.error('Erro', 'Não foi possível carregar as reservas.')
   } finally {
     loading.value = false
   }
@@ -153,6 +157,11 @@ function onFiltroClear() {
   carregarLista()
 }
 
+function onReservaSalva() {
+  carregarLista()
+  toast.success('Reserva salva', '')
+}
+
 function deletarReserva(item) {
   if (!item?.id) return
   itemParaExcluir.value = item
@@ -167,8 +176,10 @@ async function executarExclusao() {
     visibleExcluir.value = false
     itemParaExcluir.value = null
     await carregarLista()
+    toast.success('Reserva excluída', '')
   } catch (error) {
     console.error('Erro ao excluir reserva:', error)
+    toast.error('Erro', 'Não foi possível excluir a reserva.')
   } finally {
     excluindo.value = false
   }

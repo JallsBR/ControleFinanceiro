@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <Toast />
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
         <component :is="Component" />
@@ -9,7 +10,10 @@
 </template>
 
 <script>
+import Toast from 'primevue/toast'
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: { Toast }
 }
 </script>

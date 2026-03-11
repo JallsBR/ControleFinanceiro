@@ -101,8 +101,11 @@ import BaseDataTable from '@/components/BaseDataTable.vue'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
 import DialogCategoria from '@/pages/categorias/DialogCategoria.vue'
 import DialogConfirma from '@/components/DialogConfirma.vue'
+
+const toast = useToast()
 
 const TIPO_E = 'E'
 const TIPO_S = 'S'
@@ -141,6 +144,7 @@ async function carregarEntradas() {
   } catch (error) {
     console.error('Erro ao carregar categorias de entrada:', error)
     listaEntradas.value = []
+    toast.error('Erro', 'Não foi possível carregar as categorias de entrada.')
   } finally {
     loadingEntradas.value = false
   }
@@ -154,6 +158,7 @@ async function carregarSaidas() {
   } catch (error) {
     console.error('Erro ao carregar categorias de saída:', error)
     listaSaidas.value = []
+    toast.error('Erro', 'Não foi possível carregar as categorias de saída.')
   } finally {
     loadingSaidas.value = false
   }
@@ -166,6 +171,7 @@ async function carregarIcones() {
   } catch (error) {
     console.error('Erro ao carregar ícones:', error)
     iconesMap.value = {}
+    toast.error('Erro', 'Não foi possível carregar os ícones.')
   }
 }
 
@@ -196,6 +202,7 @@ function editarCategoria(tipo, item) {
 function onCategoriaSalva() {
   if (tipoCategoria.value === TIPO_E) carregarEntradas()
   else carregarSaidas()
+  toast.success('Categoria salva', '')
 }
 
 watch(visibleCategoria, (v) => {
@@ -222,8 +229,10 @@ async function executarExclusao() {
     itemParaExcluir.value = null
     if (tipo === TIPO_E) await carregarEntradas()
     else await carregarSaidas()
+    toast.success('Categoria excluída', '')
   } catch (error) {
     console.error('Erro ao excluir categoria:', error)
+    toast.error('Erro', 'Não foi possível excluir a categoria.')
   } finally {
     excluindo.value = false
   }

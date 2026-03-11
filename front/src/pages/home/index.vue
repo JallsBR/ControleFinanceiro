@@ -101,8 +101,8 @@
 
 </div>
 
-<DialogEntradas v-model:visible="visibleEntrada" @saved="carregarDashboard" />
-<DialogSaida v-model:visible="visibleSaida" @saved="carregarDashboard" />
+<DialogEntradas v-model:visible="visibleEntrada" @saved="onEntradaSalva" />
+<DialogSaida v-model:visible="visibleSaida" @saved="onSaidaSalva" />
 </template>
 
 <script setup>
@@ -113,8 +113,11 @@ import 'dayjs/locale/pt-br'
 import { ref, computed, onMounted } from 'vue'
 import financasService from '@/services/financasService'
 import Money from '@/utils/Money'
+import { useToast } from '@/utils/useToast'
 import DialogEntradas from '@/pages/home/DialogEntradas.vue'
 import DialogSaida from '@/pages/home/DialogSaida.vue'
+
+const toast = useToast()
 
 dayjs.locale('pt-br')
 
@@ -150,7 +153,18 @@ const carregarDashboard = async () => {
     dashboard.value = data
   } catch (error) {
     console.error('Erro ao carregar dashboard:', error)
+    toast.error('Erro', 'Não foi possível carregar o dashboard.')
   }
+}
+
+const onEntradaSalva = () => {
+  carregarDashboard()
+  toast.success('Entrada salva', 'Os dados do dashboard foram atualizados.')
+}
+
+const onSaidaSalva = () => {
+  carregarDashboard()
+  toast.success('Saída salva', 'Os dados do dashboard foram atualizados.')
 }
 
 onMounted(() => {

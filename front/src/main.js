@@ -3,12 +3,14 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import Aura from '@primeuix/themes/aura';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './assets/theme-global.css'
 import 'primeicons/primeicons.css';
 
 const app = createApp(App)
+app.use(ToastService)
 app.use(PrimeVue, {
     // Default theme configuration
     theme: {

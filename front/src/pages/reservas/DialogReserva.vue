@@ -89,6 +89,9 @@ import InputGroupAddon from 'primevue/inputgroupaddon'
 import InputSwitch from 'primevue/inputswitch'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
+
+const toast = useToast()
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -156,6 +159,7 @@ async function salvar() {
     emit('saved')
   } catch (error) {
     console.error('Erro ao salvar reserva:', error)
+    toast.error('Erro ao salvar', 'Não foi possível salvar a reserva.')
   }
 }
 </script>

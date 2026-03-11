@@ -63,7 +63,7 @@
     <DialogEntradas
       v-model:visible="visibleEntrada"
       :movimentacao="entradaEmEdicao"
-      @saved="carregarLista"
+      @saved="onEntradaSalva"
     />
 
     <DialogConfirma
@@ -96,9 +96,12 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
 import DialogEntradas from '@/pages/home/DialogEntradas.vue'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogFiltroMovimentacoes from '@/components/DialogFiltroMovimentacoes.vue'
+
+const toast = useToast()
 
 const visibleEntrada = ref(false)
 const visibleExcluir = ref(false)
@@ -145,6 +148,7 @@ const carregarLista = async () => {
     console.error('Erro ao carregar entradas:', error)
     lista.value = []
     totalRecords.value = 0
+    toast.error('Erro', 'Não foi possível carregar as entradas.')
   } finally {
     loading.value = false
   }
@@ -213,6 +217,11 @@ function onFiltroClear() {
   carregarLista()
 }
 
+function onEntradaSalva() {
+  carregarLista()
+  toast.success('Entrada salva', '')
+}
+
 function deletarMovimentacao(item) {
   if (!item?.id) return
   itemParaExcluir.value = item
@@ -227,8 +236,10 @@ async function executarExclusao() {
     visibleExcluir.value = false
     itemParaExcluir.value = null
     await carregarLista()
+    toast.success('Entrada excluída', '')
   } catch (error) {
     console.error('Erro ao excluir:', error)
+    toast.error('Erro', 'Não foi possível excluir a entrada.')
   } finally {
     excluindo.value = false
   }

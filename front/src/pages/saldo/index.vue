@@ -207,6 +207,9 @@ import DatePicker from 'primevue/datepicker'
 import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
+
+const toast = useToast()
 
 dayjs.locale('pt-br')
 
@@ -316,6 +319,7 @@ async function carregarSaldo () {
       totalSaidas: 0,
       saldoPeriodo: 0
     }
+    toast.error('Erro', 'Não foi possível carregar o saldo do período.')
   } finally {
     loading.value = false
   }
@@ -330,6 +334,7 @@ async function carregarConsolidados () {
   } catch (error) {
     console.error('Erro ao carregar consolidados mensais:', error)
     consolidados.value = []
+    toast.error('Erro', 'Não foi possível carregar os consolidados mensais.')
   } finally {
     loadingConsolidados.value = false
   }

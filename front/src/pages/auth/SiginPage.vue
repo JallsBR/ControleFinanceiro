@@ -110,6 +110,12 @@ export default {
         this.$router.push({ name: 'home' })
       } else {
         this.error = true
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Erro ao entrar',
+          detail: 'Credenciais não encontradas. Tente novamente.',
+          life: 5000
+        })
       }
     }
   }

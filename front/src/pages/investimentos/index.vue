@@ -72,7 +72,7 @@
     <DialogInvestimento
       v-model:visible="visibleInvestimento"
       :investimento="investimentoEmEdicao"
-      @saved="carregarLista"
+      @saved="onInvestimentoSalva"
     />
 
     <DialogConfirma
@@ -104,9 +104,12 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogInvestimento from '@/pages/investimentos/DialogInvestimento.vue'
 import DialogFiltroInvestimentos from '@/components/DialogFiltroInvestimentos.vue'
+
+const toast = useToast()
 
 const visibleInvestimento = ref(false)
 const visibleExcluir = ref(false)
@@ -132,6 +135,7 @@ const carregarLista = async () => {
     console.error('Erro ao carregar investimentos:', error)
     lista.value = []
     totalRecords.value = 0
+    toast.error('Erro', 'Não foi possível carregar os investimentos.')
   } finally {
     loading.value = false
   }
@@ -173,6 +177,11 @@ function onFiltroClear() {
   carregarLista()
 }
 
+function onInvestimentoSalva() {
+  carregarLista()
+  toast.success('Investimento salvo', '')
+}
+
 function deletarInvestimento(item) {
   if (!item?.id) return
   itemParaExcluir.value = item
@@ -187,8 +196,10 @@ async function executarExclusao() {
     visibleExcluir.value = false
     itemParaExcluir.value = null
     await carregarLista()
+    toast.success('Investimento excluído', '')
   } catch (error) {
     console.error('Erro ao excluir investimento:', error)
+    toast.error('Erro', 'Não foi possível excluir o investimento.')
   } finally {
     excluindo.value = false
   }

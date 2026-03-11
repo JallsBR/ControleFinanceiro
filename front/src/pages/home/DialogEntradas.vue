@@ -106,6 +106,9 @@ import DatePicker from 'primevue/datepicker'
 import MultiSelect from 'primevue/multiselect'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
+
+const toast = useToast()
 
 const props = defineProps({
   visible: {
@@ -243,9 +246,9 @@ const salvar = async () => {
     emit('saved')
   } catch (error) {
     const msg = error.response?.data
-    const detail = typeof msg === 'string' ? msg : msg?.detail || msg?.descricao?.[0] || msg?.categoria?.[0] || msg?.data?.[0] || JSON.stringify(msg)
+    const detail = typeof msg === 'string' ? msg : msg?.detail || msg?.descricao?.[0] || msg?.categoria?.[0] || msg?.data?.[0] || error.message
     console.error('Erro ao salvar entrada:', error.response?.status, detail, error.response?.data)
-    alert('Erro ao salvar: ' + (detail || error.message))
+    toast.error('Erro ao salvar', detail || 'Não foi possível salvar a entrada.')
   }
 }
 

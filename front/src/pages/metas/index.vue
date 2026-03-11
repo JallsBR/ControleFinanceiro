@@ -62,7 +62,7 @@
     <DialogMeta
       v-model:visible="visibleMeta"
       :meta="metaEmEdicao"
-      @saved="carregarLista"
+      @saved="onMetaSalva"
     />
 
     <DialogFiltroMetas
@@ -94,9 +94,12 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
+import { useToast } from '@/utils/useToast'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogMeta from '@/pages/metas/DialogMeta.vue'
 import DialogFiltroMetas from '@/components/DialogFiltroMetas.vue'
+
+const toast = useToast()
 
 const visibleMeta = ref(false)
 const visibleExcluir = ref(false)
@@ -122,6 +125,7 @@ const carregarLista = async () => {
     console.error('Erro ao carregar metas:', error)
     lista.value = []
     totalRecords.value = 0
+    toast.error('Erro', 'Não foi possível carregar as metas.')
   } finally {
     loading.value = false
   }
@@ -177,8 +181,10 @@ async function executarExclusao() {
     visibleExcluir.value = false
     itemParaExcluir.value = null
     await carregarLista()
+    toast.success('Meta excluída', '')
   } catch (error) {
     console.error('Erro ao excluir meta:', error)
+    toast.error('Erro', 'Não foi possível excluir a meta.')
   } finally {
     excluindo.value = false
   }
@@ -190,6 +196,11 @@ function formatarData(val) {
   if (!d) return '—'
   const [y, m, day] = d.split('-')
   return [day, m, y].filter(Boolean).join('/')
+}
+
+function onMetaSalva() {
+  carregarLista()
+  toast.success('Meta salva', '')
 }
 
 function labelPrioridade(p) {
