@@ -267,7 +267,7 @@
   .field-label {
     flex: 0 0 80px;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--texto-primario);
     padding-top: 0.5rem;
     min-width: 80px;
   }
@@ -286,8 +286,8 @@
   }
   
   .valor-field :deep(.p-inputgroup-addon) {
-    background: #e5e7eb;
-    color: #374151;
+    background: var(--neutro);
+    color: var(--texto-primario);
     font-weight: 600;
     min-width: 2.5rem;
   }
@@ -298,12 +298,12 @@
   }
   
   .btn-fechar :deep(.p-button) {
-    background: #ff6b6b;
-    color: #fff;
+    background: var(--perigo);
+    color: var(--texto-primario);
   }
   
   .btn-fechar :deep(.p-button:hover) {
-    background: #ff5252;
-    color: #fff;
+    background: color-mix(in srgb, var(--perigo) 85%, black);
+    color: var(--texto-primario);
   }
   </style>

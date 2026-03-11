@@ -244,12 +244,12 @@ onMounted(() => {
 }
 
 .meta-status--ok {
-  background: #16a34a33;
-  color: #4ade80;
+  background: color-mix(in srgb, var(--sucesso) 20%, transparent);
+  color: var(--sucesso);
 }
 
 .meta-status--pendente {
-  background: #f9737333;
-  color: #fbbf24;
+  background: color-mix(in srgb, var(--perigo) 20%, transparent);
+  color: var(--neutro);
 }
 </style>

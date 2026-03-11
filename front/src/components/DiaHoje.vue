@@ -60,8 +60,8 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: #1f242d;
-    color: #adb5bd;
+    background: var(--bg-secundario);
+    color: var(--texto-secundario);
     padding: 8px 14px;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -72,14 +72,14 @@
   
   /* Ícone */
   .card-data i {
-    color: #20c997;
+    color: var(--sucesso);
     font-size: 1rem;
   }
   
   /* Hover */
   .card-data:hover {
     transform: translateY(-2px);
-    color: #f8f9fa;
+    color: var(--texto-primario);
   }
   
   </style>

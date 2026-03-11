@@ -192,7 +192,7 @@ function onFechar() {
 .filtro-subtitle {
   margin: 0;
   font-size: 0.9rem;
-  color: #9ca3af;
+  color: var(--texto-secundario);
 }
 
 .filtro-body {
@@ -216,7 +216,7 @@ function onFechar() {
 .field-label {
   flex: 0 0 90px;
   font-weight: 600;
-  color: #e5e7eb;
+  color: var(--texto-primario);
   font-size: 0.9rem;
   padding-top: 0.4rem;
   min-width: 90px;
@@ -238,7 +238,7 @@ function onFechar() {
 }
 
 .period-separator {
-  color: #9ca3af;
+  color: var(--texto-secundario);
   font-size: 0.85rem;
 }
 
@@ -253,13 +253,13 @@ function onFechar() {
 }
 
 .btn-fechar :deep(.p-button) {
-  background: #ff6b6b;
-  color: #fff;
+  background: var(--perigo);
+  color: var(--texto-primario);
 }
 
 .btn-fechar :deep(.p-button:hover) {
-  background: #ff5252;
-  color: #fff;
+  background: color-mix(in srgb, var(--perigo) 85%, black);
+  color: var(--texto-primario);
 }
 </style>
 

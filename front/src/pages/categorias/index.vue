@@ -266,7 +266,7 @@ onMounted(async () => {
   margin: 0 0 0.75rem 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--texto-primario, #fff);
+  color: var(--texto-primario);
 }
 
 .table-toolbar {

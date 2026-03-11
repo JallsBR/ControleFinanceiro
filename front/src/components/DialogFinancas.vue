@@ -83,13 +83,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #e5e7eb;
+    background: var(--bg-primario);
     border-radius: 8px;
     padding: 0.5rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
   }
 
   .app-dialog__icon i {
-    color: #111827;
+    color: var(--texto-secundario);
     font-size: 1.25rem;
   }
 
@@ -107,7 +109,7 @@
   .app-dialog__subtitle {
     margin: 0 0 0;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--texto-secundario);
   }
 
   /* Container geral do Dialog */
@@ -118,15 +120,15 @@
 
   /* HEADER */
   :deep(.p-dialog-header) {
-    background: #f8fafc;
-    border-bottom: 1px solid #e5e7eb;
+    background: var(--bg-secundario);
+    border-bottom: 1px solid color-mix(in srgb, var(--texto-secundario) 25%, transparent);
     padding: 1.25rem 1.5rem;
   }
 
   /* BODY */
   :deep(.p-dialog-content) {
     padding: 1.5rem;
-    background: #ffffff;
+    background: var(--bg-secundario);
   }
 
   /* FOOTER */
@@ -146,9 +148,9 @@
   }
 
   :deep(.p-dialog-footer) {
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid color-mix(in srgb, var(--texto-secundario) 25%, transparent);
     padding: 1rem 1.5rem;
-    background: #fafafa;
+    background: var(--bg-primario);
   }
 
   /* Overlay levemente escuro */

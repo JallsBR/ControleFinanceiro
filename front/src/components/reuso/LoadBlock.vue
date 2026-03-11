@@ -125,7 +125,7 @@ export default {
   top: calc(50% + 25px); /* Ajuste para aparecer abaixo do spinner */
   left: 50%;
   transform: translate(-50%, 0);
-  color: #333;
+  color: var(--texto-primario);
   font-size: 1rem;
   text-align: center;
   pointer-events: none;

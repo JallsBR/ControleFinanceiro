@@ -82,7 +82,7 @@ const logout = () => {
 
 /* ===== MENUBAR BASE ===== */
 .custom-menubar {
-    background-color: #212529 !important;
+    background-color: var(--bg-secundario) !important;
     border: none !important;
     height: 70px;
     padding: 0 20px;
@@ -131,7 +131,7 @@ const logout = () => {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #adb5bd;
+    color: var(--texto-secundario);
     text-decoration: none;
     padding: 10px 15px;
     border-radius: 8px;
@@ -147,8 +147,8 @@ const logout = () => {
 
 /* Hover */
 .nav-item:hover {
-    background-color: #343a40;
-    color: white;
+    background-color: var(--bg-primario);
+    color: var(--texto-primario);
 }
 
 /* ===== USER AREA ===== */
@@ -156,7 +156,7 @@ const logout = () => {
     display: flex;
     align-items: center;
     gap: 12px;
-    color: #adb5bd;
+    color: var(--texto-secundario);
 }
 
 .username {
@@ -167,7 +167,7 @@ const logout = () => {
 .logout-btn {
     background: none;
     border: none;
-    color: #dc3545;
+    color: var(--perigo);
     cursor: pointer;
     padding: 8px;
     border-radius: 6px;
@@ -175,19 +175,19 @@ const logout = () => {
 }
 
 .logout-btn:hover {
-    background-color: rgba(220, 53, 69, 0.1);
+    background-color: color-mix(in srgb, var(--perigo) 15%, transparent);
 }
 
 .brand-title {
     font-size: 1.6rem;
     font-weight: 600;
-    color: #f8f9fa;
+    color: var(--texto-primario);
     letter-spacing: 1px;
     margin: 0;
 }
 
 .brand-title span {
-    color: #20c997; /* verde moderno */
+    color: var(--sucesso);
     font-weight: 700;
 }
 </style>

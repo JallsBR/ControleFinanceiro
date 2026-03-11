@@ -92,7 +92,7 @@
   
   <style scoped>
   .table-wrapper {
-    background: #1f242d;
+    background: var(--bg-secundario);
     border-radius: 18px;
     padding: 20px;
   }
@@ -106,7 +106,7 @@
   .table-footer {
     margin-top: 0.75rem;
     font-size: 0.875rem;
-    color: var(--p-text-muted-color, #94a3b8);
+    color: var(--texto-secundario);
   }
 
   /* Altura uniforme: cabeçalho e linhas de dados com o mesmo espaço vertical */

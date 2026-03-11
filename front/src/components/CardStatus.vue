@@ -117,14 +117,14 @@
   
   /* ===== CARD BASE ===== */
   .card-status {
-    background: #1f242d;
+    background: var(--bg-secundario);
     border-radius: 18px;
     padding: 25px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     transition: all 0.2s ease;
   }
   .card-subtitulo {
-    color: #adb5bd;
+    color: var(--texto-secundario);
     font-size: 1.0rem;
     margin-top: -15px;
   }
@@ -138,7 +138,7 @@
   }
   
   .card-descricao {
-    color: #adb5bd;
+    color: var(--texto-secundario);
     font-size: 1.3rem;
     margin-bottom: 8px;
   }
@@ -159,7 +159,7 @@
   .icone-container {
     width: 38px;
     height: 38px;
-    background-color: #343a40;
+    background-color: var(--bg-primario);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -167,13 +167,13 @@
   }
   
   .icone-container i {
-    color: #adb5bd;
+    color: var(--texto-secundario);
     font-size: 1.1rem;
   }
   
   /* ===== TEXTOS ===== */
   .card-label {
-    color: #adb5bd;
+    color: var(--texto-secundario);
     font-size: 0.8rem;
     margin-bottom: 8px;
   }
@@ -191,15 +191,15 @@
   
   /* ===== VARIANTES DE VALOR ===== */
   .valor-entrada {
-    color: #20c997;
+    color: var(--sucesso);
   }
   
   .valor-saida {
-    color: #ff6b6b;
+    color: var(--perigo);
   }
   
   .valor-neutro {
-    color: #e9ecef;
+    color: var(--neutro);
   }
   
   </style>

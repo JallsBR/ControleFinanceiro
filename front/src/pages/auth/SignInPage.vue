@@ -211,13 +211,13 @@ export default {
 .brand-title {
     font-size: 1.6rem;
     font-weight: 600;
-    color: #f8f9fa;
+    color: var(--texto-primario);
     letter-spacing: 1px;
     margin: 0;
 }
 
 .brand-title span {
-    color: #20c997; /* verde moderno */
+    color: var(--sucesso);
     font-weight: 700;
 }
 .logo-img {

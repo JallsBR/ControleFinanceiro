@@ -287,7 +287,7 @@ async function salvar() {
 .field-label {
   flex: 0 0 110px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--texto-primario);
   padding-top: 0.5rem;
   min-width: 110px;
 }
@@ -306,8 +306,8 @@ async function salvar() {
 }
 
 .valor-field :deep(.p-inputgroup-addon) {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--neutro);
+  color: var(--texto-primario);
   font-weight: 600;
   min-width: 2.5rem;
 }
@@ -329,13 +329,13 @@ async function salvar() {
 }
 
 .btn-fechar :deep(.p-button) {
-  background: #ff6b6b;
-  color: #fff;
+  background: var(--perigo);
+  color: var(--texto-primario);
 }
 
 .btn-fechar :deep(.p-button:hover) {
-  background: #ff5252;
-  color: #fff;
+  background: color-mix(in srgb, var(--perigo) 85%, black);
+  color: var(--texto-primario);
 }
 </style>
 

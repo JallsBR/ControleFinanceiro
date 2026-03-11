@@ -213,7 +213,7 @@ onMounted(() => {
 .field-label {
   flex: 0 0 80px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--texto-primario);
   padding-top: 0.5rem;
   min-width: 80px;
 }
@@ -227,6 +227,6 @@ onMounted(() => {
 .icone-option__icon {
   font-size: 1.1rem;
 }
-.btn-fechar :deep(.p-button) { background: #ff6b6b; color: #fff; }
-.btn-fechar :deep(.p-button:hover) { background: #ff5252; color: #fff; }
+.btn-fechar :deep(.p-button) { background: var(--perigo); color: var(--texto-primario); }
+.btn-fechar :deep(.p-button:hover) { background: color-mix(in srgb, var(--perigo) 85%, black); color: var(--texto-primario); }
 </style>

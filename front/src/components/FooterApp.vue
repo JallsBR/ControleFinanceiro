@@ -16,7 +16,7 @@
   left: 0;
   right: 0;
   width: 100%;
-  background-color: #212529;
+  background-color: var(--bg-secundario);
   border: none;
   padding: 1rem 20px;
   display: flex;
@@ -28,18 +28,19 @@
 }
 
 .footer-text {
-  color: #adb5bd;
+  color: var(--texto-secundario);
   font-size: 0.95rem;
 }
 
 .footer-email {
-  color: #20c997;
+  color: var(--sucesso);
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.2s ease;
 }
 
 .footer-email:hover {
-  color: #38d9a9;
+  color: var(--sucesso);
+  filter: brightness(1.15);
 }
 </style>

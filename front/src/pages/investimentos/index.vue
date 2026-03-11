@@ -267,12 +267,12 @@ onMounted(() => {
 }
 
 .invest-status--ativo {
-  background: #16a34a33;
-  color: #4ade80;
+  background: color-mix(in srgb, var(--sucesso) 20%, transparent);
+  color: var(--sucesso);
 }
 
 .invest-status--inativo {
-  background: #f9737333;
-  color: #fca5a5;
+  background: color-mix(in srgb, var(--perigo) 20%, transparent);
+  color: var(--perigo);
 }
 </style>

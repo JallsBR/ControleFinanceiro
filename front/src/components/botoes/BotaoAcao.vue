@@ -55,20 +55,20 @@
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 0.9rem;
-    color: white;
+    color: var(--texto-primario);
   }
   
   /* ===== VARIANTES ===== */
   .botao-entrada {
-    background-color: #20c997;
+    background-color: var(--sucesso);
   }
   
   .botao-saida {
-    background-color: #ff6b6b;
+    background-color: var(--perigo);
   }
   
   .botao-neutro {
-    background-color: #6c757d;
+    background-color: var(--texto-secundario);
   }
   
   /* ===== HOVER ===== */
