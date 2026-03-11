@@ -11,8 +11,8 @@ import ReservasPage from '../pages/reservas/index.vue'
 import InvestimentosPage from '../pages/investimentos/index.vue'
 import MetasPage from '../pages/metas/index.vue'
 import CategoriasPage from '../pages/categorias/index.vue'
-import SiginPage from '../pages/auth/SiginPage.vue'
-import SigupPage from '../pages/auth/SigupPage.vue'
+import SignInPage from '../pages/auth/SignInPage.vue'
+import SignUpPage from '../pages/auth/SignUpPage.vue'
 import store from '../store'
 
 const routes = [
@@ -23,7 +23,7 @@ const routes = [
       {
         path: '',
         name: 'signin',
-        component: SiginPage
+        component: SignInPage
       }
     ]
   },
@@ -34,7 +34,7 @@ const routes = [
       {
         path: '',
         name: 'signup',
-        component: SigupPage
+        component: SignUpPage
       }
     ]
   },

@@ -76,7 +76,7 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 import { RouterLink } from 'vue-router'
 export default {
-  name: 'SiginPage',
+  name: 'SignInPage',
   components: {
     Card,
     InputText,

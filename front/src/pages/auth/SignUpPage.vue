@@ -93,7 +93,7 @@ import Message from 'primevue/message'
 import { RouterLink } from 'vue-router'
 
 export default {
-  name: 'SigupPage',
+  name: 'SignUpPage',
   components: {
     Card,
     InputText,
