@@ -14,7 +14,7 @@
       :loading="loading"
       :totalRecords="totalRecords"
       :first="first"
-      :lazy="false"
+      :lazy="true"
       :reorderableColumns="true"
       @page="onPage"
     >
@@ -208,12 +208,14 @@ function abrirFiltro() {
 function onFiltroApply(novosFiltros) {
   filtros.value = novosFiltros || {}
   currentPage.value = 1
+  first.value = 0
   carregarLista()
 }
 
 function onFiltroClear() {
   filtros.value = {}
   currentPage.value = 1
+  first.value = 0
   carregarLista()
 }
 

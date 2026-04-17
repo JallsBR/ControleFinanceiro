@@ -22,12 +22,15 @@
       >
         <template #header>
           <div class="table-header">
-            <slot
-              name="toolbar"
-              :filters="filters"
-              :aplicarBusca="aplicarBusca"
-              :limparBusca="limparBusca"
-            />
+            <span class="table-count">{{ contagemTexto }}</span>
+            <div class="table-header__toolbar">
+              <slot
+                name="toolbar"
+                :filters="filters"
+                :aplicarBusca="aplicarBusca"
+                :limparBusca="limparBusca"
+              />
+            </div>
           </div>
         </template>
         <slot name="columns" />
@@ -42,9 +45,6 @@
           <slot name="expansion" :data="slotProps.data" />
         </template>
       </DataTable>
-      <div class="table-footer">
-        {{ contagemTexto }}
-      </div>
     </div>
   </template>
 
@@ -97,16 +97,33 @@
     padding: 20px;
   }
 
+  /* Uma faixa: total (metadado) à esquerda, ações à direita + linha divisória leve */
   .table-header {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.2rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--texto-secundario) 16%, transparent);
   }
 
-  .table-footer {
-    margin-top: 0.75rem;
-    font-size: 0.875rem;
+  .table-header__toolbar {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .table-count {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
     color: var(--texto-secundario);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
   }
 
   /* Altura uniforme: cabeçalho e linhas de dados com o mesmo espaço vertical */

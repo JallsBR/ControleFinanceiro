@@ -87,6 +87,47 @@ const routes = [
         path: '/categorias',
         name: 'categorias',
         component: CategoriasPage
+      },
+      {
+        path: '/perfil',
+        name: 'perfil',
+        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
+        meta: {
+          title: 'Perfil',
+          subtitulo: 'Seus dados e preferências da conta.',
+          icone: 'pi pi-user'
+        }
+      },
+      {
+        path: '/assinatura',
+        name: 'assinatura',
+        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
+        meta: {
+          title: 'Assinatura',
+          subtitulo: 'Plano e pagamentos da sua assinatura.',
+          icone: 'pi pi-id-card'
+        }
+      },
+      {
+        path: '/consultoria',
+        name: 'consultoria',
+        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
+        meta: {
+          title: 'Consultoria',
+          subtitulo: 'Acompanhamento e suporte consultivo.',
+          icone: 'pi pi-comments'
+        }
+      },
+      {
+        path: '/configuracoes',
+        name: 'configuracoes',
+        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
+        meta: {
+          title: 'Configurações',
+          subtitulo: 'Opções administrativas e parâmetros do sistema.',
+          icone: 'pi pi-cog',
+          requiresStaff: true
+        }
       }
     ]
   },
@@ -109,6 +150,15 @@ router.beforeEach((to, from) => {
   if ((to.name === 'signin' || to.name === 'signup') && isAuthenticated) {
     return { name: 'home' }
   }
+
+  const requiresStaff = to.matched.some(record => record.meta.requiresStaff)
+  if (requiresStaff && isAuthenticated) {
+    const u = store.getters.getUser
+    if (!u?.is_staff && !u?.is_superuser) {
+      return { name: 'home' }
+    }
+  }
+
   return true
 })
 

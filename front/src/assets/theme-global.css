@@ -155,6 +155,44 @@ body,
   border-color: var(--sucesso) !important;
 }
 
+/* ===== TieredMenu (popup, ex.: menu do usuário) — tema claro/escuro ===== */
+.p-tieredmenu.p-component {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border: 1px solid color-mix(in srgb, var(--texto-secundario) 22%, transparent) !important;
+  border-radius: 12px;
+  padding: 0.35rem;
+  box-shadow: 0 12px 32px color-mix(in srgb, #000 48%, transparent);
+}
+
+[data-tema="claro"] .p-tieredmenu.p-component {
+  box-shadow: 0 12px 32px color-mix(in srgb, #000 10%, transparent);
+}
+
+.p-tieredmenu .p-tieredmenu-item-link {
+  color: var(--texto-primario) !important;
+  border-radius: 8px;
+  gap: 0.65rem;
+}
+
+.p-tieredmenu .p-tieredmenu-item-icon {
+  color: var(--texto-secundario) !important;
+}
+
+.p-tieredmenu .p-tieredmenu-item:not(.p-disabled) .p-tieredmenu-item-content:hover,
+.p-tieredmenu .p-tieredmenu-item:not(.p-disabled) .p-tieredmenu-item-content[data-p-focused="true"] {
+  background: var(--bg-primario) !important;
+}
+
+.p-tieredmenu .p-tieredmenu-item:not(.p-disabled) .p-tieredmenu-item-content:hover .p-tieredmenu-item-icon,
+.p-tieredmenu .p-tieredmenu-item:not(.p-disabled) .p-tieredmenu-item-content[data-p-focused="true"] .p-tieredmenu-item-icon {
+  color: var(--texto-primario) !important;
+}
+
+.p-tieredmenu .p-tieredmenu-item-label {
+  color: var(--texto-primario) !important;
+}
+
 /* ===== TOAST (PrimeVue) - cores da app ===== */
 .p-toast-message-success {
   background: color-mix(in srgb, var(--sucesso) 15%, var(--bg-secundario)) !important;

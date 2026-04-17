@@ -55,10 +55,8 @@
                 >
                     <i :class="temaClaro ? 'pi pi-moon' : 'pi pi-sun'"></i>
                 </button>
-                <i class="pi pi-user"></i>
-                <span class="username">
-                    {{ user?.username || 'Visitante' }}
-                </span>
+
+                <MenuUser />
 
                 <button class="logout-btn" @click="logout">
                     <i class="pi pi-sign-out"></i>
@@ -72,8 +70,9 @@
 <script setup>
 import Menubar from 'primevue/menubar'
 import { RouterLink, useRouter } from 'vue-router'
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import MenuUser from '@/components/MenuUser.vue'
 
 const STORAGE_TEMA = 'financas-tema'
 
@@ -103,8 +102,6 @@ onMounted(() => {
     if (salvo === 'claro') aplicarTema(true)
     else if (salvo === 'escuro') aplicarTema(false)
 })
-
-const user = computed(() => store.getters.getUser)
 
 const logout = () => {
     store.dispatch('logout')
@@ -213,10 +210,6 @@ const logout = () => {
 
 .theme-toggle i {
     font-size: 1.2rem;
-}
-
-.username {
-    font-size: 0.95rem;
 }
 
 /* Logout */

@@ -273,6 +273,24 @@ function formatMesAno (ano, mes) {
   return dayjs(`${ano}-${m}-01`).format('MMMM [de] YYYY')
 }
 
+/** Agrega todas as páginas da listagem (PAGE_SIZE no backend). */
+async function listarMovimentacoesDoPeriodo (ini, fim) {
+  const filtros = { data__gte: ini, data__lte: fim }
+  const acumulado = []
+  let page = 1
+  let totalEsperado = Infinity
+
+  while (acumulado.length < totalEsperado) {
+    const { data, total } = await financasService.movimentacoes.getPage(page, filtros)
+    totalEsperado = total ?? 0
+    if (!data?.length) break
+    acumulado.push(...data)
+    page += 1
+  }
+
+  return acumulado
+}
+
 async function carregarSaldo () {
   const ini = toIsoDate(dataInicial.value)
   const fim = toIsoDate(dataFinal.value)
@@ -281,12 +299,7 @@ async function carregarSaldo () {
 
   loading.value = true
   try {
-    const raw = await financasService.movimentacoes.getAll({
-      data__gte: ini,
-      data__lte: fim
-    })
-
-    const arr = Array.isArray(raw) ? raw : (raw?.results || raw?.data || [])
+    const arr = await listarMovimentacoesDoPeriodo(ini, fim)
     const lista = (arr || []).map(m => ({
       ...m,
       diaSemana: getDiaSemana(m.data)
