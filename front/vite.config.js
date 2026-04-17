@@ -7,7 +7,9 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    port: 5174,
+    // Porta fixa para não colidir com outros Vite (5173) nem confundir com forwarding antigo.
+    port: 2486,
+    strictPort: true,
   },
   plugins: [
     vue(),

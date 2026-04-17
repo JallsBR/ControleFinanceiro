@@ -2,11 +2,14 @@ services:
   db:
     image: mysql:8.0
     restart: always
+    env_file:
+      - .env
     environment:
-      MYSQL_DATABASE: 'controle_db'
-      MYSQL_USER: 'user'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_ROOT_PASSWORD: 'root_password'
+      # Apenas o que o script oficial do MySQL não lê do .env: evita sobrescrever
+      # MYSQL_* do env_file com ${VAR:-default} do Compose (senão o root no contentor
+      # pode ficar com "root_password" enquanto o web usa o .env real).
+      MYSQL_ROOT_HOST: '%'
+    # Host:contentor — no PC usa-se localhost:3307; entre serviços (web→db) usa-se porta 3306.
     ports:
       - "3307:3306"
     volumes:
@@ -20,18 +23,17 @@ services:
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command:
+      [
+        "sh",
+        "-c",
+        "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000",
+      ]
     env_file: .env
     volumes:
       - .:/app
     ports:
       - "8001:8000"
-    environment:
-      - DB_HOST=db
-      - DB_NAME=controle_db
-      - DB_USER=root
-      - DB_PASSWORD=root_password
-      - DB_PORT=3306
     depends_on:
       db:
         condition: service_healthy

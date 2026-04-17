@@ -1,5 +1,6 @@
 import re
-from rest_framework.exceptions import AuthenticationFailed, APIException
+from django.db.models import Q
+from rest_framework.exceptions import AuthenticationFailed, APIException, ValidationError
 from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.db import connections
@@ -55,19 +56,22 @@ def _create_tenant_db_for_user(created_user):
 
 
 class Authentication:
-    def signin(self, email=None, password=None):
-        exception_auth = AuthenticationFailed('Credenciais incorretas')
-
-        user_exists = User.objects.filter(email=email).exists()
-
-        if not user_exists:
+    def signin(self, login=None, password=None):
+        exception_auth = AuthenticationFailed("Credenciais incorretas")
+        if not login or not password:
             raise exception_auth
-        
-        user = User.objects.filter(email=email).first()
+
+        login = login.strip()
+        user = User.objects.filter(
+            Q(email__iexact=login) | Q(username__iexact=login)
+        ).first()
+
+        if user is None:
+            raise exception_auth
 
         if not check_password(password, user.password):
             raise exception_auth
-        
+
         return user
     
     def signup(self, username, email, password ):
@@ -80,12 +84,8 @@ class Authentication:
         if not password or password == '':
             raise APIException('O password não deve ser null') 
         
-        user = User
-        if user.objects.filter(email=email).exists():
-            raise APIException('Este email já existe na plataforma')
-        
-        if user.objects.filter(username=username).exists():
-            raise APIException('Este usuário já existe na plataforma')
+        if User.objects.filter(Q(email=email) | Q(username=username)).exists():
+            raise ValidationError("Credenciais inválidas.")
 
         set_skip_categorias_signal(True)
         try:

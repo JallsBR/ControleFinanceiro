@@ -165,7 +165,7 @@ export default {
 
         this.progresso = 90
         const success = await this.$store.dispatch('login', {
-          email: this.email,
+          login: this.email,
           password: this.password
         })
 

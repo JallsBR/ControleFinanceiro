@@ -1,3 +1,4 @@
+from app.financas_subject import get_financas_subject_user
 from financas.models import ConsolidadoMensal
 from financas.serializers import ConsolidadoMensalSerializer
 from rest_framework import generics
@@ -32,21 +33,25 @@ class ConsolidadoMensalListCreateView(generics.ListCreateAPIView):
     ordering = ['-ano', '-mes']  # padrão: mais recentes primeiro
 
     def get_queryset(self):
-        return ConsolidadoMensal.objects.filter(created_by=self.request.user)
+        return ConsolidadoMensal.objects.filter(
+            created_by=get_financas_subject_user(self.request)
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset()).order_by('-ano', '-mes')[:CONSOLIDADOS_ULTIMOS_MESES]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=get_financas_subject_user(self.request))
 
 
 class ConsolidadoMensalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ConsolidadoMensalSerializer
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
-        return ConsolidadoMensal.objects.filter(created_by=self.request.user)
+        return ConsolidadoMensal.objects.filter(
+            created_by=get_financas_subject_user(self.request)
+        )
     def get_object(self):
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset, pk=self.kwargs["pk"])

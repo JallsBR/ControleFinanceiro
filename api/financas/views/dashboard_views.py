@@ -1,6 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
+from app.financas_subject import get_financas_subject_user
 from django.db.models import Sum, Max, Q
 from django.utils import timezone
 from rest_framework import generics
@@ -38,7 +39,7 @@ class DashboardView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        user = request.user
+        user = get_financas_subject_user(request)
         today = timezone.now().date()
         ano_atual = today.year
         mes_atual = today.month

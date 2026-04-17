@@ -39,12 +39,13 @@ export default createStore({
   },
 
   actions: {
-    async login({ commit }, { email, password }) {
+    async login({ commit }, { login, email, password }) {
       try {
         commit('SET_LOADING', true)
 
+        const identifier = (login ?? email ?? '').trim()
         const response = await api.post('/auth/signin', {
-          email,
+          login: identifier,
           password
         })
 
@@ -55,7 +56,7 @@ export default createStore({
         }
 
         commit('SET_AUTH', {
-          user: user || { username: email, email },
+          user: user || { username: identifier },
           access,
           refresh
         })

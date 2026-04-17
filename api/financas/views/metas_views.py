@@ -1,3 +1,4 @@
+from app.financas_subject import get_financas_subject_user
 from financas.models import Meta
 from financas.serializers import MetaSerializer
 from rest_framework import generics
@@ -29,16 +30,17 @@ class MetaListCreateView(generics.ListCreateAPIView):
     ]
     ordering = ['-data_meta']  # padrão
     def get_queryset(self):
-        return Meta.objects.filter(created_by=self.request.user)
+        return Meta.objects.filter(created_by=get_financas_subject_user(self.request))
+
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=get_financas_subject_user(self.request))
 
 
 class MetaRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MetaSerializer
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
-        return Meta.objects.filter(created_by=self.request.user)
+        return Meta.objects.filter(created_by=get_financas_subject_user(self.request))
     def get_object(self):
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset, pk=self.kwargs["pk"])

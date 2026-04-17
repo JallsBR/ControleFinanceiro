@@ -2,6 +2,7 @@ from datetime import timedelta
 from pathlib import Path
 import os
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -9,6 +10,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Carrega variáveis do .env (raiz do projeto = parent de api/)
 load_dotenv(BASE_DIR.parent / '.env')
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"{name} deve ser um inteiro válido.") from exc
+
+
+def _env_csv_urls(name: str, default):
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -84,15 +103,36 @@ REST_FRAMEWORK = {
 
 ROOT_URLCONF = 'app.urls'
 
-# CORS: origens explícitas para funcionar com credenciais (cookies/withCredentials)
+# CORS: origens via .env (CORS_ALLOWED_ORIGINS=url1,url2). Regex opcional para localhost (Vite em porta variável).
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-]
+CORS_ALLOWED_ORIGINS = _env_csv_urls(
+    "CORS_ALLOWED_ORIGINS",
+    [
+        "http://localhost:2486",
+        "http://127.0.0.1:2486",
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+    ],
+)
+# CORS_ALLOW_LOCALHOST_REGEX: se não definido, ativa quando DEBUG=True
+_cors_localhost_regex = os.getenv("CORS_ALLOW_LOCALHOST_REGEX")
+if _cors_localhost_regex is None or _cors_localhost_regex.strip() == "":
+    _use_cors_regex = DEBUG
+else:
+    _use_cors_regex = _cors_localhost_regex.lower() in ("true", "1", "yes", "on")
+CORS_ALLOWED_ORIGIN_REGEXES = (
+    [
+        r"^http://localhost(:\d+)?$",
+        r"^http://127\.0\.0\.1(:\d+)?$",
+    ]
+    if _use_cors_regex
+    else []
+)
 
 # Preflight: headers que o frontend pode enviar
 CORS_ALLOW_HEADERS = [
@@ -193,9 +233,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Tempos JWT via .env (ex.: access curto em prod, maior em dev)
+_jwt_access_minutes = _env_int("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", 48 * 60)
+_jwt_refresh_days = _env_int("JWT_REFRESH_TOKEN_LIFETIME_DAYS", 7)
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=48),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=_jwt_access_minutes),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=_jwt_refresh_days),
 }
 
 JAZZMIN_SETTINGS = {

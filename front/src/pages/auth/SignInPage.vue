@@ -16,16 +16,16 @@
             Credenciais não encontradas. Tente novamente.
           </Message>
 
-          <!-- Email -->
+          <!-- E-mail ou nome de usuário -->
           <div class="field mb-3">
-            <label for="email" class="field-label">Email</label>
+            <label for="login" class="field-label">E-mail ou usuário</label>
             <InputText
-              id="email"
-              v-model="email"
-              type="email"
+              id="login"
+              v-model="login"
+              type="text"
               class="w-full"
-              placeholder="seu@email.com"
-              autocomplete="email"
+              placeholder="seu@email.com ou nome de usuário"
+              autocomplete="username"
             />
           </div>
 
@@ -87,7 +87,7 @@ export default {
   },
   data() {
     return {
-      email: '',
+      login: '',
       password: '',
       error: null
     }
@@ -103,7 +103,7 @@ export default {
     async handleLogin() {
       this.error = null
       const success = await this.$store.dispatch('login', {
-        email: this.email,
+        login: this.login,
         password: this.password
       })
 

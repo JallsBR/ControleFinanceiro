@@ -5,7 +5,7 @@
 Gerenciar autenticação e cadastro de usuários na aplicação de finanças.
 
 A autenticação é baseada em:
-- Email + senha
+- E-mail **ou** nome de usuário + senha
 - JWT (access + refresh token)
 - Controle stateless
 
@@ -15,15 +15,14 @@ A autenticação é baseada em:
 
 Modelo customizado baseado em AbstractUser.
 
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
+Campos principais em `users.models.User`: `username` (único, validador Unicode), `email` (único), `tenant_db_name` (multi-tenant).
 
 Regras importantes:
 
 - Email é único.
-- Username também é único (herdado do AbstractUser).
+- Username é único (campo explícito no modelo, alinhado ao AbstractUser).
 - O campo username continua sendo obrigatório.
-- __str__ retorna o email.
+- __str__ retorna o username.
 - Ordering padrão: username.
 
 ---
@@ -35,15 +34,19 @@ A autenticação é feita manualmente via classe Authentication.
 ### Signin
 
 Método:
-    Authentication.signin(email, password)
+    Authentication.signin(login, password)
+
+O parâmetro `login` é o identificador digitado: **e-mail** (comparação case-insensitive) **ou** **username** (case-insensitive).
 
 Fluxo:
 
-1. Verifica se existe usuário com o email informado.
+1. Busca usuário por `email__iexact=login` ou `username__iexact=login`.
 2. Se não existir → AuthenticationFailed('Credenciais incorretas')
 3. Valida senha com check_password.
 4. Se inválida → AuthenticationFailed('Credenciais incorretas')
 5. Retorna o usuário autenticado.
+
+A view `Signin` aceita `login` no JSON; o campo legado `email` é aceito como alias do identificador.
 
 Após autenticação:
 - Gera JWT via RefreshToken.for_user(user)
@@ -114,7 +117,7 @@ Base: `/api/v1/auth/`
 
 | Método | Caminho | Descrição |
 |--------|---------|------------|
-| POST   | `/api/v1/auth/signin`       | Login (email + senha) → user, access, refresh |
+| POST   | `/api/v1/auth/signin`       | Login (`login` + senha; e-mail ou username) → user, access, refresh |
 | POST   | `/api/v1/auth/signup`       | Cadastro de usuário |
 | POST   | `/api/v1/auth/logout`       | Invalida refresh token (body: `refresh`) |
 | POST   | `/api/v1/auth/token/refresh/`| Renova access token (body: `refresh`) |

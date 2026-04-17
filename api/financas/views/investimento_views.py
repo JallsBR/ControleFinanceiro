@@ -1,3 +1,4 @@
+from app.financas_subject import get_financas_subject_user
 from financas.models import Investimento
 from financas.serializers import InvestimentoSerializer
 from rest_framework import generics
@@ -38,12 +39,15 @@ class InvestimentoListCreateView(generics.ListCreateAPIView):
     ]
     ordering = ['-created_at']  # padrão
     def get_queryset(self):
-        return Investimento.objects.filter(created_by=self.request.user)
+        return Investimento.objects.filter(
+            created_by=get_financas_subject_user(self.request)
+        )
 
     def perform_create(self, serializer):
+        subject = get_financas_subject_user(self.request)
         serializer.save(
-            usuario=self.request.user,
-            created_by=self.request.user,
+            usuario=subject,
+            created_by=subject,
         )
 
 
@@ -51,7 +55,9 @@ class InvestimentoRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
     serializer_class = InvestimentoSerializer
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
-        return Investimento.objects.filter(created_by=self.request.user)
+        return Investimento.objects.filter(
+            created_by=get_financas_subject_user(self.request)
+        )
     def get_object(self):
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset, pk=self.kwargs["pk"])

@@ -1,3 +1,4 @@
+from app.financas_subject import get_financas_subject_user
 from financas.models import Categoria
 from financas.serializers import CategoriaSerializer
 from rest_framework import generics
@@ -28,10 +29,11 @@ class CategoriaListCreateView(generics.ListCreateAPIView):
     ordering = ['nome']  # padrão
     def get_queryset(self):
         return Categoria.objects.filter(
-            created_by=self.request.user
+            created_by=get_financas_subject_user(self.request)
         )
+
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=get_financas_subject_user(self.request))
 
 
 class CategoriaRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -39,7 +41,7 @@ class CategoriaRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
         return Categoria.objects.filter(
-            created_by=self.request.user
+            created_by=get_financas_subject_user(self.request)
         )
     def get_object(self):
         queryset = self.get_queryset()

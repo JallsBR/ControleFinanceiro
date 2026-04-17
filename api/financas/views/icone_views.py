@@ -2,7 +2,7 @@ from financas.models import Icone
 from financas.serializers import IconeSerializer
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter

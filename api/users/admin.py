@@ -1,5 +1,5 @@
 from django.contrib import admin
-from users.models import User
+from users.models import Assinatura, Consultoria, User
 
 
 def _excluir_objetos_relacionados(queryset):
@@ -31,11 +31,27 @@ def _excluir_objetos_relacionados(queryset):
         Icone.objects.filter(created_by=user).delete()
 
 
+@admin.register(Consultoria)
+class ConsultoriaAdmin(admin.ModelAdmin):
+    list_display = ("id", "gerente", "cliente", "status", "created_at")
+    list_filter = ("status",)
+    search_fields = ("gerente__username", "gerente__email", "cliente__username", "cliente__email")
+    raw_id_fields = ("gerente", "cliente")
+
+
+@admin.register(Assinatura)
+class AssinaturaAdmin(admin.ModelAdmin):
+    list_display = ("user", "status", "plano_slug", "current_period_end", "updated_at")
+    list_filter = ("status",)
+    search_fields = ("user__username", "user__email", "stripe_customer_id", "stripe_subscription_id")
+    raw_id_fields = ("user",)
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'last_name', 'email')
-    search_fields = ('username', 'last_name', 'email')
-    list_filter = ('is_staff', 'is_superuser')
+    list_display = ("username", "last_name", "email", "is_gerente", "tenant_db_name")
+    search_fields = ("username", "last_name", "email")
+    list_filter = ("is_staff", "is_superuser", "is_gerente")
     ordering = ('email',)
 
     def save_model(self, request, obj, form, change):

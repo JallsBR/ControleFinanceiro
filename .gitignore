@@ -2,6 +2,7 @@ venv/
 ref/
 .dist/
 atalhos.txt
+popularDB.txt
 __pycache__/
 OIG4.webp
 *.sqlite3

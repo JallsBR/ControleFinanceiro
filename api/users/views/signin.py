@@ -10,16 +10,16 @@ class Signin(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
+        login = (request.data.get("login") or request.data.get("email") or "").strip()
+        password = request.data.get("password")
 
-        if not email or not password:
+        if not login or not password:
             return Response(
-                {'detail': 'Email e senha são obrigatórios.'},
-                status=HTTP_400_BAD_REQUEST
+                {"detail": "Login e senha são obrigatórios."},
+                status=HTTP_400_BAD_REQUEST,
             )
 
-        user = Authentication.signin(self, email=email, password=password)
+        user = Authentication.signin(self, login=login, password=password)
         
         token = RefreshToken.for_user(user)
 
