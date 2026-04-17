@@ -12,6 +12,7 @@ import InvestimentosPage from '../pages/investimentos/index.vue'
 import MetasPage from '../pages/metas/index.vue'
 import CategoriasPage from '../pages/categorias/index.vue'
 import PerfilPage from '../pages/perfil/PerfilPage.vue'
+import AssinaturaPage from '../pages/assinatura/AssinaturaPage.vue'
 import SignInPage from '../pages/auth/SignInPage.vue'
 import SignUpPage from '../pages/auth/SignUpPage.vue'
 import store from '../store'
@@ -97,12 +98,7 @@ const routes = [
       {
         path: '/assinatura',
         name: 'assinatura',
-        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
-        meta: {
-          title: 'Assinatura',
-          subtitulo: 'Plano e pagamentos da sua assinatura.',
-          icone: 'pi pi-id-card'
-        }
+        component: AssinaturaPage
       },
       {
         path: '/consultoria',
