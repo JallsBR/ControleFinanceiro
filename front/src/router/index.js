@@ -13,6 +13,7 @@ import MetasPage from '../pages/metas/index.vue'
 import CategoriasPage from '../pages/categorias/index.vue'
 import PerfilPage from '../pages/perfil/PerfilPage.vue'
 import AssinaturaPage from '../pages/assinatura/AssinaturaPage.vue'
+import AdministrarPage from '../pages/administrar/index.vue'
 import SignInPage from '../pages/auth/SignInPage.vue'
 import SignUpPage from '../pages/auth/SignUpPage.vue'
 import store from '../store'
@@ -111,15 +112,14 @@ const routes = [
         }
       },
       {
+        path: '/administrar',
+        name: 'administrar',
+        component: AdministrarPage,
+        meta: { requiresStaff: true }
+      },
+      {
         path: '/configuracoes',
-        name: 'configuracoes',
-        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
-        meta: {
-          title: 'Configurações',
-          subtitulo: 'Opções administrativas e parâmetros do sistema.',
-          icone: 'pi pi-cog',
-          requiresStaff: true
-        }
+        redirect: { name: 'administrar' }
       }
     ]
   },

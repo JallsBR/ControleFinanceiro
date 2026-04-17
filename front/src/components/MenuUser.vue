@@ -62,8 +62,8 @@ const displayName = computed(() => store.getters.getUser?.username || 'Visitante
 
 const user = computed(() => store.getters.getUser)
 
-/** Staff ou superuser: vê item Configurações (API expõe is_staff / is_superuser no login). */
-const podeConfiguracoes = computed(() => {
+/** Staff ou superuser: vê item Administrar (API expõe is_staff / is_superuser no login). */
+const podeAdministrar = computed(() => {
   const u = user.value
   if (!u) return false
   return Boolean(u.is_staff || u.is_superuser)
@@ -75,10 +75,10 @@ const itens = computed(() => {
     { label: 'Assinatura', icon: 'pi pi-id-card', route: '/assinatura' },
     { label: 'Consultoria', icon: 'pi pi-comments', route: '/consultoria' }
   ]
-  if (!podeConfiguracoes.value) return base
+  if (!podeAdministrar.value) return base
   return [
     ...base,
-    { label: 'Configurações', icon: 'pi pi-cog', route: '/configuracoes' }
+    { label: 'Administrar', icon: 'pi pi-cog', route: '/administrar' }
   ]
 })
 

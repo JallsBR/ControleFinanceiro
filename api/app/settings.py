@@ -9,7 +9,13 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Carrega variáveis do .env (raiz do projeto = parent de api/)
-load_dotenv(BASE_DIR.parent / '.env')
+_root_env = BASE_DIR.parent / ".env"
+load_dotenv(_root_env)
+# Sobrescreve com .env.local (gitignored) — ex.: DB_HOST=127.0.0.1 para `manage.py` no host
+# enquanto o `.env` mantém DB_HOST=db para o serviço `web` no Docker.
+_env_local = BASE_DIR.parent / ".env.local"
+if _env_local.is_file():
+    load_dotenv(_env_local, override=True)
 
 
 def _env_int(name: str, default: int) -> int:

@@ -193,6 +193,38 @@ body,
   color: var(--texto-primario) !important;
 }
 
+/* ===== Tabs (PrimeVue 4 — ex.: Administrar) — tema claro/escuro ===== */
+.p-tabs.p-component {
+  background: transparent;
+}
+
+.p-tabs .p-tablist {
+  background: var(--bg-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 20%, transparent) !important;
+}
+
+.p-tabs .p-tab {
+  color: var(--texto-secundario) !important;
+}
+
+.p-tabs .p-tab:not(.p-disabled):hover {
+  color: var(--texto-primario) !important;
+}
+
+.p-tabs .p-tab.p-tab-active {
+  color: var(--texto-primario) !important;
+}
+
+.p-tabs .p-tabpanels {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 18%, transparent) !important;
+}
+
+.p-tabs .p-tabpanels .p-tabpanel {
+  color: var(--texto-primario) !important;
+}
+
 /* ===== TOAST (PrimeVue) - cores da app ===== */
 .p-toast-message-success {
   background: color-mix(in srgb, var(--sucesso) 15%, var(--bg-secundario)) !important;

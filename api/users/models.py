@@ -92,11 +92,13 @@ class Assinatura(models.Model):
     Assinatura no banco **default** (plataforma). Campos Stripe opcionais para depois.
     """
 
+    class Plano(models.TextChoices):
+        COMUM = "comum", _("Comum")
+        PREMIUM = "premium", _("Premium")
+
     class Status(models.TextChoices):
-        INATIVA = "inativa", _("Inativa")
-        TRIAL = "trial", _("Período de teste")
         ATIVA = "ativa", _("Ativa")
-        PAGAMENTO_PENDENTE = "pagamento_pendente", _("Pagamento pendente")
+        EXPIRADA = "expirada", _("Expirada")
         CANCELADA = "cancelada", _("Cancelada")
 
     user = models.OneToOneField(
@@ -105,18 +107,25 @@ class Assinatura(models.Model):
         related_name="assinatura",
         verbose_name=_("usuário"),
     )
+    plano = models.CharField(
+        _("plano"),
+        max_length=16,
+        choices=Plano.choices,
+        default=Plano.COMUM,
+        db_index=True,
+    )
     status = models.CharField(
         _("status"),
-        max_length=30,
+        max_length=16,
         choices=Status.choices,
-        default=Status.INATIVA,
+        default=Status.ATIVA,
         db_index=True,
     )
     plano_slug = models.CharField(
-        _("identificador do plano"),
+        _("identificador Stripe / legado"),
         max_length=64,
         blank=True,
-        help_text=_("Ex.: basico, premium — alinhar depois com price id da Stripe."),
+        help_text=_("Opcional: price id ou slug legado da Stripe."),
     )
     stripe_customer_id = models.CharField(max_length=255, blank=True)
     stripe_subscription_id = models.CharField(max_length=255, blank=True)
@@ -134,4 +143,4 @@ class Assinatura(models.Model):
         verbose_name_plural = _("assinaturas")
 
     def __str__(self):
-        return f"{self.user_id} — {self.status}"
+        return f"{self.user_id} — {self.plano} ({self.status})"

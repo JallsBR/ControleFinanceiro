@@ -41,8 +41,8 @@ class ConsultoriaAdmin(admin.ModelAdmin):
 
 @admin.register(Assinatura)
 class AssinaturaAdmin(admin.ModelAdmin):
-    list_display = ("user", "status", "plano_slug", "current_period_end", "updated_at")
-    list_filter = ("status",)
+    list_display = ("user", "plano", "status", "plano_slug", "current_period_end", "updated_at")
+    list_filter = ("plano", "status")
     search_fields = ("user__username", "user__email", "stripe_customer_id", "stripe_subscription_id")
     raw_id_fields = ("user",)
 

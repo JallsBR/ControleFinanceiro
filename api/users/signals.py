@@ -1,12 +1,15 @@
 import re
+from datetime import timedelta
 
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from django.db import connections
+from django.utils import timezone
 
 from app.db_router import get_skip_categorias_signal
 from financas.service import criar_categorias_iniciais
+from users.models import Assinatura
 
 
 def _drop_tenant_db_if_exists(db_name):
@@ -33,3 +36,18 @@ def drop_tenant_db_on_user_delete(sender, instance, **kwargs):
 def criar_categorias_usuario(sender, instance, created, **kwargs):
     if created and not get_skip_categorias_signal():
         criar_categorias_iniciais(instance)
+
+
+@receiver(post_save, sender=get_user_model())
+def criar_assinatura_inicial(sender, instance, created, **kwargs):
+    """Novo usuário: plano Comum, status ativa, período de 30 dias a partir da criação."""
+    if not created:
+        return
+    if Assinatura.objects.filter(user_id=instance.pk).exists():
+        return
+    Assinatura.objects.create(
+        user=instance,
+        plano=Assinatura.Plano.COMUM,
+        status=Assinatura.Status.ATIVA,
+        current_period_end=timezone.now() + timedelta(days=30),
+    )
