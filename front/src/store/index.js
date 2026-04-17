@@ -35,6 +35,15 @@ export default createStore({
       localStorage.removeItem('access')
       localStorage.removeItem('refresh')
       localStorage.removeItem('user')
+    },
+
+    /** Mescla dados do usuário após atualizar perfil (mantém is_staff etc.). */
+    UPDATE_USER (state, user) {
+      if (!user) return
+      state.user = { ...(state.user || {}), ...user }
+      try {
+        localStorage.setItem('user', JSON.stringify(state.user))
+      } catch (_) {}
     }
   },
 

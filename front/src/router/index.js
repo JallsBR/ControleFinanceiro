@@ -11,6 +11,7 @@ import ReservasPage from '../pages/reservas/index.vue'
 import InvestimentosPage from '../pages/investimentos/index.vue'
 import MetasPage from '../pages/metas/index.vue'
 import CategoriasPage from '../pages/categorias/index.vue'
+import PerfilPage from '../pages/perfil/PerfilPage.vue'
 import SignInPage from '../pages/auth/SignInPage.vue'
 import SignUpPage from '../pages/auth/SignUpPage.vue'
 import store from '../store'
@@ -91,12 +92,7 @@ const routes = [
       {
         path: '/perfil',
         name: 'perfil',
-        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
-        meta: {
-          title: 'Perfil',
-          subtitulo: 'Seus dados e preferências da conta.',
-          icone: 'pi pi-user'
-        }
+        component: PerfilPage
       },
       {
         path: '/assinatura',
