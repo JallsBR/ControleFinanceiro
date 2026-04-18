@@ -21,7 +21,7 @@
                 class="w-full"
                 style="width: 100%;"
                 autocomplete="off"
-                
+                :disabled="readOnly"
               />
             </div>
           </div>
@@ -44,6 +44,7 @@
                   :maxFractionDigits="2"
                   placeholder="0,00"
                   class="valor-input"
+                  :disabled="readOnly"
                 />
               </InputGroup>
             </div>
@@ -52,7 +53,7 @@
           <div class="field field-ativa">
             <label class="field-label">Ativa</label>
             <div class="field-input">
-              <InputSwitch v-model="form.ativa" />
+              <InputSwitch v-model="form.ativa" :disabled="readOnly" />
             </div>
           </div>
         </div>
@@ -62,6 +63,7 @@
 
     <template #actions>
       <Button
+        v-if="!readOnly"
         type="button"
         label="Salvar"
         icon="pi pi-check"
@@ -90,8 +92,10 @@ import InputSwitch from 'primevue/inputswitch'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -143,6 +147,7 @@ watch(() => props.visible, async (visible) => {
 })
 
 async function salvar() {
+  if (readOnly.value) return
   const payload = {
     nome: (form.value.nome || '').trim(),
     valor: Number(form.value.valor) || 0,

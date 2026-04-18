@@ -23,6 +23,7 @@
               :maxFractionDigits="2"
               placeholder="0,00"
               class="valor-input"
+              :disabled="readOnly"
             />
           </InputGroup>
           <small v-if="errors.valor" class="p-error block">{{ errors.valor }}</small>
@@ -39,6 +40,7 @@
             dateFormat="dd/mm/yy"
             showIcon
             class="w-full"
+            :disabled="readOnly"
           />
         </div>
       </div>
@@ -57,6 +59,7 @@
             display="chip"
             placeholder="Selecione uma categoria"
             class="w-full"
+            :disabled="readOnly"
           />
           <small v-if="errors.categoria" class="p-error block">{{ errors.categoria }}</small>
         </div>
@@ -71,6 +74,7 @@
             v-model="form.descricao"
             class="w-full"
             autocomplete="off"
+            :disabled="readOnly"
           />
         </div>
       </div>
@@ -78,6 +82,7 @@
 
     <template #actions>
       <Button
+        v-if="!readOnly"
         type="button"
         label="Salvar"
         icon="pi pi-check"
@@ -107,8 +112,10 @@ import MultiSelect from 'primevue/multiselect'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const props = defineProps({
   visible: {
@@ -217,6 +224,7 @@ const validar = () => {
 }
 
 const salvar = async () => {
+  if (readOnly.value) return
   if (!validar()) return
 
   const dataVal = form.value.data

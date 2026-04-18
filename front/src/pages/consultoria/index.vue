@@ -13,7 +13,7 @@
       :closable="false"
       class="consultoria-msg consultoria-msg--fora"
     >
-      Em modo de visualização administrativa, esta página segue o seu perfil de staff; o conteúdo não reflete o utilizador monitorizado.
+      Modo de visualização administrativa: os dados de consultoria (vínculo, clientes ou pedidos em aguardo) correspondem ao utilizador que está a monitorizar, como na conta dele.
     </Message>
 
     <Message v-if="erroCarregar" severity="warn" :closable="false" class="consultoria-msg consultoria-msg--fora">
@@ -41,12 +41,13 @@
             :key="c.consultoria_id ?? c.id"
             :nome="c.nome_exibicao || c.username"
             :subtitulo="c.email"
+            :cliente-user-id="c.id"
             :consultoria-id="c.consultoria_id"
             :encerrando="
               encerrandoVinculoId != null &&
                 Number(encerrandoVinculoId) === Number(c.consultoria_id)
             "
-            @encerrar="() => encerrarVinculo(c.consultoria_id)"
+            @encerrar="() => solicitarEncerramentoVinculo(c.consultoria_id)"
           />
         </div>
       </div>
@@ -70,12 +71,34 @@
             encerrandoVinculoId != null &&
               Number(encerrandoVinculoId) === Number(vinculoConsultoriaId)
           "
-          @encerrar="() => encerrarVinculo(vinculoConsultoriaId)"
+          @encerrar="() => solicitarEncerramentoVinculo(vinculoConsultoriaId)"
         />
       </div>
 
       <!-- Formulário: solicitar consultoria -->
       <div v-else class="consultoria-panel" aria-labelledby="titulo-solicitar">
+        <Message
+          v-if="solicitacoesEnviadasPendentes.length"
+          severity="warn"
+          :closable="false"
+          class="consultoria-msg"
+        >
+          <p class="consultoria-msg-pendente mb-0">
+            Tem
+            <template v-if="solicitacoesEnviadasPendentes.length === 1">
+              um pedido de consultoria em aguardo
+            </template>
+            <template v-else>
+              {{ solicitacoesEnviadasPendentes.length }} pedidos de consultoria em aguardo
+            </template>
+            (aguardam aceite ou recusa por parte do consultor)
+            <template v-if="textoConsultoresPendentes">
+              : <strong>{{ textoConsultoresPendentes }}</strong>
+            </template>.
+            Não é possível enviar outro pedido ao mesmo consultor enquanto existir um pedido pendente.
+          </p>
+        </Message>
+
         <h2 id="titulo-solicitar" class="consultoria-secao-titulo">Solicitar consultoria</h2>
 
         <Message v-if="erroEnvio" severity="error" :closable="true" class="consultoria-msg" @close="erroEnvio = ''">
@@ -148,6 +171,21 @@
           </div>
         </form>
       </div>
+
+      <DialogConfirma
+        v-model="visibleConfirmaEncerrar"
+        titulo="Encerrar consultoria?"
+        mensagem="Tem a certeza de que pretende encerrar esta consultoria? O acesso na plataforma deixa de estar ativo para este vínculo."
+        icone="pi pi-trash"
+        tipo="danger"
+        labelConfirmar="Encerrar"
+        labelCancelar="Cancelar"
+        iconeConfirmar="pi pi-trash"
+        severityConfirmar="danger"
+        :loading="encerrandoVinculoId != null"
+        @confirm="confirmarEncerramentoVinculo"
+        @cancel="cancelarEncerramentoVinculo"
+      />
     </template>
   </div>
 </template>
@@ -157,6 +195,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import CardStatus from '@/components/CardStatus.vue'
 import ConsultorCard from '@/components/ConsultorCard.vue'
+import DialogConfirma from '@/components/DialogConfirma.vue'
 import Message from 'primevue/message'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -171,7 +210,15 @@ const toast = useToast()
 
 const modoMonitorVisualizacao = computed(() => store.getters.subjectViewAdminActive)
 const user = computed(() => store.getters.getUser)
-const isConsultor = computed(() => Boolean(user.value?.is_gerente))
+const monitored = computed(() => store.getters.getSubjectMonitoredUser)
+/** Painel de consultor só para gerente real ou staff a ver um gerente. */
+const isConsultor = computed(() => {
+  if (store.getters.subjectViewConsultorActive) return false
+  if (user.value?.is_gerente) return true
+  return Boolean(
+    modoMonitorVisualizacao.value && monitored.value?.is_gerente
+  )
+})
 
 const carregando = ref(true)
 const erroCarregar = ref('')
@@ -181,11 +228,55 @@ const vinculoConsultor = ref(null)
 const vinculoConsultoriaId = ref(null)
 const clientes = ref([])
 const encerrandoVinculoId = ref(null)
+const visibleConfirmaEncerrar = ref(false)
+/** PK ``Consultoria`` escolhida no diálogo antes de confirmar. */
+const consultoriaIdPendenteEncerrar = ref(null)
 
 const consultorIdentifier = ref('')
 const mensagem = ref('')
 const enviando = ref(false)
 const erroEnvio = ref('')
+/** Pedidos enviados por este utilizador ainda sem aceite nem eliminação (lista API). */
+const solicitacoesEnviadasPendentes = ref([])
+
+function nomeConsultorBreve (c) {
+  if (!c) return ''
+  if (c.nome_exibicao) return c.nome_exibicao
+  const n = `${c.first_name || ''} ${c.last_name || ''}`.trim()
+  return n || c.username || c.email || ''
+}
+
+const textoConsultoresPendentes = computed(() =>
+  solicitacoesEnviadasPendentes.value
+    .map((s) => nomeConsultorBreve(s.consultor))
+    .filter(Boolean)
+    .join(', ')
+)
+
+async function refreshSolicitacoesPendentesCliente () {
+  solicitacoesEnviadasPendentes.value = []
+  if (isConsultor.value || vinculoConsultor.value) {
+    return
+  }
+  let uid = user.value?.id
+  if (modoMonitorVisualizacao.value) {
+    const sid = Number(store.state.subjectViewMode?.userId)
+    uid = Number.isFinite(sid) ? sid : null
+  }
+  if (!uid) return
+  try {
+    const sol = await consultoriaService.listSolicitacoes({
+      usuario: uid,
+      estado: 'pendente',
+      page: 1
+    })
+    solicitacoesEnviadasPendentes.value = Array.isArray(sol?.results)
+      ? sol.results
+      : []
+  } catch (e) {
+    console.log('[consultoria] refreshSolicitacoesPendentesCliente', e)
+  }
+}
 
 function extrairMensagemErro (error) {
   const d = error?.response?.data
@@ -207,11 +298,13 @@ async function carregar () {
       clientes.value = Array.isArray(data?.results) ? data.results : []
       vinculoConsultor.value = null
       vinculoConsultoriaId.value = null
+      solicitacoesEnviadasPendentes.value = []
     } else {
       const data = await consultoriaService.getVinculoAtual()
       vinculoConsultor.value = data?.consultor || null
       vinculoConsultoriaId.value = data?.consultoria_id ?? null
       clientes.value = []
+      await refreshSolicitacoesPendentesCliente()
     }
   } catch (e) {
     console.log('[consultoria] carregar', e)
@@ -221,24 +314,37 @@ async function carregar () {
   }
 }
 
-async function encerrarVinculo (consultoriaId) {
+function solicitarEncerramentoVinculo (consultoriaId) {
   const id =
     consultoriaId != null && consultoriaId !== ''
       ? Number(consultoriaId)
       : NaN
   if (!Number.isFinite(id) || encerrandoVinculoId.value != null) return
-  const ok = window.confirm(
-    'Tem a certeza de que pretende encerrar esta consultoria? O acesso na plataforma deixa de estar ativo para este vínculo.'
-  )
-  if (!ok) return
-  encerrandoVinculoId.value = id
+  consultoriaIdPendenteEncerrar.value = id
+  visibleConfirmaEncerrar.value = true
+}
+
+function cancelarEncerramentoVinculo () {
+  consultoriaIdPendenteEncerrar.value = null
+  visibleConfirmaEncerrar.value = false
+}
+
+async function confirmarEncerramentoVinculo () {
+  const id = consultoriaIdPendenteEncerrar.value
+  if (id == null || !Number.isFinite(Number(id))) {
+    cancelarEncerramentoVinculo()
+    return
+  }
+  encerrandoVinculoId.value = Number(id)
   try {
-    await consultoriaService.encerrarVinculoConsultoria(id)
+    await consultoriaService.encerrarVinculoConsultoria(Number(id))
     toast.success('Consultoria', 'O vínculo foi encerrado.')
+    visibleConfirmaEncerrar.value = false
+    consultoriaIdPendenteEncerrar.value = null
     await carregar()
     await store.dispatch('fetchConsultoriaResumo')
   } catch (e) {
-    console.log('[consultoria] encerrarVinculo', e)
+    console.log('[consultoria] confirmarEncerramentoVinculo', e)
     toast.error('Consultoria', extrairMensagemErro(e))
   } finally {
     encerrandoVinculoId.value = null
@@ -265,6 +371,7 @@ async function enviar () {
     )
     consultorIdentifier.value = ''
     mensagem.value = ''
+    await refreshSolicitacoesPendentesCliente()
     await store.dispatch('fetchConsultoriaResumo')
   } catch (e) {
     console.log('[consultoria] enviar', e)
@@ -279,6 +386,13 @@ onMounted(async () => {
     await store.dispatch('refreshUserProfile')
   } catch (e) {
     console.log('[consultoria] refreshUserProfile', e)
+  }
+  if (modoMonitorVisualizacao.value && store.state.subjectViewMode?.userId) {
+    try {
+      await store.dispatch('fetchSubjectMonitoredProfile')
+    } catch (e) {
+      console.log('[consultoria] fetchSubjectMonitoredProfile', e)
+    }
   }
   await carregar()
 })
@@ -295,6 +409,10 @@ onMounted(async () => {
 
 .consultoria-msg {
   margin-bottom: 1rem;
+}
+
+.consultoria-msg-pendente {
+  line-height: 1.5;
 }
 
 .consultoria-panel {

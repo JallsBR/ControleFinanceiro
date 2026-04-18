@@ -17,15 +17,16 @@
       :aria-label="'Ações para ' + titulo"
     >
       <Button
-        v-if="mostrarVisualizar"
+        v-if="mostrarVisualizar && podeAbrirVisualizacao"
         type="button"
         class="consultor-card__btn"
         icon="pi pi-eye"
         rounded
         text
         severity="success"
-        :aria-label="'Visualizar dados de ' + titulo + ' (em breve)'"
-        title="Visualizar (em breve)"
+        :aria-label="'Ver finanças de ' + titulo + ' (novo separador, só leitura)'"
+        title="Ver finanças do cliente (só leitura)"
+        @click="abrirVisualizacaoCliente"
       />
       <Button
         v-if="mostrarEncerrar"
@@ -58,6 +59,12 @@
 <script setup>
 import { computed } from 'vue'
 import Button from 'primevue/button'
+import {
+  FINANCAS_VIEW_AS_DISPLAY_QUERY,
+  FINANCAS_VIEW_AS_KIND_QUERY,
+  FINANCAS_VIEW_AS_USER_QUERY,
+  SUBJECT_VIEW_KIND
+} from '@/constants/financasViewAs'
 
 const props = defineProps({
   /** Nome preferencial (ex.: nome_exibicao da API) */
@@ -84,6 +91,11 @@ const props = defineProps({
   encerrando: {
     type: Boolean,
     default: false
+  },
+  /** PK do utilizador cliente (default DB) para modo visualização finanças. */
+  clienteUserId: {
+    type: [Number, String],
+    default: null
   }
 })
 
@@ -101,9 +113,31 @@ const mostrarEncerrar = computed(() => {
   return id != null && id !== ''
 })
 
+const podeAbrirVisualizacao = computed(() => {
+  const id = props.clienteUserId
+  return id != null && id !== ''
+})
+
 function onEncerrar () {
   if (!mostrarEncerrar.value || props.encerrando) return
   emit('encerrar')
+}
+
+function abrirVisualizacaoCliente () {
+  if (!podeAbrirVisualizacao.value) return
+  const basePath = import.meta.env.BASE_URL || '/'
+  const path = basePath.endsWith('/') ? basePath : `${basePath}/`
+  const url = new URL(path, window.location.origin)
+  url.searchParams.set(FINANCAS_VIEW_AS_USER_QUERY, String(props.clienteUserId))
+  url.searchParams.set(FINANCAS_VIEW_AS_KIND_QUERY, SUBJECT_VIEW_KIND.CONSULTOR)
+  const label = (props.nome || '').trim() || (props.subtitulo || '').trim()
+  if (label) {
+    url.searchParams.set(
+      FINANCAS_VIEW_AS_DISPLAY_QUERY,
+      encodeURIComponent(label.slice(0, 120))
+    )
+  }
+  window.open(url.toString(), '_blank', 'noopener,noreferrer')
 }
 </script>
 

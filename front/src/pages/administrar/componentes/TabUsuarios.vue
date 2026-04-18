@@ -190,7 +190,11 @@ import { PAGE_SIZE } from '@/constants/pagination'
 import { labelAssinatura } from './usuariosAdminMock'
 import { adminService } from '@/services/adminService'
 import { useToast } from '@/utils/useToast'
-import { FINANCAS_VIEW_AS_USER_QUERY } from '@/constants/financasViewAs'
+import {
+  FINANCAS_VIEW_AS_KIND_QUERY,
+  FINANCAS_VIEW_AS_USER_QUERY,
+  SUBJECT_VIEW_KIND
+} from '@/constants/financasViewAs'
 import { resolveAdminCapabilities } from '@/utils/adminCapabilities'
 
 const store = useStore()
@@ -317,6 +321,7 @@ function abrirVisaoComoUtilizador (row) {
   const path = basePath.endsWith('/') ? basePath : `${basePath}/`
   const url = new URL(path, window.location.origin)
   url.searchParams.set(FINANCAS_VIEW_AS_USER_QUERY, String(row.id))
+  url.searchParams.set(FINANCAS_VIEW_AS_KIND_QUERY, SUBJECT_VIEW_KIND.ADMIN)
   window.open(url.toString(), '_blank', 'noopener,noreferrer')
 }
 

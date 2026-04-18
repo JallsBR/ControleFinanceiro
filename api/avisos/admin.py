@@ -27,9 +27,10 @@ class SolicitacaoConsultoriaAdmin(admin.ModelAdmin):
         "usuario",
         "consultor",
         "aceito",
+        "vinculo_encerrado",
         "created_at",
     )
-    list_filter = ("aceito", "created_at")
+    list_filter = ("aceito", "vinculo_encerrado", "created_at")
     search_fields = ("mensagem",)
     raw_id_fields = ("usuario", "consultor")
     ordering = ("-created_at",)

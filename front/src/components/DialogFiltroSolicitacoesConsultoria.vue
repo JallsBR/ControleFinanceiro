@@ -90,7 +90,7 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
-  /** Filtros ativos na lista (`{ search?: string, estado?: 'pendente'|'aceito' }`). */
+  /** Filtros ativos na lista (`{ search?: string, estado?: 'pendente'|'aceito'|'encerrada' }`). */
   filtros: {
     type: Object,
     default: () => ({})
@@ -109,7 +109,8 @@ const estado = ref('')
 
 const opcoesEstado = [
   { label: 'Pendente', value: 'pendente' },
-  { label: 'Aceito', value: 'aceito' }
+  { label: 'Aceito (vínculo ativo)', value: 'aceito' },
+  { label: 'Encerrada (aceite, vínculo encerrado)', value: 'encerrada' }
 ]
 
 watch(
@@ -119,7 +120,8 @@ watch(
       texto.value =
         props.filtros?.search != null ? String(props.filtros.search) : ''
       const e = props.filtros?.estado
-      estado.value = e === 'pendente' || e === 'aceito' ? e : ''
+      estado.value =
+        e === 'pendente' || e === 'aceito' || e === 'encerrada' ? e : ''
     }
   }
 )
@@ -130,7 +132,11 @@ function onAplicar () {
   if (search) {
     out.search = search
   }
-  if (estado.value === 'pendente' || estado.value === 'aceito') {
+  if (
+    estado.value === 'pendente' ||
+    estado.value === 'aceito' ||
+    estado.value === 'encerrada'
+  ) {
     out.estado = estado.value
   }
   emit('apply', out)

@@ -3,7 +3,7 @@
         tituloPrincipal="Metas"
         subtitulo="Gerencie as suas metas"
         icone="pi pi-bullseye"
-        :mostrarAcao="true"
+        :mostrarAcao="!readOnly"
         iconeAcao="pi pi-plus"
         @acao="abrirModalMeta"
         style="margin-bottom: 1rem;"
@@ -50,7 +50,13 @@
                     </span>
                 </template>
             </Column>
-            <Column header="Ações" columnKey="acoesMetas" style="width: 8rem" :reorderableColumn="false">
+            <Column
+              v-if="!readOnly"
+              header="Ações"
+              columnKey="acoesMetas"
+              style="width: 8rem"
+              :reorderableColumn="false"
+            >
                 <template #body="slotProps">
                     <Button icon="pi pi-pencil" text @click="editarMeta(slotProps.data)" />
                     <Button icon="pi pi-trash" text severity="danger" @click="deletarMeta(slotProps.data)" />
@@ -95,11 +101,13 @@ import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogMeta from '@/pages/metas/DialogMeta.vue'
 import DialogFiltroMetas from '@/components/DialogFiltroMetas.vue'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const visibleMeta = ref(false)
 const visibleExcluir = ref(false)
@@ -138,11 +146,13 @@ function onPage(event) {
 }
 
 function abrirModalMeta() {
+  if (readOnly.value) return
   metaEmEdicao.value = null
   visibleMeta.value = true
 }
 
 function editarMeta(item) {
+  if (readOnly.value) return
   metaEmEdicao.value = item
   visibleMeta.value = true
 }
@@ -168,13 +178,13 @@ function onFiltroClear() {
 }
 
 function deletarMeta(item) {
-  if (!item?.id) return
+  if (readOnly.value || !item?.id) return
   itemParaExcluir.value = item
   visibleExcluir.value = true
 }
 
 async function executarExclusao() {
-  if (!itemParaExcluir.value?.id) return
+  if (readOnly.value || !itemParaExcluir.value?.id) return
   excluindo.value = true
   try {
     await financasService.metas.delete(itemParaExcluir.value.id)

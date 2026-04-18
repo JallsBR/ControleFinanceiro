@@ -5,18 +5,22 @@
     role="status"
     aria-live="polite"
   >
-    <Tag
-      v-if="adminAtivo"
-      value="Modo Administrador ativo"
-      severity="danger"
-      class="modo-tag"
-    />
-    <Tag
-      v-else-if="consultorAtivo"
-      value="Modo Consultor ativo"
-      severity="warn"
-      class="modo-tag"
-    />
+    <div class="banner-modo-visual__inner">
+      <Tag
+        v-if="adminAtivo"
+        value="Modo Administrador ativo"
+        severity="danger"
+        class="modo-tag"
+      />
+      <template v-else-if="consultorAtivo">
+        <Tag
+          value="Modo Consultor ativo"
+          severity="warn"
+          class="modo-tag"
+        />
+
+      </template>
+    </div>
   </div>
 </template>
 
@@ -40,6 +44,21 @@ const mostrarAlgumModo = computed(() => adminAtivo.value || consultorAtivo.value
   width: 100%;
   padding: 0.35rem 1rem 0.45rem;
   box-sizing: border-box;
+}
+
+.banner-modo-visual__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem 0.75rem;
+  max-width: 100%;
+}
+
+.banner-modo-visual__hint {
+  font-size: 0.78rem;
+  color: var(--texto-secundario);
+  line-height: 1.35;
 }
 
 .modo-tag :deep(.p-tag) {

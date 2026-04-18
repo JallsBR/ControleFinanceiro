@@ -10,7 +10,7 @@
         <!-- Coluna Esquerda: Categorias de Entrada (E) -->
         <div class="coluna">
             <h2 class="coluna-titulo">Categorias de Entrada</h2>
-            <div class="table-toolbar">
+            <div v-if="!readOnly" class="table-toolbar">
                 <div class="right">
                     <Button icon="pi pi-plus" text label="Cadastrar nova categoria" @click="abrirNovaCategoria('E')" />
                 </div>
@@ -29,7 +29,7 @@
                     </Column>
                     <Column field="nome" columnKey="nome" header="Nome" sortable />
                     <Column field="descricao" columnKey="descricao" header="Descrição" sortable />
-                    <Column header="Ações" columnKey="acoesE" :reorderableColumn="false">
+                    <Column v-if="!readOnly" header="Ações" columnKey="acoesE" :reorderableColumn="false">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" text @click="editarCategoria('E', slotProps.data)" />
                             <Button icon="pi pi-trash" text severity="danger" @click="deletarCategoria('E', slotProps.data)" />
@@ -42,7 +42,7 @@
         <!-- Coluna Direita: Categorias de Saída (S) -->
         <div class="coluna">
             <h2 class="coluna-titulo">Categorias de Saída</h2>
-            <div class="table-toolbar">
+            <div v-if="!readOnly" class="table-toolbar">
                 <div class="right">
                     <Button icon="pi pi-plus" text label="Cadastrar nova categoria" @click="abrirNovaCategoria('S')" />
                 </div>
@@ -61,7 +61,7 @@
                     </Column>
                     <Column field="nome" columnKey="nome" header="Nome" sortable />
                     <Column field="descricao" columnKey="descricao" header="Descrição" sortable />
-                    <Column header="Ações" columnKey="acoesS" :reorderableColumn="false">
+                    <Column v-if="!readOnly" header="Ações" columnKey="acoesS" :reorderableColumn="false">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" text @click="editarCategoria('S', slotProps.data)" />
                             <Button icon="pi pi-trash" text severity="danger" @click="deletarCategoria('S', slotProps.data)" />
@@ -102,10 +102,12 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 import DialogCategoria from '@/pages/categorias/DialogCategoria.vue'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const TIPO_E = 'E'
 const TIPO_S = 'S'
@@ -188,12 +190,14 @@ function filtrarSaidas() {
 }
 
 function abrirNovaCategoria(tipo) {
+  if (readOnly.value) return
   tipoCategoria.value = tipo
   categoriaEmEdicao.value = null
   visibleCategoria.value = true
 }
 
 function editarCategoria(tipo, item) {
+  if (readOnly.value) return
   tipoCategoria.value = tipo
   categoriaEmEdicao.value = item
   visibleCategoria.value = true
@@ -210,7 +214,7 @@ watch(visibleCategoria, (v) => {
 })
 
 function deletarCategoria(tipo, item) {
-  if (!item?.id) return
+  if (readOnly.value || !item?.id) return
   itemParaExcluir.value = { ...item, tipo }
   visibleExcluir.value = true
 }
@@ -220,7 +224,7 @@ watch(visibleExcluir, (v) => {
 })
 
 async function executarExclusao() {
-  if (!itemParaExcluir.value?.id) return
+  if (readOnly.value || !itemParaExcluir.value?.id) return
   excluindo.value = true
   try {
     await financasService.categorias.delete(itemParaExcluir.value.id)

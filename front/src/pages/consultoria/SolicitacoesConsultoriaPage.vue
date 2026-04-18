@@ -2,7 +2,7 @@
   <div class="solicitacoes-page">
     <CardStatus
       tituloPrincipal="Solicitações de consultoria"
-      subtitulo="Pedidos de utilizadores que o identificaram como consultor. Aceite o pedido para ativar o vínculo; elimine para recusar um pendente ou encerrar a consultoria já aceita."
+      subtitulo="Pedidos de utilizadores que o identificaram como consultor. Aceite para ativar o vínculo; recuse um pendente com eliminar; num pedido aceite, eliminar encerra o vínculo e o estado passa a «Encerrada» (histórico mantido)."
       icone="pi pi-inbox"
       style="margin-bottom: 1rem;"
     />
@@ -51,7 +51,12 @@
         >
           <template #body="{ data }">
             <div class="sol-estado">
-              <Tag v-if="data.aceito" severity="success" value="Aceito" />
+              <Tag
+                v-if="data.aceito && data.vinculo_encerrado"
+                severity="secondary"
+                value="Encerrada"
+              />
+              <Tag v-else-if="data.aceito" severity="success" value="Aceito" />
               <Tag v-else severity="warn" value="Pendente" />
             </div>
           </template>
@@ -82,9 +87,7 @@
                 icon="pi pi-trash"
                 text
                 severity="danger"
-                :aria-label="slotProps.data.aceito
-                  ? ('Encerrar vínculo e remover pedido de ' + nomeUtilizador(slotProps.data.usuario))
-                  : ('Recusar e eliminar pedido de ' + nomeUtilizador(slotProps.data.usuario))"
+                :aria-label="ariaLabelEliminar(slotProps.data)"
                 :loading="acaoId === slotProps.data.id && acaoTipo === 'excluir'"
                 :disabled="acaoId != null"
                 @click="excluirPedido(slotProps.data)"
@@ -105,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import CardStatus from '@/components/CardStatus.vue'
 import BaseDataTable from '@/components/BaseDataTable.vue'
@@ -130,6 +133,20 @@ const acaoId = ref(null)
 const acaoTipo = ref('')
 
 const user = computed(() => store.getters.getUser)
+const monitored = computed(() => store.getters.getSubjectMonitoredUser)
+
+/** ID do consultor na listagem: JWT ou utilizador monitorizado (staff + gerente). */
+const consultorIdLista = computed(() => {
+  const u = user.value
+  if (!u?.id) return null
+  if (store.getters.subjectViewAdminActive) {
+    const m = monitored.value
+    if (m?.is_gerente && m.id != null) return Number(m.id)
+    const sid = Number(store.state.subjectViewMode?.userId)
+    return Number.isFinite(sid) ? sid : null
+  }
+  return Number(u.id)
+})
 
 function nomeUtilizador (u) {
   if (!u) return '—'
@@ -140,6 +157,17 @@ function nomeUtilizador (u) {
   return u.username || `ID ${u.id}`
 }
 
+function ariaLabelEliminar (row) {
+  const nome = nomeUtilizador(row.usuario)
+  if (row.vinculo_encerrado) {
+    return `Eliminar definitivamente o registo encerrado de ${nome}`
+  }
+  if (row.aceito) {
+    return `Encerrar consultoria (pedido passa a encerrado) de ${nome}`
+  }
+  return `Recusar e eliminar pedido de ${nome}`
+}
+
 function extrairErro (error) {
   const d = error?.response?.data
   if (typeof d?.detail === 'string') return d.detail
@@ -148,7 +176,7 @@ function extrairErro (error) {
 }
 
 const carregarLista = async () => {
-  const uid = user.value?.id
+  const uid = consultorIdLista.value
   if (!uid) return
   loading.value = true
   try {
@@ -223,9 +251,11 @@ async function excluirPedido (row) {
     await recusarSolicitacao(row.id)
     toast.success(
       'Consultoria',
-      row.aceito
-        ? 'Vínculo encerrado e pedido removido.'
-        : 'Pedido recusado e removido.'
+      row.vinculo_encerrado
+        ? 'Solicitação encerrada eliminada.'
+        : row.aceito
+          ? 'Consultoria encerrada. O pedido ficou registado como encerrada.'
+          : 'Pedido recusado e removido.'
     )
     await store.dispatch('fetchConsultoriaResumo')
     currentPage.value = 1
@@ -240,7 +270,17 @@ async function excluirPedido (row) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (store.getters.subjectViewAdminActive && store.state.subjectViewMode?.userId) {
+    await store.dispatch('fetchSubjectMonitoredProfile')
+  }
+  await carregarLista()
+})
+
+watch(consultorIdLista, (id, prev) => {
+  if (id == null || id === prev) return
+  currentPage.value = 1
+  first.value = 0
   carregarLista()
 })
 </script>

@@ -18,7 +18,8 @@ import SignInPage from '../pages/auth/SignInPage.vue'
 import SignUpPage from '../pages/auth/SignUpPage.vue'
 import store from '../store'
 import {
-  FINANCAS_VIEW_AS_USER_KEY,
+  FINANCAS_VIEW_AS_DISPLAY_QUERY,
+  FINANCAS_VIEW_AS_KIND_QUERY,
   FINANCAS_VIEW_AS_USER_QUERY,
   SUBJECT_VIEW_KIND
 } from '@/constants/financasViewAs'
@@ -142,7 +143,19 @@ const router = createRouter({
   routes
 })
 
-/** Grava modo “ver como utilizador” e remove o query param da URL. */
+function parseViewAsDisplay (raw) {
+  if (raw === undefined || raw === null) return null
+  const s = String(raw).trim()
+  if (!s) return null
+  try {
+    const d = decodeURIComponent(s)
+    return d.length > 160 ? d.slice(0, 160) : d
+  } catch (_) {
+    return s.length > 160 ? s.slice(0, 160) : s
+  }
+}
+
+/** Grava modo “ver como utilizador” (staff ou consultor) e limpa a query. */
 function consumeViewAsUserQuery (to) {
   const raw = to.query?.[FINANCAS_VIEW_AS_USER_QUERY]
   if (raw === undefined || raw === null || String(raw).trim() === '') {
@@ -151,23 +164,62 @@ function consumeViewAsUserQuery (to) {
   const id = parseInt(String(raw), 10)
   const q = { ...to.query }
   delete q[FINANCAS_VIEW_AS_USER_QUERY]
+  delete q[FINANCAS_VIEW_AS_KIND_QUERY]
+  delete q[FINANCAS_VIEW_AS_DISPLAY_QUERY]
   const dest =
     Object.keys(q).length > 0
       ? { path: to.path, query: q, hash: to.hash, replace: true }
       : { path: to.path, hash: to.hash, replace: true }
 
-  if (store.getters.isAuthenticated && !Number.isNaN(id) && id > 0) {
-    const u = store.getters.getUser
-    if (u?.is_staff || u?.is_superuser) {
-      const sid = String(id)
-      sessionStorage.setItem(FINANCAS_VIEW_AS_USER_KEY, sid)
+  if (!store.getters.isAuthenticated || Number.isNaN(id) || id <= 0) {
+    return dest
+  }
+
+  const kindParam = String(to.query[FINANCAS_VIEW_AS_KIND_QUERY] || '')
+    .trim()
+    .toLowerCase()
+  const wantsConsultor = kindParam === SUBJECT_VIEW_KIND.CONSULTOR
+  const displayName = parseViewAsDisplay(to.query[FINANCAS_VIEW_AS_DISPLAY_QUERY])
+
+  const u = store.getters.getUser
+  const sid = String(id)
+
+  if (wantsConsultor) {
+    if (u?.is_gerente) {
       store.commit('SET_SUBJECT_VIEW_MODE', {
-        kind: SUBJECT_VIEW_KIND.ADMIN,
-        userId: sid
+        kind: SUBJECT_VIEW_KIND.CONSULTOR,
+        userId: sid,
+        displayName
       })
     }
+  } else if (u?.is_staff || u?.is_superuser) {
+    store.commit('SET_SUBJECT_VIEW_MODE', {
+      kind: SUBJECT_VIEW_KIND.ADMIN,
+      userId: sid,
+      displayName: null
+    })
   }
+
   return dest
+}
+
+/** Sessão “ver como” inválida para o utilizador atual (ex.: mudou de conta). */
+function invalidateSubjectViewIfNeeded () {
+  const m = store.state.subjectViewMode
+  if (!m?.userId) return
+  const u = store.getters.getUser
+  if (!u) return
+  if (m.kind === SUBJECT_VIEW_KIND.CONSULTOR && !u.is_gerente) {
+    store.commit('SET_SUBJECT_VIEW_MODE', null)
+    return
+  }
+  if (
+    m.kind === SUBJECT_VIEW_KIND.ADMIN &&
+    !u.is_staff &&
+    !u.is_superuser
+  ) {
+    store.commit('SET_SUBJECT_VIEW_MODE', null)
+  }
 }
 
 /* Navigation Guard */
@@ -179,6 +231,10 @@ router.beforeEach((to, from) => {
 
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isAuthenticated = store.getters.isAuthenticated
+
+  if (isAuthenticated) {
+    invalidateSubjectViewIfNeeded()
+  }
 
   if (requiresAuth && !isAuthenticated) {
     return { name: 'signin' }
@@ -200,13 +256,21 @@ router.beforeEach((to, from) => {
   )
   if (requiresConsultor && isAuthenticated) {
     const u = store.getters.getUser
-    if (!u?.is_gerente) {
+    const staffComVisaoAdmin =
+      (u?.is_staff || u?.is_superuser) &&
+      store.getters.subjectViewAdminActive &&
+      store.state.subjectViewMode?.userId
+    if (!u?.is_gerente && !staffComVisaoAdmin) {
       return { name: 'consultoria' }
     }
   }
 
-  /* Modo “ver como” utilizador: não aceder ao painel Administrar */
-  if (to.name === 'administrar' && store.getters.subjectViewAdminActive) {
+  /* Modo visualização (admin ou consultor): não aceder ao painel Administrar */
+  if (
+    to.name === 'administrar' &&
+    (store.getters.subjectViewAdminActive ||
+      store.getters.subjectViewConsultorActive)
+  ) {
     return { name: 'home' }
   }
 

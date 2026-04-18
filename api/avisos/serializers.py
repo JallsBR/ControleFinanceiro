@@ -1,6 +1,8 @@
 from django.db.models import Q
 from rest_framework import serializers
 
+from app.financas_subject import get_financas_subject_user
+from app.consultoria_subject import request_user_pode_atuar_como_consultor_da_solicitacao
 from users.models import User
 
 from .models import Mensagem, SolicitacaoConsultoria
@@ -128,12 +130,26 @@ class SolicitacaoConsultoriaSerializer(serializers.ModelSerializer):
             "consultor_identifier",
             "mensagem",
             "aceito",
+            "vinculo_encerrado",
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("usuario", "consultor", "created_at", "updated_at")
+        read_only_fields = (
+            "usuario",
+            "consultor",
+            "vinculo_encerrado",
+            "created_at",
+            "updated_at",
+        )
 
     def validate(self, attrs):
+        if self.instance is not None and getattr(
+            self.instance, "vinculo_encerrado", False
+        ):
+            if attrs:
+                raise serializers.ValidationError(
+                    "Esta solicitação está encerrada e não pode ser alterada."
+                )
         request = self.context.get("request")
         if self.instance is not None:
             attrs.pop("consultor_identifier", None)
@@ -162,7 +178,12 @@ class SolicitacaoConsultoriaSerializer(serializers.ModelSerializer):
                 consultor = resolve_gerente_por_identificador(ident)
                 attrs["consultor"] = consultor
             user = getattr(request, "user", None)
-            if user and user.is_authenticated and consultor.id == user.id:
+            subject = (
+                get_financas_subject_user(request)
+                if user and user.is_authenticated
+                else None
+            )
+            if subject and consultor.id == subject.id:
                 raise serializers.ValidationError(
                     {
                         "consultor_identifier": (
@@ -170,6 +191,21 @@ class SolicitacaoConsultoriaSerializer(serializers.ModelSerializer):
                         )
                     }
                 )
+            if subject:
+                if SolicitacaoConsultoria.objects.filter(
+                    usuario_id=subject.id,
+                    consultor_id=consultor.id,
+                    aceito=False,
+                ).exists():
+                    raise serializers.ValidationError(
+                        {
+                            "consultor_identifier": (
+                                "Já existe um pedido pendente para este consultor. "
+                                "Aguarde o aceite ou a resposta do consultor. "
+                                "Após a consultoria ser encerrada, poderá voltar a solicitar."
+                            )
+                        }
+                    )
         if self.instance is None and attrs.get("aceito"):
             raise serializers.ValidationError(
                 {
@@ -188,11 +224,12 @@ class SolicitacaoConsultoriaSerializer(serializers.ModelSerializer):
                 )
             if attrs.get("aceito") != self.instance.aceito:
                 user = getattr(request, "user", None)
-                if (
-                    not user
-                    or not user.is_authenticated
-                    or self.instance.consultor_id != user.id
-                ):
+                pode = user and user.is_authenticated
+                if pode:
+                    pode = request_user_pode_atuar_como_consultor_da_solicitacao(
+                        request, self.instance.consultor_id
+                    )
+                if not pode:
                     raise serializers.ValidationError(
                         {
                             "aceito": "Só o consultor indicado pode aceitar a solicitação."

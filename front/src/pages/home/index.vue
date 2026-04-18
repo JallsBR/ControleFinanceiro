@@ -11,7 +11,7 @@
         icone="pi pi-wallet"
         variante="entrada"
         to="/entradas"
-        :mostrarAcao="true"
+        :mostrarAcao="!readOnly"
         iconeAcao="pi pi-plus"
         @acao="abrirModalEntrada"
       />
@@ -22,7 +22,7 @@
         icone="pi pi-credit-card"
         variante="saida"
         to="/saidas"
-        :mostrarAcao="true"
+        :mostrarAcao="!readOnly"
         iconeAcao="pi pi-minus"
         @acao="abrirModalSaida"
       />
@@ -114,10 +114,12 @@ import { ref, computed, onMounted } from 'vue'
 import financasService from '@/services/financasService'
 import Money from '@/utils/Money'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 import DialogEntradas from '@/pages/home/DialogEntradas.vue'
 import DialogSaida from '@/pages/home/DialogSaida.vue'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 dayjs.locale('pt-br')
 
@@ -173,6 +175,7 @@ onMounted(() => {
 
 
 const abrirModalEntrada = () => {
+  if (readOnly.value) return
   try {
     console.log('Abrir modal entrada')
     visibleEntrada.value = true
@@ -182,6 +185,7 @@ const abrirModalEntrada = () => {
 }
 
 const abrirModalSaida = () => {
+  if (readOnly.value) return
   try {
     console.log('Abrir modal saída')
     visibleSaida.value = true

@@ -85,8 +85,8 @@ export async function listSolicitacoes (params = {}) {
  * Lista paginada (mesmo contrato que `financasService.*.getPage`).
  * @param {number|string} consultorId
  * @param {number} [page=1]
- * @param {{ search?: string, estado?: 'pendente'|'aceito' }} [filtros]
- *   `search`: SearchFilter; `estado`: `aceito` exact na API (pendente=false, aceito=true).
+ * @param {{ search?: string, estado?: 'pendente'|'aceito'|'encerrada' }} [filtros]
+ *   `estado`: query `estado` na API (pendente / aceito com vínculo ativo / encerrada).
  * @returns {{ data: array, total: number }}
  */
 export async function getSolicitacoesRecebidasPage (
@@ -100,10 +100,9 @@ export async function getSolicitacoesRecebidasPage (
     if (s) {
       params.search = s
     }
-    if (filtros.estado === 'pendente') {
-      params.aceito = false
-    } else if (filtros.estado === 'aceito') {
-      params.aceito = true
+    const est = filtros.estado
+    if (est === 'pendente' || est === 'aceito' || est === 'encerrada') {
+      params.estado = est
     }
     const { data: body } = await api.get('/avisos/solicitacoes-consultoria/', {
       params

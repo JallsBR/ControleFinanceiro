@@ -4,17 +4,26 @@
       <button
         type="button"
         class="menu-user__trigger"
-        :class="{ 'menu-user__trigger--monitor': modoMonitorFinancas }"
-        aria-haspopup="menu"
-        :aria-expanded="menuAberto"
-        :aria-label="ariaLabelMenu"
+        :class="{
+          'menu-user__trigger--monitor': modoVisualizacaoFinancas,
+          'menu-user__trigger--sem-menu': semMenuContaConsultor
+        }"
+        :aria-haspopup="semMenuContaConsultor ? undefined : 'menu'"
+        :aria-expanded="semMenuContaConsultor ? undefined : menuAberto"
+        :aria-disabled="semMenuContaConsultor ? 'true' : undefined"
+        :disabled="semMenuContaConsultor"
+        :aria-label="ariaLabelConta"
         @click="abrirMenu"
       >
         <i class="pi pi-user menu-user__icon" aria-hidden="true" />
         <span class="menu-user__textblock">
           <span class="menu-user__name">{{ displayName }}</span>
         </span>
-        <i class="pi pi-angle-down menu-user__chevron" aria-hidden="true" />
+        <i
+          v-if="!semMenuContaConsultor"
+          class="pi pi-angle-down menu-user__chevron"
+          aria-hidden="true"
+        />
       </button>
       <Badge
         v-if="mostrarBadgeOverlay"
@@ -25,6 +34,7 @@
     </div>
 
     <TieredMenu
+      v-if="!semMenuContaConsultor"
       ref="menuRef"
       :model="itens"
       popup
@@ -100,19 +110,36 @@ const menuRef = ref(null)
 const menuAberto = ref(false)
 const perfilMonitorErro = ref(false)
 
-const modoMonitorFinancas = computed(() => store.getters.subjectViewAdminActive)
+const modoVisualizacaoFinancas = computed(
+  () =>
+    store.getters.subjectViewAdminActive ||
+    store.getters.subjectViewConsultorActive
+)
+/** Consultor a ver dados do cliente: sem menu da conta (só leitura). */
+const semMenuContaConsultor = computed(
+  () => store.getters.subjectViewConsultorActive
+)
 const monitored = computed(() => store.getters.getSubjectMonitoredUser)
 const user = computed(() => store.getters.getUser)
 
 const isConsultor = computed(() => Boolean(user.value?.is_gerente))
+
+/** Consultor real ou staff a visualizar um gerente (menu Solicitações + badge). */
+const isConsultorEfectivoConsultoria = computed(
+  () =>
+    Boolean(user.value?.is_gerente) ||
+    (store.getters.subjectViewAdminActive &&
+      Boolean(store.getters.getSubjectMonitoredUser?.is_gerente))
+)
 const pendentesRecebidas = computed(
   () => store.getters.consultoriaPendentesRecebidas
 )
 
-/** Badge no botão do menu: só consultor, só quando há pendentes e menu fechado. */
+/** Badge no botão do menu: só consultor (fora da vista cliente), pendentes, menu fechado. */
 const mostrarBadgeOverlay = computed(
   () =>
-    isConsultor.value &&
+    isConsultorEfectivoConsultoria.value &&
+    !semMenuContaConsultor.value &&
     pendentesRecebidas.value > 0 &&
     !menuAberto.value
 )
@@ -135,7 +162,12 @@ function nomeSobrenomeOuUsername (u) {
 }
 
 const displayName = computed(() => {
-  if (modoMonitorFinancas.value) {
+  if (store.getters.subjectViewConsultorActive) {
+    const d = store.state.subjectViewMode?.displayName
+    if (d) return d
+    return 'Cliente (consultoria)'
+  }
+  if (store.getters.subjectViewAdminActive) {
     const u = monitored.value
     if (!u) {
       return perfilMonitorErro.value ? 'Monitor (erro)' : 'A carregar…'
@@ -147,7 +179,15 @@ const displayName = computed(() => {
   return nomeSobrenomeOuUsername(user.value)
 })
 
-const ariaLabelMenu = computed(() => 'Abrir menu da conta')
+const ariaLabelConta = computed(() =>
+  semMenuContaConsultor.value
+    ? 'Modo consultor — visualização do cliente (menu indisponível)'
+    : 'Abrir menu da conta'
+)
+
+watch(semMenuContaConsultor, (sem) => {
+  if (sem) menuAberto.value = false
+})
 
 watch(
   () => [
@@ -175,12 +215,12 @@ const podeAdministrar = computed(() => {
   return Boolean(u.is_staff || u.is_superuser)
 })
 
-/** Só consultores (gerentes) vêem o separador Solicitações. */
-const podeVerSolicitacoes = computed(() => isConsultor.value)
+/** Consultores e staff a visualizar um gerente vêem Solicitações. */
+const podeVerSolicitacoes = computed(() => isConsultorEfectivoConsultoria.value)
 
 /** Valor do Badge na linha “Solicitações” (menu aberto). */
 function badgeCountSolicitacoes () {
-  if (!isConsultor.value) return null
+  if (!isConsultorEfectivoConsultoria.value) return null
   const n = pendentesRecebidas.value
   return n > 0 ? n : null
 }
@@ -192,9 +232,9 @@ function badgeValor (item) {
   return n > 99 ? '99+' : String(n)
 }
 
-/** Em modo “ver como”, menu como utilizador comum: sem Administrar. */
+/** Em modo visualização (admin ou consultor), sem Administrar. */
 const mostrarLinkAdministrar = computed(
-  () => podeAdministrar.value && !modoMonitorFinancas.value
+  () => podeAdministrar.value && !modoVisualizacaoFinancas.value
 )
 
 const itens = computed(() => {
@@ -226,6 +266,7 @@ const itens = computed(() => {
 })
 
 function abrirMenu (event) {
+  if (semMenuContaConsultor.value) return
   menuRef.value?.toggle(event)
 }
 </script>
@@ -288,6 +329,16 @@ function abrirMenu (event) {
 
 .menu-user__trigger--monitor {
   max-width: min(320px, 42vw);
+}
+
+.menu-user__trigger--sem-menu {
+  cursor: default;
+  opacity: 0.92;
+}
+
+.menu-user__trigger--sem-menu:hover {
+  background-color: transparent;
+  color: var(--texto-secundario);
 }
 
 .menu-user__trigger:hover {

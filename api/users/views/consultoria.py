@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from app.financas_subject import get_financas_subject_user
 from avisos.models import SolicitacaoConsultoria
 from users.models import Consultoria, User
 
@@ -39,9 +40,10 @@ class ConsultoriaVinculoAtualView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        subject = get_financas_subject_user(request)
         row = (
             Consultoria.objects.filter(
-                cliente_id=request.user.id,
+                cliente_id=subject.id,
                 status=Consultoria.Status.ATIVA,
             )
             .select_related("gerente")
@@ -62,14 +64,15 @@ class ConsultoriaClientesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not getattr(request.user, "is_gerente", False):
+        subject = get_financas_subject_user(request)
+        if not getattr(subject, "is_gerente", False):
             return Response(
                 {"detail": "Apenas consultores (gerentes) podem listar clientes."},
                 status=403,
             )
         qs = (
             Consultoria.objects.filter(
-                gerente_id=request.user.id,
+                gerente_id=subject.id,
                 status=Consultoria.Status.ATIVA,
             )
             .select_related("cliente")
@@ -92,7 +95,7 @@ class ConsultoriaSolicitacoesPendentesCountView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        uid = request.user.id
+        uid = get_financas_subject_user(request).id
         recebidas = SolicitacaoConsultoria.objects.filter(
             consultor_id=uid, aceito=False
         ).count()
@@ -120,7 +123,8 @@ class ConsultoriaVinculoEncerrarView(APIView):
                 {"detail": "Esta consultoria já não está ativa."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        uid = request.user.id
+        subject = get_financas_subject_user(request)
+        uid = subject.id
         if row.gerente_id != uid and row.cliente_id != uid:
             return Response(
                 {"detail": "Não tem permissão para encerrar este vínculo."},
@@ -128,6 +132,11 @@ class ConsultoriaVinculoEncerrarView(APIView):
             )
         row.status = Consultoria.Status.ENCERRADA
         row.save(update_fields=["status", "updated_at"])
+        SolicitacaoConsultoria.objects.filter(
+            consultor_id=row.gerente_id,
+            usuario_id=row.cliente_id,
+            aceito=True,
+        ).update(vinculo_encerrado=True)
         return Response(
             {"detail": "Consultoria encerrada com sucesso."},
             status=status.HTTP_200_OK,

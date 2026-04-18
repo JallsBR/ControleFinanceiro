@@ -3,7 +3,7 @@
         tituloPrincipal="Saídas"
         subtitulo="Gerencie os seus gastos"
         icone="pi pi-credit-card"
-        :mostrarAcao="true"
+        :mostrarAcao="!readOnly"
         iconeAcao="pi pi-minus"
         @acao="abrirModalSaida"
         style="margin-bottom: 1rem;"
@@ -51,7 +51,13 @@
                 </template>
             </Column>
             <Column field="descricao" columnKey="descricao" header="Descrição" sortable />
-            <Column header="Ações" columnKey="acoesSaidas" style="width: 8rem" :reorderableColumn="false">
+            <Column
+              v-if="!readOnly"
+              header="Ações"
+              columnKey="acoesSaidas"
+              style="width: 8rem"
+              :reorderableColumn="false"
+            >
                 <template #body="slotProps">
                     <Button icon="pi pi-pencil" text @click="editarMovimentacao(slotProps.data)" />
                     <Button icon="pi pi-trash" text severity="danger" @click="deletarMovimentacao(slotProps.data)" />
@@ -97,11 +103,13 @@ import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 import DialogSaida from '@/pages/home/DialogSaida.vue'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogFiltroMovimentacoes from '@/components/DialogFiltroMovimentacoes.vue'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const visibleSaida = ref(false)
 const visibleExcluir = ref(false)
@@ -180,11 +188,13 @@ function formatarData(val) {
 }
 
 function abrirModalSaida() {
+  if (readOnly.value) return
   saidaEmEdicao.value = null
   visibleSaida.value = true
 }
 
 function editarMovimentacao(item) {
+  if (readOnly.value) return
   saidaEmEdicao.value = item
   visibleSaida.value = true
 }
@@ -225,13 +235,13 @@ function onSaidaSalva() {
 }
 
 function deletarMovimentacao(item) {
-  if (!item?.id) return
+  if (readOnly.value || !item?.id) return
   itemParaExcluir.value = item
   visibleExcluir.value = true
 }
 
 async function executarExclusao() {
-  if (!itemParaExcluir.value?.id) return
+  if (readOnly.value || !itemParaExcluir.value?.id) return
   excluindo.value = true
   try {
     await financasService.movimentacoes.delete(itemParaExcluir.value.id)

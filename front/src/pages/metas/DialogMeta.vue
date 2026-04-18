@@ -15,6 +15,7 @@
             v-model="form.nome"
             class="w-full"
             autocomplete="off"
+            :disabled="readOnly"
           />
         </div>
       </div>
@@ -34,6 +35,7 @@
               :maxFractionDigits="2"
               placeholder="0,00"
               class="valor-input"
+              :disabled="readOnly"
             />
           </InputGroup>
         </div>
@@ -48,6 +50,7 @@
             dateFormat="dd/mm/yy"
             showIcon
             class="w-full"
+            :disabled="readOnly"
           />
         </div>
       </div>
@@ -63,6 +66,7 @@
             optionValue="value"
             placeholder="Selecione"
             class="w-full"
+            :disabled="readOnly"
           />
         </div>
       </div>
@@ -70,13 +74,14 @@
       <div class="field">
         <label class="field-label">Concluída</label>
         <div class="field-input">
-          <InputSwitch v-model="form.concluida" />
+          <InputSwitch v-model="form.concluida" :disabled="readOnly" />
         </div>
       </div>
     </div>
 
     <template #actions>
       <Button
+        v-if="!readOnly"
         type="button"
         label="Salvar"
         icon="pi pi-check"
@@ -107,8 +112,10 @@ import InputSwitch from 'primevue/inputswitch'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -190,6 +197,7 @@ function toIsoDate(date) {
 }
 
 async function salvar() {
+  if (readOnly.value) return
   const payload = {
     nome: (form.value.nome || '').trim(),
     valor_meta: Number(form.value.valor_meta) || 0,

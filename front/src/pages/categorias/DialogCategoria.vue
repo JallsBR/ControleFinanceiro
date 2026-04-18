@@ -16,6 +16,7 @@
             class="w-full"
             autocomplete="off"
             placeholder="Nome da categoria"
+            :disabled="readOnly"
           />
           <small v-if="errors.nome" class="p-error block">{{ errors.nome }}</small>
         </div>
@@ -29,6 +30,7 @@
             class="w-full"
             autocomplete="off"
             placeholder="Opcional"
+            :disabled="readOnly"
           />
         </div>
       </div>
@@ -44,6 +46,7 @@
             class="w-full"
             placeholder="Selecione um ícone"
             :showClear="true"
+            :disabled="readOnly"
           >
             <template #value="slotProps">
               <div v-if="slotProps.value" class="icone-option">
@@ -64,7 +67,13 @@
     </div>
 
     <template #actions>
-      <Button type="button" label="Salvar" icon="pi pi-check" @click="salvar" />
+      <Button
+        v-if="!readOnly"
+        type="button"
+        label="Salvar"
+        icon="pi pi-check"
+        @click="salvar"
+      />
       <Button
         type="button"
         label="Fechar"
@@ -85,8 +94,10 @@ import Button from 'primevue/button'
 import Select from 'primevue/select'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -154,6 +165,7 @@ function validar() {
 }
 
 async function salvar() {
+  if (readOnly.value) return
   if (!validar()) return
   const payload = {
     tipo: props.tipo,

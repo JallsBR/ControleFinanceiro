@@ -3,7 +3,7 @@
         tituloPrincipal="Investimentos"
         subtitulo="Gerencie os seus investimentos"
         icone="pi pi-chart-line"
-        :mostrarAcao="true"
+        :mostrarAcao="!readOnly"
         iconeAcao="pi pi-plus"
         @acao="abrirModalInvestimento"
         style="margin-bottom: 1rem;"
@@ -60,7 +60,13 @@
                     </span>
                 </template>
             </Column>
-            <Column header="Ações" columnKey="acoesInvestimentos" style="width: 8rem" :reorderableColumn="false">
+            <Column
+              v-if="!readOnly"
+              header="Ações"
+              columnKey="acoesInvestimentos"
+              style="width: 8rem"
+              :reorderableColumn="false"
+            >
                 <template #body="slotProps">
                     <Button icon="pi pi-pencil" text @click="editarInvestimento(slotProps.data)" />
                     <Button icon="pi pi-trash" text severity="danger" @click="deletarInvestimento(slotProps.data)" />
@@ -105,11 +111,13 @@ import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogInvestimento from '@/pages/investimentos/DialogInvestimento.vue'
 import DialogFiltroInvestimentos from '@/components/DialogFiltroInvestimentos.vue'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 const visibleInvestimento = ref(false)
 const visibleExcluir = ref(false)
@@ -148,11 +156,13 @@ function onPage(event) {
 }
 
 function abrirModalInvestimento() {
+  if (readOnly.value) return
   investimentoEmEdicao.value = null
   visibleInvestimento.value = true
 }
 
 function editarInvestimento(item) {
+  if (readOnly.value) return
   investimentoEmEdicao.value = item
   visibleInvestimento.value = true
 }
@@ -183,13 +193,13 @@ function onInvestimentoSalva() {
 }
 
 function deletarInvestimento(item) {
-  if (!item?.id) return
+  if (readOnly.value || !item?.id) return
   itemParaExcluir.value = item
   visibleExcluir.value = true
 }
 
 async function executarExclusao() {
-  if (!itemParaExcluir.value?.id) return
+  if (readOnly.value || !itemParaExcluir.value?.id) return
   excluindo.value = true
   try {
     await financasService.investimentos.delete(itemParaExcluir.value.id)

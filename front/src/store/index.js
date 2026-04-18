@@ -2,6 +2,8 @@ import { createStore } from 'vuex'
 import api from '../services/APIService'
 import {
   FINANCAS_VIEW_AS_USER_KEY,
+  FINANCAS_VIEW_AS_KIND_KEY,
+  FINANCAS_VIEW_AS_DISPLAY_KEY,
   readSubjectViewModeFromStorage,
   SUBJECT_VIEW_KIND
 } from '@/constants/financasViewAs'
@@ -26,6 +28,9 @@ export default createStore({
     subjectViewAdminActive: (state) =>
       state.subjectViewMode?.kind === SUBJECT_VIEW_KIND.ADMIN,
     subjectViewConsultorActive: (state) =>
+      state.subjectViewMode?.kind === SUBJECT_VIEW_KIND.CONSULTOR,
+    /** Consultor a ver cliente: bloquear alterações nas finanças (UI + API). */
+    subjectViewFinancasReadOnly: (state) =>
       state.subjectViewMode?.kind === SUBJECT_VIEW_KIND.CONSULTOR,
     getSubjectMonitoredUser: (state) => state.subjectMonitoredUser,
     consultoriaPendentesTotal: (state) =>
@@ -61,14 +66,44 @@ export default createStore({
       localStorage.removeItem('user')
       try {
         sessionStorage.removeItem(FINANCAS_VIEW_AS_USER_KEY)
+        sessionStorage.removeItem(FINANCAS_VIEW_AS_KIND_KEY)
+        sessionStorage.removeItem(FINANCAS_VIEW_AS_DISPLAY_KEY)
       } catch (_) {}
     },
 
     SET_SUBJECT_VIEW_MODE (state, payload) {
-      state.subjectViewMode = payload || null
+      state.subjectViewMode = payload
+        ? {
+            kind: payload.kind,
+            userId: String(payload.userId),
+            displayName: payload.displayName || null
+          }
+        : null
       if (!payload) {
         state.subjectMonitoredUser = null
+        try {
+          sessionStorage.removeItem(FINANCAS_VIEW_AS_USER_KEY)
+          sessionStorage.removeItem(FINANCAS_VIEW_AS_KIND_KEY)
+          sessionStorage.removeItem(FINANCAS_VIEW_AS_DISPLAY_KEY)
+        } catch (_) {}
+        return
       }
+      try {
+        sessionStorage.setItem(FINANCAS_VIEW_AS_USER_KEY, String(payload.userId))
+        const k =
+          payload.kind === SUBJECT_VIEW_KIND.CONSULTOR
+            ? SUBJECT_VIEW_KIND.CONSULTOR
+            : SUBJECT_VIEW_KIND.ADMIN
+        sessionStorage.setItem(FINANCAS_VIEW_AS_KIND_KEY, k)
+        if (payload.displayName) {
+          sessionStorage.setItem(
+            FINANCAS_VIEW_AS_DISPLAY_KEY,
+            encodeURIComponent(String(payload.displayName).slice(0, 160))
+          )
+        } else {
+          sessionStorage.removeItem(FINANCAS_VIEW_AS_DISPLAY_KEY)
+        }
+      } catch (_) {}
     },
 
     SET_SUBJECT_MONITORED_USER (state, payload) {

@@ -55,6 +55,14 @@ class SolicitacaoConsultoria(models.Model):
     )
     mensagem = models.CharField(_("mensagem"), max_length=250)
     aceito = models.BooleanField(_("aceito"), default=False)
+    vinculo_encerrado = models.BooleanField(
+        _("vínculo de consultoria encerrado"),
+        default=False,
+        db_index=True,
+        help_text=_(
+            "Verdadeiro quando o pedido foi aceite mas a consultoria (vínculo) já não está ativa."
+        ),
+    )
     created_at = models.DateTimeField(_("criado em"), auto_now_add=True)
     updated_at = models.DateTimeField(_("atualizado em"), auto_now=True)
 
@@ -64,4 +72,10 @@ class SolicitacaoConsultoria(models.Model):
         verbose_name_plural = _("solicitações de consultoria")
 
     def __str__(self):
-        return f"{self.usuario_id} → {self.consultor_id} ({'aceito' if self.aceito else 'pendente'})"
+        if not self.aceito:
+            st = "pendente"
+        elif self.vinculo_encerrado:
+            st = "encerrada"
+        else:
+            st = "aceito"
+        return f"{self.usuario_id} → {self.consultor_id} ({st})"

@@ -8,7 +8,8 @@ id de qualquer **utilizador** com ``tenant_db_name``, para operar nesse tenant
 (visão administrativa).
 
 Gerentes autenticados podem enviar o mesmo header com o id do **cliente**
-(User.pk) quando existir ``Consultoria`` ativa entre gerente e cliente.
+(User.pk) quando existir ``Consultoria`` ativa entre gerente e cliente; nesse
+caso os dados financeiros são apenas para leitura (exceto GET/HEAD/OPTIONS).
 """
 
 from django.contrib.auth.models import AnonymousUser
@@ -43,6 +44,9 @@ class TenantDatabaseMiddleware:
             if err is not None:
                 return err
         try:
+            err_ro = self._forbid_subject_writes_financas(request)
+            if err_ro is not None:
+                return err_ro
             return self.get_response(request)
         finally:
             clear_tenant_db_name()
@@ -65,6 +69,7 @@ class TenantDatabaseMiddleware:
             return None
 
         request._financas_subject_user = user
+        request._financas_subject_readonly = False
 
         raw_subject = request.headers.get("X-Financas-Subject-User", "").strip()
         if not raw_subject:
@@ -105,6 +110,7 @@ class TenantDatabaseMiddleware:
                     status=400,
                 )
             request._financas_subject_user = cliente
+            request._financas_subject_readonly = False
             _set_tenant_connection(db_name)
             return None
 
@@ -138,5 +144,24 @@ class TenantDatabaseMiddleware:
             )
 
         request._financas_subject_user = cliente
+        request._financas_subject_readonly = True
         _set_tenant_connection(db_name)
         return None
+
+    def _forbid_subject_writes_financas(self, request):
+        """Consultor com subject ativo: apenas GET/HEAD/OPTIONS em ``/financas/``."""
+        if not request.path.startswith("/api/v1/financas/"):
+            return None
+        if not getattr(request, "_financas_subject_readonly", False):
+            return None
+        if request.method in ("GET", "HEAD", "OPTIONS"):
+            return None
+        return JsonResponse(
+            {
+                "detail": (
+                    "Em modo consultoria só é permitida a visualização. "
+                    "Não são permitidas alterações nos dados do cliente."
+                )
+            },
+            status=403,
+        )

@@ -26,7 +26,13 @@ api.interceptors.request.use(
 
       const viewAsId = sessionStorage.getItem(FINANCAS_VIEW_AS_USER_KEY)
       const fullPath = `${config.baseURL || ''}${config.url || ''}`
-      if (viewAsId && /^\d+$/.test(viewAsId) && fullPath.includes('/financas/')) {
+      const enviaSubjectUser =
+        viewAsId &&
+        /^\d+$/.test(viewAsId) &&
+        (fullPath.includes('/financas/') ||
+          fullPath.includes('/auth/consultoria/') ||
+          fullPath.includes('/avisos/solicitacoes-consultoria'))
+      if (enviaSubjectUser) {
         config.headers['X-Financas-Subject-User'] = viewAsId
       }
 
