@@ -14,7 +14,13 @@
           <div class="right">
             <Button icon="pi pi-refresh" text label="Atualizar" @click="atualizarLista" />
             <Button icon="pi pi-search" text label="Filtrar" @click="abrirFiltro" />
-            <Button icon="pi pi-plus" text label="Criar grupo" @click="abrirCriarGrupo" />
+            <Button
+              v-if="caps.groups.add"
+              icon="pi pi-plus"
+              text
+              label="Criar grupo"
+              @click="abrirCriarGrupo"
+            />
           </div>
         </div>
       </template>
@@ -48,27 +54,33 @@
           sortable
         />
         <Column
+          v-if="mostrarColunaAcoesGrupos"
           header="Ações"
           columnKey="acoesGrupos"
-          style="width: 10rem"
+          style="min-width: 11rem; width: 11rem"
           :reorderableColumn="false"
         >
           <template #body="slotProps">
-            <Button
-              icon="pi pi-shield"
-              text
-              rounded
-              title="Permissões do grupo"
-              aria-label="Permissões do grupo"
-              @click="abrirPermissoes(slotProps.data)"
-            />
-            <Button
-              icon="pi pi-pencil"
-              text
-              rounded
-              aria-label="Editar nome"
-              @click="editarGrupo(slotProps.data)"
-            />
+            <div class="acoes-linha">
+              <Button
+                v-if="caps.group_permissions"
+                icon="pi pi-shield"
+                text
+                rounded
+                title="Permissões Django do grupo"
+                :aria-label="'Permissões do grupo ' + (slotProps.data.name || '')"
+                @click="abrirPermissoes(slotProps.data)"
+              />
+              <Button
+                v-if="caps.groups.change"
+                icon="pi pi-pencil"
+                text
+                rounded
+                title="Editar nome"
+                aria-label="Editar nome do grupo"
+                @click="editarGrupo(slotProps.data)"
+              />
+            </div>
           </template>
         </Column>
       </template>
@@ -99,7 +111,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
+import { useStore } from 'vuex'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -109,8 +122,16 @@ import GrupoPermissoesDialog from '../dialogs/GrupoPermissoesDialog.vue'
 import { PAGE_SIZE } from '@/constants/pagination'
 import { adminService } from '@/services/adminService'
 import { useToast } from '@/utils/useToast'
+import { resolveAdminCapabilities } from '@/utils/adminCapabilities'
 
+const store = useStore()
 const toast = useToast()
+
+const caps = computed(() => resolveAdminCapabilities(store.getters.getUser))
+
+const mostrarColunaAcoesGrupos = computed(
+  () => caps.value.group_permissions || caps.value.groups.change
+)
 
 const loading = ref(false)
 const lista = ref([])
@@ -215,11 +236,13 @@ function onFiltroClear () {
 }
 
 function abrirCriarGrupo () {
+  if (!caps.value.groups.add) return
   grupoFormulario.value = null
   visibleGrupo.value = true
 }
 
 function editarGrupo (row) {
+  if (!caps.value.groups.change) return
   grupoFormulario.value = { id: row.id, name: row.name }
   visibleGrupo.value = true
 }
@@ -229,6 +252,8 @@ watch(visibleGrupo, (aberto) => {
 })
 
 async function onGrupoSave (payload) {
+  if (payload.id != null && !caps.value.groups.change) return
+  if (payload.id == null && !caps.value.groups.add) return
   salvandoGrupo.value = true
   try {
     if (payload.id != null) {
@@ -249,6 +274,7 @@ async function onGrupoSave (payload) {
 }
 
 function abrirPermissoes (row) {
+  if (!caps.value.group_permissions) return
   grupoPermissoes.value = { id: row.id, name: row.name }
   visiblePermissoes.value = true
 }
@@ -287,5 +313,12 @@ onMounted(() => {
   white-space: normal;
   word-break: break-word;
   line-height: 1.35;
+}
+
+.acoes-linha {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
 }
 </style>

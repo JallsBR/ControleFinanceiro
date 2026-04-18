@@ -10,13 +10,13 @@
     <div class="administrar-tabs-wrap">
       <Tabs v-model:value="abaAtiva" scrollable>
         <TabList>
-          <Tab value="usuarios">
+          <Tab v-if="podeVerUsuarios" value="usuarios">
             <span class="admin-tab-header">
               <i class="pi pi-users" aria-hidden="true" />
               Usuários
             </span>
           </Tab>
-          <Tab value="grupos">
+          <Tab v-if="podeVerGrupos" value="grupos">
             <span class="admin-tab-header">
               <i class="pi pi-th-large" aria-hidden="true" />
               Grupos
@@ -30,10 +30,10 @@
           </Tab>
         </TabList>
         <TabPanels>
-          <TabPanel value="usuarios">
+          <TabPanel v-if="podeVerUsuarios" value="usuarios">
             <TabUsuarios />
           </TabPanel>
-          <TabPanel value="grupos">
+          <TabPanel v-if="podeVerGrupos" value="grupos">
             <TabGrupos />
           </TabPanel>
           <TabPanel value="dashboard">
@@ -46,8 +46,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useStore } from 'vuex'
 import CardStatus from '@/components/CardStatus.vue'
+import { authService } from '@/services/authService'
+import { resolveAdminCapabilities } from '@/utils/adminCapabilities'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
@@ -57,7 +60,34 @@ import TabUsuarios from './componentes/TabUsuarios.vue'
 import TabGrupos from './componentes/TabGrupos.vue'
 import TabDashboard from './componentes/TabDashboard.vue'
 
+const store = useStore()
 const abaAtiva = ref('usuarios')
+
+const caps = computed(() => resolveAdminCapabilities(store.getters.getUser))
+const podeVerUsuarios = computed(() => caps.value.users.view)
+const podeVerGrupos = computed(() => caps.value.groups.view)
+
+watch(
+  [podeVerUsuarios, podeVerGrupos],
+  () => {
+    const tab = abaAtiva.value
+    if (tab === 'usuarios' && !podeVerUsuarios.value) {
+      abaAtiva.value = podeVerGrupos.value ? 'grupos' : 'dashboard'
+    } else if (tab === 'grupos' && !podeVerGrupos.value) {
+      abaAtiva.value = podeVerUsuarios.value ? 'usuarios' : 'dashboard'
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(async () => {
+  try {
+    const u = await authService.getProfile()
+    store.commit('UPDATE_USER', u)
+  } catch (_) {
+    /* mantém user em cache */
+  }
+})
 </script>
 
 <style scoped>

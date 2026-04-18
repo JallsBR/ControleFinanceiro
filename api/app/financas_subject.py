@@ -2,8 +2,9 @@
 Usuário "dono" dos dados de finanças na request (tenant + filtros created_by).
 
 Por padrão é o usuário autenticado (JWT). Com o header ``X-Financas-Subject-User``,
-um gerente autenticado pode operar no contexto de um cliente vinculado (consultoria ativa);
-o middleware valida o vínculo e aponta o banco tenant do cliente.
+staff/superuser pode operar no tenant de qualquer utilizador com base configurada;
+gerentes autenticados podem operar no contexto de um cliente com consultoria ativa.
+O middleware aplica as regras e aponta o banco ``tenant``.
 """
 
 

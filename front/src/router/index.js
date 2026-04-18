@@ -17,6 +17,11 @@ import AdministrarPage from '../pages/administrar/index.vue'
 import SignInPage from '../pages/auth/SignInPage.vue'
 import SignUpPage from '../pages/auth/SignUpPage.vue'
 import store from '../store'
+import {
+  FINANCAS_VIEW_AS_USER_KEY,
+  FINANCAS_VIEW_AS_USER_QUERY,
+  SUBJECT_VIEW_KIND
+} from '@/constants/financasViewAs'
 
 const routes = [
   {
@@ -131,8 +136,41 @@ const router = createRouter({
   routes
 })
 
+/** Grava modo “ver como utilizador” e remove o query param da URL. */
+function consumeViewAsUserQuery (to) {
+  const raw = to.query?.[FINANCAS_VIEW_AS_USER_QUERY]
+  if (raw === undefined || raw === null || String(raw).trim() === '') {
+    return null
+  }
+  const id = parseInt(String(raw), 10)
+  const q = { ...to.query }
+  delete q[FINANCAS_VIEW_AS_USER_QUERY]
+  const dest =
+    Object.keys(q).length > 0
+      ? { path: to.path, query: q, hash: to.hash, replace: true }
+      : { path: to.path, hash: to.hash, replace: true }
+
+  if (store.getters.isAuthenticated && !Number.isNaN(id) && id > 0) {
+    const u = store.getters.getUser
+    if (u?.is_staff || u?.is_superuser) {
+      const sid = String(id)
+      sessionStorage.setItem(FINANCAS_VIEW_AS_USER_KEY, sid)
+      store.commit('SET_SUBJECT_VIEW_MODE', {
+        kind: SUBJECT_VIEW_KIND.ADMIN,
+        userId: sid
+      })
+    }
+  }
+  return dest
+}
+
 /* Navigation Guard */
 router.beforeEach((to, from) => {
+  const redirected = consumeViewAsUserQuery(to)
+  if (redirected) {
+    return redirected
+  }
+
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isAuthenticated = store.getters.isAuthenticated
 
@@ -149,6 +187,11 @@ router.beforeEach((to, from) => {
     if (!u?.is_staff && !u?.is_superuser) {
       return { name: 'home' }
     }
+  }
+
+  /* Modo “ver como” utilizador: não aceder ao painel Administrar */
+  if (to.name === 'administrar' && store.getters.subjectViewAdminActive) {
+    return { name: 'home' }
   }
 
   return true

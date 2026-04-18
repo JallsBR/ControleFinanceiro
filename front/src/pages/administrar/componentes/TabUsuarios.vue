@@ -103,27 +103,43 @@
           </template>
         </Column>
         <Column
+          v-if="mostrarColunaAcoesUsuarios"
           header="Ações"
           columnKey="acoesUsuarios"
-          style="width: 8rem"
+          style="min-width: 11.5rem; width: 11.5rem"
           :reorderableColumn="false"
         >
           <template #body="slotProps">
-            <Button
-              icon="pi pi-pencil"
-              text
-              rounded
-              aria-label="Editar"
-              @click="editarUsuario(slotProps.data)"
-            />
-            <Button
-              icon="pi pi-trash"
-              text
-              rounded
-              severity="danger"
-              aria-label="Excluir"
-              @click="confirmarExclusao(slotProps.data)"
-            />
+            <div class="acoes-linha">
+              <Button
+                v-if="caps.users.view"
+                icon="pi pi-eye"
+                text
+                rounded
+                title="Abrir app como este utilizador (novo separador)"
+                aria-label="Ver como este utilizador"
+                @click="abrirVisaoComoUtilizador(slotProps.data)"
+              />
+              <Button
+                v-if="caps.users.change"
+                icon="pi pi-pencil"
+                text
+                rounded
+                title="Editar"
+                aria-label="Editar utilizador"
+                @click="editarUsuario(slotProps.data)"
+              />
+              <Button
+                v-if="caps.users.delete"
+                icon="pi pi-trash"
+                text
+                rounded
+                severity="danger"
+                title="Excluir (API em desenvolvimento)"
+                aria-label="Excluir utilizador"
+                @click="confirmarExclusao(slotProps.data)"
+              />
+            </div>
           </template>
         </Column>
       </template>
@@ -161,7 +177,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
+import { useStore } from 'vuex'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
@@ -173,8 +190,20 @@ import { PAGE_SIZE } from '@/constants/pagination'
 import { labelAssinatura } from './usuariosAdminMock'
 import { adminService } from '@/services/adminService'
 import { useToast } from '@/utils/useToast'
+import { FINANCAS_VIEW_AS_USER_QUERY } from '@/constants/financasViewAs'
+import { resolveAdminCapabilities } from '@/utils/adminCapabilities'
 
+const store = useStore()
 const toast = useToast()
+
+const caps = computed(() => resolveAdminCapabilities(store.getters.getUser))
+
+const mostrarColunaAcoesUsuarios = computed(
+  () =>
+    caps.value.users.view ||
+    caps.value.users.change ||
+    caps.value.users.delete
+)
 
 const loading = ref(false)
 const lista = ref([])
@@ -278,7 +307,21 @@ function onFiltroClear () {
   carregarLista(1)
 }
 
+/**
+ * Novo separador com a app em modo finanças desse utilizador (JWT do staff +
+ * cabeçalho X-Financas-Subject-User nas rotas /financas/).
+ */
+function abrirVisaoComoUtilizador (row) {
+  if (!caps.value.users.view) return
+  const basePath = import.meta.env.BASE_URL || '/'
+  const path = basePath.endsWith('/') ? basePath : `${basePath}/`
+  const url = new URL(path, window.location.origin)
+  url.searchParams.set(FINANCAS_VIEW_AS_USER_QUERY, String(row.id))
+  window.open(url.toString(), '_blank', 'noopener,noreferrer')
+}
+
 function editarUsuario (row) {
+  if (!caps.value.users.change) return
   usuarioEmEdicao.value = row
   visibleUsuario.value = true
 }
@@ -303,6 +346,7 @@ function mensagemErroApi (e) {
 }
 
 async function onUsuarioSave (payload) {
+  if (!caps.value.users.change) return
   salvandoUsuario.value = true
   try {
     await adminService.updateUser(payload.id, {
@@ -327,6 +371,7 @@ async function onUsuarioSave (payload) {
 }
 
 function confirmarExclusao (row) {
+  if (!caps.value.users.delete) return
   itemParaExcluir.value = row
   visibleExcluir.value = true
 }
@@ -400,5 +445,12 @@ onMounted(() => {
 
 .grupos-vazio {
   color: var(--texto-secundario);
+}
+
+.acoes-linha {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem;
 }
 </style>

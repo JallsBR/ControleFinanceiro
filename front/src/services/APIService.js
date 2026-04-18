@@ -1,6 +1,7 @@
 import axios from 'axios'
 import store from '../store'
 import router from '../router'
+import { FINANCAS_VIEW_AS_USER_KEY } from '@/constants/financasViewAs'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001/api/v1'
 
@@ -21,6 +22,12 @@ api.interceptors.request.use(
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
+      }
+
+      const viewAsId = sessionStorage.getItem(FINANCAS_VIEW_AS_USER_KEY)
+      const fullPath = `${config.baseURL || ''}${config.url || ''}`
+      if (viewAsId && /^\d+$/.test(viewAsId) && fullPath.includes('/financas/')) {
+        config.headers['X-Financas-Subject-User'] = viewAsId
       }
 
       return config

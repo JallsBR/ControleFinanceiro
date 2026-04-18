@@ -1,17 +1,31 @@
 import { createStore } from 'vuex'
 import api from '../services/APIService'
+import {
+  FINANCAS_VIEW_AS_USER_KEY,
+  readSubjectViewModeFromStorage,
+  SUBJECT_VIEW_KIND
+} from '@/constants/financasViewAs'
 
 export default createStore({
   state: {
     user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('access') || null,
-    loading: false
+    loading: false,
+    /** { kind, userId } | null — alinhado com sessionStorage (modo ver como). */
+    subjectViewMode: readSubjectViewModeFromStorage(),
+    /** Perfil admin GET do utilizador monitorizado (só modo admin). */
+    subjectMonitoredUser: null
   },
 
   getters: {
     isAuthenticated: state => !!state.token,
     getUser: state => state.user,
-    isLoading: state => state.loading
+    isLoading: state => state.loading,
+    subjectViewAdminActive: (state) =>
+      state.subjectViewMode?.kind === SUBJECT_VIEW_KIND.ADMIN,
+    subjectViewConsultorActive: (state) =>
+      state.subjectViewMode?.kind === SUBJECT_VIEW_KIND.CONSULTOR,
+    getSubjectMonitoredUser: (state) => state.subjectMonitoredUser
   },
 
   mutations: {
@@ -31,10 +45,26 @@ export default createStore({
     LOGOUT(state) {
       state.user = null
       state.token = null
+      state.subjectViewMode = null
+      state.subjectMonitoredUser = null
 
       localStorage.removeItem('access')
       localStorage.removeItem('refresh')
       localStorage.removeItem('user')
+      try {
+        sessionStorage.removeItem(FINANCAS_VIEW_AS_USER_KEY)
+      } catch (_) {}
+    },
+
+    SET_SUBJECT_VIEW_MODE (state, payload) {
+      state.subjectViewMode = payload || null
+      if (!payload) {
+        state.subjectMonitoredUser = null
+      }
+    },
+
+    SET_SUBJECT_MONITORED_USER (state, payload) {
+      state.subjectMonitoredUser = payload || null
     },
 
     /** Mescla dados do usuário após atualizar perfil (mantém is_staff etc.). */
@@ -82,6 +112,22 @@ export default createStore({
     logout({ commit }) {
       commit('LOGOUT')
       window.location.href = '/'
+    },
+
+    /** Carrega perfil admin do utilizador em modo “ver como” (rotas /financas). */
+    async fetchSubjectMonitoredProfile ({ commit, state }) {
+      const m = state.subjectViewMode
+      if (!m || m.kind !== SUBJECT_VIEW_KIND.ADMIN || !m.userId) {
+        commit('SET_SUBJECT_MONITORED_USER', null)
+        return
+      }
+      try {
+        const { adminService } = await import('@/services/adminService')
+        const data = await adminService.getUser(m.userId)
+        commit('SET_SUBJECT_MONITORED_USER', data)
+      } catch (_) {
+        commit('SET_SUBJECT_MONITORED_USER', null)
+      }
     }
   }
 })

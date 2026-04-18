@@ -18,6 +18,9 @@ body,
   --sucesso: #20c997;
   --perigo: #ff6b6b;
   --neutro: #e9ecef;
+
+  /* Fundo dos campos com autofill do browser (evita o amarelo padrão) */
+  --input-autofill-fundo: #1a1d24;
 }
 
 /* ===== TEMA CLARO ===== */
@@ -31,6 +34,8 @@ body,
   --sucesso: #198754;
   --perigo: #dc3545;
   --neutro: #212529;
+
+  --input-autofill-fundo: #f1f3f5;
 }
 
 /* ===== PRIMEVUE: dialogs, inputs e datatable seguem o tema da app ===== */
@@ -63,6 +68,27 @@ body,
 .p-inputtext::placeholder,
 .p-inputnumber input::placeholder {
   color: var(--texto-secundario);
+}
+
+/* Autofill (Chrome/Edge/Safari): substitui o fundo amarelo por tom do tema */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--input-autofill-fundo) inset !important;
+  box-shadow: 0 0 0 1000px var(--input-autofill-fundo) inset !important;
+  -webkit-text-fill-color: var(--texto-primario) !important;
+  caret-color: var(--texto-primario);
+  border-color: color-mix(in srgb, var(--texto-secundario) 40%, transparent) !important;
+  transition: background-color 99999s ease-out;
 }
 
 .p-inputgroup-addon {

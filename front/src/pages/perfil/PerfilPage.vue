@@ -2,7 +2,7 @@
   <div class="perfil-page">
     <CardStatus
       tituloPrincipal="Perfil"
-      subtitulo="Atualize seus dados e, se quiser, sua senha"
+      :subtitulo="subtituloCard"
       icone="pi pi-user"
       style="margin-bottom: 1rem;"
     />
@@ -46,6 +46,7 @@
                 class="w-full"
                 required
                 autocomplete="email"
+                :disabled="somenteLeituraMonitor"
               />
             </div>
 
@@ -56,6 +57,7 @@
                 v-model="firstName"
                 class="w-full"
                 autocomplete="given-name"
+                :disabled="somenteLeituraMonitor"
               />
             </div>
 
@@ -66,14 +68,20 @@
                 v-model="lastName"
                 class="w-full"
                 autocomplete="family-name"
+                :disabled="somenteLeituraMonitor"
               />
             </div>
           </div>
 
-          <Divider layout="vertical" type="solid" class="perfil-divider-v" />
+          <Divider
+          v-if="!somenteLeituraMonitor"
+          layout="vertical"
+          type="solid"
+          class="perfil-divider-v"
+        />
 
           <!-- Direita: toda a alteração de senha -->
-          <div class="perfil-col perfil-col--senha">
+          <div v-if="!somenteLeituraMonitor" class="perfil-col perfil-col--senha">
             <h2 class="perfil-secao-titulo">Senha</h2>
             <p class="perfil-hint perfil-hint--intro">
               Deixe as novas senhas em branco para manter a atual. Se preencher, as duas devem ser iguais e a senha atual é obrigatória.
@@ -122,7 +130,7 @@
           </div>
         </div>
 
-        <div class="perfil-actions">
+        <div v-if="!somenteLeituraMonitor" class="perfil-actions">
           <Button
             type="submit"
             label="Salvar alterações"
@@ -137,7 +145,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import CardStatus from '@/components/CardStatus.vue'
 import InputText from 'primevue/inputtext'
@@ -150,6 +158,16 @@ import { useToast } from '@/utils/useToast'
 
 const store = useStore()
 const toast = useToast()
+
+const modoMonitor = computed(() => store.getters.subjectViewAdminActive)
+const monitored = computed(() => store.getters.getSubjectMonitoredUser)
+const somenteLeituraMonitor = computed(() => modoMonitor.value)
+
+const subtituloCard = computed(() =>
+  somenteLeituraMonitor.value
+    ? 'Dados do utilizador que está a visualizar (somente leitura).'
+    : 'Atualize seus dados e, se quiser, sua senha'
+)
 
 const carregando = ref(true)
 const salvando = ref(false)
@@ -188,6 +206,22 @@ function formatarErroApi (data) {
 async function carregar () {
   erroCarregar.value = ''
   carregando.value = true
+  if (modoMonitor.value) {
+    if (!monitored.value) {
+      await store.dispatch('fetchSubjectMonitoredProfile')
+    }
+    const m = store.getters.getSubjectMonitoredUser
+    if (m) {
+      aplicarUsuario(m)
+    } else {
+      aplicarUsuario(store.getters.getUser)
+      erroCarregar.value =
+        'Não foi possível carregar os dados do utilizador monitorizado.'
+      toast.error('Perfil', erroCarregar.value)
+    }
+    carregando.value = false
+    return
+  }
   aplicarUsuario(store.getters.getUser)
   try {
     const u = await authService.getProfile()
@@ -203,6 +237,7 @@ async function carregar () {
 }
 
 async function salvar () {
+  if (somenteLeituraMonitor.value) return
   erroSalvar.value = ''
   msgSucesso.value = ''
 
@@ -253,6 +288,16 @@ async function salvar () {
     salvando.value = false
   }
 }
+
+watch(
+  [modoMonitor, monitored],
+  () => {
+    if (modoMonitor.value && monitored.value) {
+      aplicarUsuario(monitored.value)
+    }
+  },
+  { deep: true }
+)
 
 onMounted(() => {
   carregar()

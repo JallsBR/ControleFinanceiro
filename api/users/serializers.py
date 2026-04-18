@@ -8,6 +8,10 @@ from users.models import Assinatura, User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Perfil básico + capacidades Django para o painel admin (só staff)."""
+
+    admin_capabilities = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -18,7 +22,41 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'is_staff',
             'is_superuser',
+            'admin_capabilities',
         )
+
+    def get_admin_capabilities(self, obj):
+        if not getattr(obj, 'is_staff', False) and not getattr(obj, 'is_superuser', False):
+            return None
+        if getattr(obj, 'is_superuser', False):
+            return {'superuser': True}
+        u_app = User._meta.app_label
+        g_app = Group._meta.app_label
+
+        def u_perm(suffix):
+            return obj.has_perm(f'{u_app}.{suffix}_user')
+
+        def g_perm(suffix):
+            return obj.has_perm(f'{g_app}.{suffix}_group')
+
+        return {
+            'users': {
+                'view': u_perm('view') or u_perm('change'),
+                'add': u_perm('add'),
+                'change': u_perm('change'),
+                'delete': u_perm('delete'),
+            },
+            'groups': {
+                'view': g_perm('view') or g_perm('change'),
+                'add': g_perm('add'),
+                'change': g_perm('change'),
+                'delete': g_perm('delete'),
+            },
+            # Editar permissões M2M do grupo (API PUT .../permissions)
+            'group_permissions': g_perm('change'),
+            # Abrir app como outro utilizador (tenant) — quem vê utilizadores no admin
+            'view_financas_as_subject': u_perm('view') or u_perm('change'),
+        }
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):

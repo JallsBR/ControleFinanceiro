@@ -3,9 +3,12 @@ Middleware que define o banco do tenant para a request atual.
 Para rotas /api/, resolve o usuário via JWT (se houver token) e, se o usuário
 tiver tenant_db_name, define o thread-local e reconfigura a conexão 'tenant'.
 
-Gerentes autenticados podem enviar o header ``X-Financas-Subject-User`` com o id
-do **cliente** (User.pk) para operar no tenant desse cliente, desde que exista
-``Consultoria`` ativa entre gerente e cliente.
+Staff ou superuser autenticados podem enviar ``X-Financas-Subject-User`` com o
+id de qualquer **utilizador** com ``tenant_db_name``, para operar nesse tenant
+(visão administrativa).
+
+Gerentes autenticados podem enviar o mesmo header com o id do **cliente**
+(User.pk) quando existir ``Consultoria`` ativa entre gerente e cliente.
 """
 
 from django.contrib.auth.models import AnonymousUser
@@ -82,14 +85,6 @@ class TenantDatabaseMiddleware:
                 _set_tenant_connection(user.tenant_db_name)
             return None
 
-        if not getattr(user, "is_gerente", False):
-            return JsonResponse(
-                {
-                    "detail": "Apenas gerentes podem usar o cabeçalho X-Financas-Subject-User."
-                },
-                status=403,
-            )
-
         from django.contrib.auth import get_user_model
         from users.models import Consultoria
 
@@ -97,7 +92,32 @@ class TenantDatabaseMiddleware:
         try:
             cliente = User.objects.using("default").get(pk=subject_id)
         except User.DoesNotExist:
-            return JsonResponse({"detail": "Cliente não encontrado."}, status=404)
+            return JsonResponse({"detail": "Utilizador não encontrado."}, status=404)
+
+        # Staff / superuser: visão administrativa do tenant do utilizador (sem consultoria).
+        if getattr(user, "is_staff", False) or getattr(user, "is_superuser", False):
+            db_name = getattr(cliente, "tenant_db_name", None) or None
+            if not db_name:
+                return JsonResponse(
+                    {
+                        "detail": "Utilizador sem base de dados de finanças configurada."
+                    },
+                    status=400,
+                )
+            request._financas_subject_user = cliente
+            _set_tenant_connection(db_name)
+            return None
+
+        if not getattr(user, "is_gerente", False):
+            return JsonResponse(
+                {
+                    "detail": (
+                        "Apenas staff ou gerentes podem usar o cabeçalho "
+                        "X-Financas-Subject-User."
+                    )
+                },
+                status=403,
+            )
 
         allowed = Consultoria.objects.using("default").filter(
             gerente=user,

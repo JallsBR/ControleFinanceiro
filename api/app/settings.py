@@ -148,6 +148,8 @@ CORS_ALLOW_HEADERS = [
     "content-type",
     "origin",
     "user-agent",
+    # Visão staff/gerente no tenant do cliente (APIService + middleware_tenant)
+    "x-financas-subject-user",
 ]
 # Headers que o frontend pode ler na resposta (ex.: Authorization com JWT)
 CORS_EXPOSE_HEADERS = ["Authorization"]

@@ -2,16 +2,39 @@
   <div class="assinatura-page">
     <CardStatus
       tituloPrincipal="Assinatura"
-      subtitulo="Consulte seu plano atual e conheça as opções Premium (referência visual — dados mock)"
+      :subtitulo="subtituloAssinaturaCard"
       icone="pi pi-id-card"
       style="margin-bottom: 1rem;"
     />
 
-    <!-- Plano atual -->
+    <!-- Plano atual: dados reais no modo visualização admin -->
     <section class="assinatura-secao" aria-labelledby="titulo-plano-atual">
       <h2 id="titulo-plano-atual" class="assinatura-secao-titulo">Plano atual</h2>
 
-      <div class="assinatura-card assinatura-card--atual">
+      <div v-if="modoMonitorVisualizacao && planoMonitorReal" class="assinatura-card assinatura-card--atual">
+        <div class="assinatura-card-head">
+          <div>
+            <span class="assinatura-plano-nome">{{ planoMonitorReal.nome }}</span>
+            <Tag :severity="planoMonitorReal.tagSeverity" :value="planoMonitorReal.statusLabel" class="assinatura-tag" />
+          </div>
+          <span class="assinatura-slug">{{ planoMonitorReal.slug }}</span>
+        </div>
+        <p class="assinatura-renovacao">
+          <i class="pi pi-calendar" aria-hidden="true" />
+          Fim do período atual:
+          <strong>{{ planoMonitorReal.fimPeriodo }}</strong>
+        </p>
+        <p class="assinatura-aviso-mock assinatura-aviso--real">
+          <i class="pi pi-eye" aria-hidden="true" />
+          Plano da conta que está a visualizar (dados da API admin).
+        </p>
+      </div>
+
+      <div v-else-if="modoMonitorVisualizacao" class="assinatura-card assinatura-card--atual assinatura-card--vazio">
+        <p class="assinatura-secao-sub">A carregar dados de assinatura ou indisponíveis para este utilizador.</p>
+      </div>
+
+      <div v-else class="assinatura-card assinatura-card--atual">
         <div class="assinatura-card-head">
           <div>
             <span class="assinatura-plano-nome">{{ mock.planoAtual.nome }}</span>
@@ -39,8 +62,12 @@
       </div>
     </section>
 
-    <!-- Premium: 3 produtos -->
-    <section class="assinatura-secao" aria-labelledby="titulo-premium">
+    <!-- Premium: 3 produtos (referência da app; não é checkout do utilizador monitorizado) -->
+    <section
+      v-if="!modoMonitorVisualizacao"
+      class="assinatura-secao"
+      aria-labelledby="titulo-premium"
+    >
       <h2 id="titulo-premium" class="assinatura-secao-titulo">Premium</h2>
       <p class="assinatura-secao-sub">
         Três períodos de assinatura: três meses, seis meses e um ano. Integração de pagamento em desenvolvimento.
@@ -83,10 +110,16 @@
         </div>
       </div>
     </section>
+
+    <p v-else class="assinatura-secao-sub assinatura-premium-oculto">
+      Ofertas Premium e preços de exemplo estão ocultos neste modo; voltam ao sair da visualização do utilizador.
+    </p>
   </div>
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import CardStatus from '@/components/CardStatus.vue'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
@@ -94,8 +127,49 @@ import Money from '@/utils/Money.js'
 import { mockAssinaturaReferencia } from './assinaturaMock'
 import { useToast } from '@/utils/useToast'
 
+const store = useStore()
 const mock = mockAssinaturaReferencia
 const toast = useToast()
+
+const modoMonitorVisualizacao = computed(() => store.getters.subjectViewAdminActive)
+const monitored = computed(() => store.getters.getSubjectMonitoredUser)
+
+const subtituloAssinaturaCard = computed(() =>
+  modoMonitorVisualizacao.value
+    ? 'Plano da conta que está a visualizar.'
+    : 'Consulte seu plano atual e conheça as opções Premium (referência visual — dados mock)'
+)
+
+const planoMonitorReal = computed(() => {
+  if (!modoMonitorVisualizacao.value) return null
+  const m = monitored.value
+  if (!m) return null
+  const slug = (m.assinatura || 'comum').toString().toLowerCase()
+  const nome = slug === 'premium' ? 'Premium' : 'Comum'
+  const st = (m.assinatura_status || '').toString().toLowerCase()
+  const statusLabel =
+    st === 'ativa' ? 'Ativa' : st === 'expirada' ? 'Expirada' : st === 'cancelada' ? 'Cancelada' : String(m.assinatura_status || '—')
+  let tagSeverity = 'secondary'
+  if (st === 'ativa') tagSeverity = 'success'
+  else if (st === 'expirada' || st === 'cancelada') tagSeverity = 'warn'
+  const fim = m.current_period_end
+    ? formatarDataHoraIso(m.current_period_end)
+    : '—'
+  return { nome, slug, statusLabel, tagSeverity, fimPeriodo: fim }
+})
+
+function formatarDataHoraIso (iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return String(iso)
+  return d.toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })
+}
+
+onMounted(async () => {
+  if (modoMonitorVisualizacao.value && !monitored.value) {
+    await store.dispatch('fetchSubjectMonitoredProfile')
+  }
+})
 
 function formatarDataIso (iso) {
   if (!iso) return '—'
