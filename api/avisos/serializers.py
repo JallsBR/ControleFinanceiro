@@ -5,6 +5,7 @@ from app.financas_subject import get_financas_subject_user
 from app.consultoria_subject import request_user_pode_atuar_como_consultor_da_solicitacao
 from users.models import User
 
+from .mensagens_permissoes import pode_mensagem_entre
 from .models import Mensagem, SolicitacaoConsultoria
 
 
@@ -44,25 +45,33 @@ class MensagemSerializer(serializers.ModelSerializer):
     remetente = UserBriefSerializer(read_only=True)
     destino = UserBriefSerializer(read_only=True)
     destino_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), source="destino", write_only=True
+        queryset=User.objects.all(),
+        source="destino",
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
 
     class Meta:
         model = Mensagem
         fields = (
             "id",
+            "thread_root_id",
             "remetente",
             "destino",
             "destino_id",
-            "assunto",
             "lido",
             "resposta",
             "mensagem",
-            "link",
             "star",
             "created_at",
         )
-        read_only_fields = ("remetente", "destino", "created_at")
+        read_only_fields = (
+            "remetente",
+            "destino",
+            "thread_root_id",
+            "created_at",
+        )
 
     def validate_resposta(self, value):
         if value is None:
@@ -70,9 +79,9 @@ class MensagemSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return value
-        user = request.user
+        sender = self.context.get("remetente_efetivo") or request.user
         if not Mensagem.objects.filter(
-            Q(remetente=user) | Q(destino=user), pk=value.pk
+            Q(remetente_id=sender.pk) | Q(destino_id=sender.pk), pk=value.pk
         ).exists():
             raise serializers.ValidationError(
                 "A mensagem referenciada em resposta não existe ou não lhe pertence."
@@ -83,11 +92,52 @@ class MensagemSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user.is_authenticated:
             return attrs
-        user = request.user
+        subject = get_financas_subject_user(request)
         if self.instance is None:
+            sender = self.context.get("remetente_efetivo") or request.user
+            resposta = attrs.get("resposta")
+
+            if resposta is not None:
+                if attrs.get("destino") is not None:
+                    raise serializers.ValidationError(
+                        {
+                            "destino_id": (
+                                "Numa resposta, não envie destinatário; "
+                                "é inferido automaticamente."
+                            )
+                        }
+                    )
+                if resposta.remetente_id == sender.pk:
+                    attrs["destino"] = resposta.destino
+                elif resposta.destino_id == sender.pk:
+                    attrs["destino"] = resposta.remetente
+                else:
+                    raise serializers.ValidationError(
+                        {"resposta": "Não participa nesta conversa."}
+                    )
+                if not pode_mensagem_entre(sender, attrs["destino"]):
+                    raise serializers.ValidationError(
+                        {"resposta": "Não pode continuar esta conversa."}
+                    )
+            else:
+                dest = attrs.get("destino")
+                if dest is None:
+                    raise serializers.ValidationError(
+                        {"destino_id": "Selecione um destinatário."}
+                    )
+                if not pode_mensagem_entre(sender, dest):
+                    raise serializers.ValidationError(
+                        {
+                            "destino_id": (
+                                "Não pode enviar mensagem para este utilizador. "
+                                "Só helpdesk (equipa), o seu consultor ou clientes "
+                                "com consultoria ativa."
+                            )
+                        }
+                    )
             return attrs
-        # destinatário controla leitura / estrela
-        if self.instance.destino_id != user.id:
+        # destinatário (contexto da conta) controla leitura / estrela
+        if self.instance.destino_id != subject.id:
             incoming = attrs.keys()
             if "lido" in incoming and attrs.get("lido") != self.instance.lido:
                 raise serializers.ValidationError(
@@ -98,6 +148,28 @@ class MensagemSerializer(serializers.ModelSerializer):
                     {"star": "Só o destinatário pode alterar o destaque."}
                 )
         return attrs
+
+    def create(self, validated_data):
+        remetente = validated_data.pop("remetente")
+        resposta = validated_data.pop("resposta", None)
+        destino = validated_data.pop("destino")
+        mensagem = validated_data.pop("mensagem", "")[:500]
+        thread_root_id = None
+        if resposta is not None:
+            thread_root_id = resposta.thread_root_id or resposta.pk
+        inst = Mensagem.objects.create(
+            remetente=remetente,
+            destino=destino,
+            mensagem=mensagem,
+            lido=False,
+            star=False,
+            resposta=resposta,
+            thread_root_id=thread_root_id,
+        )
+        if resposta is None:
+            inst.thread_root_id = inst.pk
+            inst.save(update_fields=["thread_root_id"])
+        return inst
 
     def update(self, instance, validated_data):
         validated_data.pop("destino", None)

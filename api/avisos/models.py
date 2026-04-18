@@ -16,7 +16,6 @@ class Mensagem(models.Model):
         related_name="mensagens_recebidas",
         verbose_name=_("destino"),
     )
-    assunto = models.CharField(_("assunto"), max_length=150)
     lido = models.BooleanField(_("lido"), default=False)
     resposta = models.ForeignKey(
         "self",
@@ -26,8 +25,14 @@ class Mensagem(models.Model):
         related_name="respostas",
         verbose_name=_("resposta a"),
     )
+    thread_root_id = models.PositiveIntegerField(
+        _("id raiz da conversa"),
+        db_index=True,
+        null=True,
+        blank=True,
+        help_text=_("Identificador da primeira mensagem da conversa (thread)."),
+    )
     mensagem = models.CharField(_("mensagem"), max_length=500)
-    link = models.CharField(_("link"), max_length=155, blank=True)
     star = models.BooleanField(_("destacar (estrela)"), default=False)
     created_at = models.DateTimeField(_("criado em"), auto_now_add=True)
 
@@ -37,7 +42,7 @@ class Mensagem(models.Model):
         verbose_name_plural = _("mensagens")
 
     def __str__(self):
-        return f"{self.assunto} ({self.remetente_id} → {self.destino_id})"
+        return f"{self.remetente_id} → {self.destino_id}"
 
 
 class SolicitacaoConsultoria(models.Model):

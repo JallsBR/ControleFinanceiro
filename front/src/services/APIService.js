@@ -31,7 +31,8 @@ api.interceptors.request.use(
         /^\d+$/.test(viewAsId) &&
         (fullPath.includes('/financas/') ||
           fullPath.includes('/auth/consultoria/') ||
-          fullPath.includes('/avisos/solicitacoes-consultoria'))
+          fullPath.includes('/avisos/solicitacoes-consultoria') ||
+          fullPath.includes('/avisos/mensagens'))
       if (enviaSubjectUser) {
         config.headers['X-Financas-Subject-User'] = viewAsId
       }

@@ -26,6 +26,9 @@ onMounted(() => {
   store.dispatch('fetchConsultoriaResumo').catch((e) => {
     console.log('AuthLayout fetchConsultoriaResumo', e)
   })
+  store.dispatch('fetchMensagensNaoLidas').catch((e) => {
+    console.log('AuthLayout fetchMensagensNaoLidas', e)
+  })
 })
 </script>
 

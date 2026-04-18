@@ -18,7 +18,9 @@ export default createStore({
     /** Perfil admin GET do utilizador monitorizado (só modo admin). */
     subjectMonitoredUser: null,
     /** Contadores de solicitações de consultoria (avisos) para badge no menu. */
-    consultoriaResumo: { recebidas: 0, enviadas: 0, total: 0 }
+    consultoriaResumo: { recebidas: 0, enviadas: 0, total: 0 },
+    /** Mensagens internas não lidas (caixa do contexto atual). */
+    mensagensNaoLidas: 0
   },
 
   getters: {
@@ -37,7 +39,8 @@ export default createStore({
       Number(state.consultoriaResumo?.total) || 0,
     /** Pedidos recebidos pelo consultor ainda por aceitar (badge menu Solicitações). */
     consultoriaPendentesRecebidas: (state) =>
-      Number(state.consultoriaResumo?.recebidas) || 0
+      Number(state.consultoriaResumo?.recebidas) || 0,
+    mensagensNaoLidasCount: (state) => Number(state.mensagensNaoLidas) || 0
   },
 
   mutations: {
@@ -60,6 +63,7 @@ export default createStore({
       state.subjectViewMode = null
       state.subjectMonitoredUser = null
       state.consultoriaResumo = { recebidas: 0, enviadas: 0, total: 0 }
+      state.mensagensNaoLidas = 0
 
       localStorage.removeItem('access')
       localStorage.removeItem('refresh')
@@ -119,6 +123,10 @@ export default createStore({
       }
     },
 
+    SET_MENSAGENS_NAO_LIDAS (state, n) {
+      state.mensagensNaoLidas = Math.max(0, Number(n) || 0)
+    },
+
     /** Mescla dados do usuário após atualizar perfil (mantém is_staff etc.). */
     UPDATE_USER (state, user) {
       if (!user) return
@@ -162,6 +170,11 @@ export default createStore({
         } catch (e) {
           console.log('login fetchConsultoriaResumo', e)
         }
+        try {
+          await dispatch('fetchMensagensNaoLidas')
+        } catch (e) {
+          console.log('login fetchMensagensNaoLidas', e)
+        }
 
         return true
       } catch (error) {
@@ -201,6 +214,17 @@ export default createStore({
           enviadas: 0,
           total: 0
         })
+      }
+    },
+
+    async fetchMensagensNaoLidas ({ commit }) {
+      try {
+        const { getMensagensNaoLidasCount } = await import('../services/mensagens')
+        const n = await getMensagensNaoLidasCount()
+        commit('SET_MENSAGENS_NAO_LIDAS', n)
+      } catch (error) {
+        console.log('fetchMensagensNaoLidas', error)
+        commit('SET_MENSAGENS_NAO_LIDAS', 0)
       }
     },
 

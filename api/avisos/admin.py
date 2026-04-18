@@ -7,7 +7,7 @@ from .models import Mensagem, SolicitacaoConsultoria
 class MensagemAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "assunto",
+        "thread_root_id",
         "remetente",
         "destino",
         "lido",
@@ -15,7 +15,7 @@ class MensagemAdmin(admin.ModelAdmin):
         "created_at",
     )
     list_filter = ("lido", "star", "created_at")
-    search_fields = ("assunto", "mensagem", "link")
+    search_fields = ("mensagem",)
     raw_id_fields = ("remetente", "destino", "resposta")
     ordering = ("-created_at",)
 

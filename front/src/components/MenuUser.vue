@@ -122,8 +122,6 @@ const semMenuContaConsultor = computed(
 const monitored = computed(() => store.getters.getSubjectMonitoredUser)
 const user = computed(() => store.getters.getUser)
 
-const isConsultor = computed(() => Boolean(user.value?.is_gerente))
-
 /** Consultor real ou staff a visualizar um gerente (menu Solicitações + badge). */
 const isConsultorEfectivoConsultoria = computed(
   () =>
@@ -134,18 +132,20 @@ const isConsultorEfectivoConsultoria = computed(
 const pendentesRecebidas = computed(
   () => store.getters.consultoriaPendentesRecebidas
 )
+const mensagensNaoLidas = computed(
+  () => store.getters.mensagensNaoLidasCount
+)
 
-/** Badge no botão do menu: só consultor (fora da vista cliente), pendentes, menu fechado. */
+/** Badge no avatar: apenas mensagens não lidas (solicitações mantêm badge na linha do menu). */
 const mostrarBadgeOverlay = computed(
   () =>
-    isConsultorEfectivoConsultoria.value &&
     !semMenuContaConsultor.value &&
-    pendentesRecebidas.value > 0 &&
+    mensagensNaoLidas.value > 0 &&
     !menuAberto.value
 )
 
 const badgeOverlayValor = computed(() => {
-  const n = pendentesRecebidas.value
+  const n = mensagensNaoLidas.value
   return n > 99 ? '99+' : String(n)
 })
 
@@ -225,6 +225,11 @@ function badgeCountSolicitacoes () {
   return n > 0 ? n : null
 }
 
+function badgeCountMensagens () {
+  const n = mensagensNaoLidas.value
+  return n > 0 ? n : null
+}
+
 /** Valor do Badge PrimeVue (string). */
 function badgeValor (item) {
   const n = item?.badgeCount
@@ -239,6 +244,7 @@ const mostrarLinkAdministrar = computed(
 
 const itens = computed(() => {
   const bcSol = badgeCountSolicitacoes()
+  const bcMsg = badgeCountMensagens()
   const base = [
     { label: 'Perfil', icon: 'pi pi-user', route: '/perfil' },
     { label: 'Assinatura', icon: 'pi pi-id-card', route: '/assinatura' },
@@ -246,6 +252,12 @@ const itens = computed(() => {
       label: 'Consultoria',
       icon: 'pi pi-comments',
       route: '/consultoria'
+    },
+    {
+      label: 'Mensagens',
+      icon: 'pi pi-envelope',
+      route: '/mensagens',
+      badgeCount: bcMsg
     }
   ]
   if (podeVerSolicitacoes.value) {

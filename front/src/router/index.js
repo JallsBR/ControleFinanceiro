@@ -124,6 +124,16 @@ const routes = [
         meta: { requiresConsultor: true }
       },
       {
+        path: '/mensagens',
+        name: 'mensagens',
+        component: () => import('../pages/mensagens/MensagensPage.vue'),
+        meta: {
+          title: 'Mensagens',
+          subtitulo: 'Mensagens internas com a equipa, o consultor ou clientes em consultoria.',
+          icone: 'pi pi-envelope'
+        }
+      },
+      {
         path: '/administrar',
         name: 'administrar',
         component: AdministrarPage,
