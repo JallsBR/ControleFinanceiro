@@ -6,7 +6,10 @@ popularDB.txt
 __pycache__/
 OIG4.webp
 *.sqlite3
-docs/
+# Documentação local; mantém versionados os contextos em docs/ai/
+docs/*
+!docs/ai/
+!docs/ai/**
 mysql_data/
 
 

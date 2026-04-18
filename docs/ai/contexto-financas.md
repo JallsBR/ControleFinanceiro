@@ -1,7 +1,12 @@
-# Contexto da Aplicação - Finanças
+# Contexto da aplicação – Finanças
+
+Este ficheiro descreve **só** o domínio da app **`financas`** (movimentações, categorias, dashboard, etc.). Para mensagens internas e avisos, ver **`contexto-avisos.md`**. Para autenticação e utilizadores, ver **`contexto-usuarios.md`**.
+
+---
 
 ## Objetivo
-Aplicação de controle financeiro pessoal com:
+
+Módulo de controle financeiro pessoal com:
 - Movimentações (entrada e saída)
 - Movimentações recorrentes
 - Categorias
@@ -78,3 +83,10 @@ Todos exigem autenticação JWT e filtram por `created_by`.
 - Services ainda não implementados
 - Futuramente separar lógica recorrente em camada de domínio
 - Usar django-filter para filtros
+
+---
+
+## Documentação relacionada
+
+- **`contexto-avisos.md`** – mensagens internas e API `/api/v1/avisos/`.
+- **`contexto-usuarios.md`** – JWT, modelo `User`, consultoria.

@@ -1,8 +1,8 @@
-# Contexto da Aplicação - Usuários
+# Contexto da aplicação – Utilizadores
 
 ## Objetivo
 
-Gerenciar autenticação e cadastro de usuários na aplicação de finanças.
+Gerir autenticação e cadastro de utilizadores na aplicação (finanças, mensagens e restantes módulos). O modelo **`User`** e o vínculo **`Consultoria`** (gerente–cliente) são também base para as **regras de destinatários** das mensagens internas; ver **`contexto-avisos.md`**.
 
 A autenticação é baseada em:
 - E-mail **ou** nome de usuário + senha
@@ -180,3 +180,10 @@ Não expõe:
 - Adicionar rate limit em signin
 - Separar camada de domínio/serviço
 - Implementar controle de múltiplas sessões
+
+---
+
+## Documentação relacionada
+
+- **`contexto-financas.md`** – recursos em `/api/v1/financas/` e filtro por `created_by`.
+- **`contexto-avisos.md`** – mensagens internas, threads e endpoints em `/api/v1/avisos/`.

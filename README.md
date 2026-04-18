@@ -1,6 +1,6 @@
 # Controle Financeiro
 
-Aplicação de controle financeiro pessoal com **frontend Vue 3** e **backend Django REST**. Cada usuário tem seus próprios dados (movimentações, categorias, metas, reservas, investimentos). O banco **não é compartilhado** entre ambientes: ao clonar, configure seu próprio MySQL e `.env`.
+Aplicação web de **controlo financeiro pessoal** com registo de entradas, saídas, categorias, metas, reservas e investimentos, mais áreas de apoio à **consultoria** (vínculo gerente–cliente) e **mensagens internas** entre utilizadores autorizados (equipa de suporte, gerentes e clientes em consultoria ativa). O frontend é **Vue 3** e o backend **Django REST**; os dados financeiros são **por utilizador** (`created_by`). O MySQL **não é partilhado** entre ambientes: ao clonar o repositório, configure a sua instância e o `.env`.
 
 ---
 
@@ -9,9 +9,9 @@ Aplicação de controle financeiro pessoal com **frontend Vue 3** e **backend Dj
 | Camada    | Tecnologia |
 |-----------|------------|
 | Backend   | Django 5.2, Django REST Framework, Simple JWT, django-filter, django-cors-headers |
-| Banco     | MySQL (configurado via variáveis de ambiente) |
+| Banco     | MySQL (variáveis de ambiente) |
 | Admin     | Django Admin com tema Jazzmin |
-| Frontend  | Vue 3, Vite 7, Vue Router, Pinia, PrimeVue, Axios |
+| Frontend  | Vue 3, Vite 7, Vue Router, **Vuex**, PrimeVue (tema Aura), Axios |
 | Execução  | Docker (backend + MySQL) + Node (frontend); ou venv em `api/` sem Docker |
 
 ---
@@ -25,10 +25,12 @@ ControleFinanceiro/
 ├── docker-compose.yml   # MySQL + Django (portas 3307, 8001)
 ├── Dockerfile           # Imagem do backend
 ├── package.json         # Scripts (Docker + frontend)
+├── docs/ai/             # Contextos para documentação e assistentes (finanças, utilizadores, avisos)
 ├── api/                 # Backend Django
-│   ├── app/             # Settings, URLs, WSGI
-│   ├── users/           # Auth (signin, signup, logout, JWT)
+│   ├── app/             # Settings, URLs, WSGI, utilitários partilhados
+│   ├── users/           # Auth (JWT), modelo User, consultoria (vínculo gerente–cliente)
 │   ├── financas/        # Categorias, movimentações, metas, reservas, investimentos, dashboard
+│   ├── avisos/          # Mensagens internas (inbox/threads), solicitações de consultoria
 │   ├── manage.py
 │   └── requirements.txt
 └── front/               # Frontend Vue (Vite)
@@ -155,7 +157,17 @@ Recursos (todos exigem autenticação JWT; dados filtrados por `created_by`):
 - `icone/` – ícones (ex.: para categorias)
 - `dashboard/` – dados para o dashboard
 
-Detalhes de regras de negócio, filtros e padrões estão em `docs/ai/`.
+### API – Avisos (`/api/v1/avisos/`)
+
+- `mensagens/` – listagem e criação (threads via `resposta` / `thread_root_id`); filtros: `nome`, `q`, `thread_root_id`, `lido`, `star`, etc.
+- `mensagens/<id>/` – detalhe, atualização parcial (ex.: `star`, `lido`), eliminação (só remetente)
+- `mensagens/conversas/` – inbox agregado por thread (query: `nome`, `q`, `favorita`)
+- `mensagens/threads/<thread_root_id>/marcar-lidas/` – POST para marcar lidas no contexto atual
+- `mensagens/nao-lidas/` – contagem para badge
+- `mensagens/destinatarios/` – utilizadores que o remetente pode escolher (regras em `mensagens_permissoes.py`)
+- `solicitacoes-consultoria/` – pedidos de vínculo consultoria (list/create e detalhe)
+
+Regras de negócio, filtros e padrões por módulo estão em **`docs/ai/`** (`contexto-financas.md`, `contexto-usuarios.md`, `contexto-avisos.md`).
 
 ---
 
