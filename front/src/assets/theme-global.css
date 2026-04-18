@@ -70,6 +70,33 @@ body,
   color: var(--texto-secundario);
 }
 
+/* Textarea (PrimeVue): mesmo tratamento visual dos inputs */
+textarea.p-textarea,
+.p-textarea {
+  background: var(--bg-secundario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 40%, transparent) !important;
+}
+
+.p-textarea::placeholder {
+  color: var(--texto-secundario);
+}
+
+.p-textarea:enabled:hover {
+  border-color: color-mix(in srgb, var(--texto-secundario) 55%, transparent) !important;
+}
+
+.p-textarea:enabled:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--texto-primario) 35%, var(--texto-secundario)) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--texto-primario) 20%, transparent);
+}
+
+.p-textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 /* Autofill (Chrome/Edge/Safari): substitui o fundo amarelo por tom do tema */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

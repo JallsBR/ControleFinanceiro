@@ -9,19 +9,24 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { onMounted } from 'vue'
+import { useStore } from 'vuex'
 import BarraNavegacao from '../components/BarraNavegacao.vue'
 import BannerModoVisualizacao from '../components/BannerModoVisualizacao.vue'
 import FooterApp from '../components/FooterApp.vue'
 
-export default {
-  name: 'AuthLayout',
-  components: {
-    BarraNavegacao,
-    BannerModoVisualizacao,
-    FooterApp
-  }
-}
+const store = useStore()
+
+onMounted(() => {
+  if (!store.getters.isAuthenticated) return
+  store.dispatch('refreshUserProfile').catch((e) => {
+    console.log('AuthLayout refreshUserProfile', e)
+  })
+  store.dispatch('fetchConsultoriaResumo').catch((e) => {
+    console.log('AuthLayout fetchConsultoriaResumo', e)
+  })
+})
 </script>
 
 <style scoped>

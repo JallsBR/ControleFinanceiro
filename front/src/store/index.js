@@ -14,7 +14,9 @@ export default createStore({
     /** { kind, userId } | null — alinhado com sessionStorage (modo ver como). */
     subjectViewMode: readSubjectViewModeFromStorage(),
     /** Perfil admin GET do utilizador monitorizado (só modo admin). */
-    subjectMonitoredUser: null
+    subjectMonitoredUser: null,
+    /** Contadores de solicitações de consultoria (avisos) para badge no menu. */
+    consultoriaResumo: { recebidas: 0, enviadas: 0, total: 0 }
   },
 
   getters: {
@@ -25,7 +27,12 @@ export default createStore({
       state.subjectViewMode?.kind === SUBJECT_VIEW_KIND.ADMIN,
     subjectViewConsultorActive: (state) =>
       state.subjectViewMode?.kind === SUBJECT_VIEW_KIND.CONSULTOR,
-    getSubjectMonitoredUser: (state) => state.subjectMonitoredUser
+    getSubjectMonitoredUser: (state) => state.subjectMonitoredUser,
+    consultoriaPendentesTotal: (state) =>
+      Number(state.consultoriaResumo?.total) || 0,
+    /** Pedidos recebidos pelo consultor ainda por aceitar (badge menu Solicitações). */
+    consultoriaPendentesRecebidas: (state) =>
+      Number(state.consultoriaResumo?.recebidas) || 0
   },
 
   mutations: {
@@ -47,6 +54,7 @@ export default createStore({
       state.token = null
       state.subjectViewMode = null
       state.subjectMonitoredUser = null
+      state.consultoriaResumo = { recebidas: 0, enviadas: 0, total: 0 }
 
       localStorage.removeItem('access')
       localStorage.removeItem('refresh')
@@ -67,6 +75,15 @@ export default createStore({
       state.subjectMonitoredUser = payload || null
     },
 
+    SET_CONSULTORIA_RESUMO (state, payload) {
+      const p = payload || {}
+      state.consultoriaResumo = {
+        recebidas: Number(p.recebidas) || 0,
+        enviadas: Number(p.enviadas) || 0,
+        total: Number(p.total) || 0
+      }
+    },
+
     /** Mescla dados do usuário após atualizar perfil (mantém is_staff etc.). */
     UPDATE_USER (state, user) {
       if (!user) return
@@ -78,7 +95,7 @@ export default createStore({
   },
 
   actions: {
-    async login({ commit }, { login, email, password }) {
+    async login({ commit, dispatch }, { login, email, password }) {
       try {
         commit('SET_LOADING', true)
 
@@ -100,6 +117,17 @@ export default createStore({
           refresh
         })
 
+        try {
+          await dispatch('refreshUserProfile')
+        } catch (e) {
+          console.log('login refreshUserProfile', e)
+        }
+        try {
+          await dispatch('fetchConsultoriaResumo')
+        } catch (e) {
+          console.log('login fetchConsultoriaResumo', e)
+        }
+
         return true
       } catch (error) {
         console.error('Erro no login:', error)
@@ -115,6 +143,32 @@ export default createStore({
     },
 
     /** Carrega perfil admin do utilizador em modo “ver como” (rotas /financas). */
+    async refreshUserProfile ({ commit }) {
+      try {
+        const { data } = await api.get('/auth/user')
+        if (data?.user) {
+          commit('UPDATE_USER', data.user)
+        }
+      } catch (error) {
+        console.log('refreshUserProfile', error)
+      }
+    },
+
+    async fetchConsultoriaResumo ({ commit }) {
+      try {
+        const { getSolicitacoesPendentesCount } = await import('../services/consultoria')
+        const data = await getSolicitacoesPendentesCount()
+        commit('SET_CONSULTORIA_RESUMO', data)
+      } catch (error) {
+        console.log('fetchConsultoriaResumo', error)
+        commit('SET_CONSULTORIA_RESUMO', {
+          recebidas: 0,
+          enviadas: 0,
+          total: 0
+        })
+      }
+    },
+
     async fetchSubjectMonitoredProfile ({ commit, state }) {
       const m = state.subjectViewMode
       if (!m || m.kind !== SUBJECT_VIEW_KIND.ADMIN || !m.userId) {

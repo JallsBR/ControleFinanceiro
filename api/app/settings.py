@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     # Apps
     'users',
     'financas',
+    'avisos.apps.AvisosConfig',
 ]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

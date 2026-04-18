@@ -11,6 +11,12 @@ from users.views.admin_groups import (
     AdminPermissionTreeView,
 )
 from users.views.admin_users import AdminUserDetailView, AdminUserListView
+from users.views.consultoria import (
+    ConsultoriaClientesView,
+    ConsultoriaSolicitacoesPendentesCountView,
+    ConsultoriaVinculoAtualView,
+    ConsultoriaVinculoEncerrarView,
+)
 
 from django.urls import path
 
@@ -19,6 +25,26 @@ urlpatterns = [
     path('signup', Signup.as_view()),
     path('token/refresh/', TokenRefreshViewDefaultDB.as_view(), name='token_refresh'),
     path('user', UserProfileView.as_view(), name='user'),
+    path(
+        'consultoria/vinculo-atual',
+        ConsultoriaVinculoAtualView.as_view(),
+        name='consultoria_vinculo_atual',
+    ),
+    path(
+        'consultoria/clientes',
+        ConsultoriaClientesView.as_view(),
+        name='consultoria_clientes',
+    ),
+    path(
+        'consultoria/solicitacoes-pendentes-count',
+        ConsultoriaSolicitacoesPendentesCountView.as_view(),
+        name='consultoria_solicitacoes_pendentes_count',
+    ),
+    path(
+        'consultoria/vinculos/<int:pk>',
+        ConsultoriaVinculoEncerrarView.as_view(),
+        name='consultoria_vinculo_encerrar',
+    ),
     path('logout', Logout.as_view(), name='logout'),
     path('admin/users', AdminUserListView.as_view(), name='admin_users'),
     path('admin/users/<int:pk>', AdminUserDetailView.as_view(), name='admin_user_detail'),

@@ -109,12 +109,18 @@ const routes = [
       {
         path: '/consultoria',
         name: 'consultoria',
-        component: () => import('../pages/conta/UsuarioAreaPage.vue'),
+        component: () => import('../pages/consultoria/index.vue'),
         meta: {
           title: 'Consultoria',
           subtitulo: 'Acompanhamento e suporte consultivo.',
           icone: 'pi pi-comments'
         }
+      },
+      {
+        path: '/consultoria/solicitacoes',
+        name: 'consultoria-solicitacoes',
+        component: () => import('../pages/consultoria/SolicitacoesConsultoriaPage.vue'),
+        meta: { requiresConsultor: true }
       },
       {
         path: '/administrar',
@@ -186,6 +192,16 @@ router.beforeEach((to, from) => {
     const u = store.getters.getUser
     if (!u?.is_staff && !u?.is_superuser) {
       return { name: 'home' }
+    }
+  }
+
+  const requiresConsultor = to.matched.some(
+    (record) => record.meta.requiresConsultor
+  )
+  if (requiresConsultor && isAuthenticated) {
+    const u = store.getters.getUser
+    if (!u?.is_gerente) {
+      return { name: 'consultoria' }
     }
   }
 

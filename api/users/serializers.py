@@ -22,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'is_staff',
             'is_superuser',
+            'is_gerente',
             'admin_capabilities',
         )
 
