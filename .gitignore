@@ -31,6 +31,8 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
+# Cursor (regras e estado locais da IDE — não versionar)
+.cursor/
 .DS_Store
 *.suo
 *.ntvs*
