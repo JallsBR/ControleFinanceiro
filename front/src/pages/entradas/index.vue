@@ -132,8 +132,7 @@ const iconesMap = ref({})
 
 const carregarCategorias = async () => {
   try {
-    const data = await financasService.categorias.getAll({ tipo: 'E' })
-    const arr = Array.isArray(data) ? data : (data?.results || data?.data || [])
+    const arr = await financasService.categorias.getAllFlat({ tipo: 'E' })
     categoriasMap.value = Object.fromEntries((arr || []).map(c => [c.id, c]))
   } catch (_) {
     categoriasMap.value = {}

@@ -199,8 +199,7 @@ async function preencherParaEdicao() {
 
 const carregarCategorias = async () => {
   try {
-    const data = await financasService.categorias.getAll({ tipo: 'E' })
-    categorias.value = Array.isArray(data) ? data : (data?.results || data?.data || [])
+    categorias.value = await financasService.categorias.getAllFlat({ tipo: 'E' })
   } catch (error) {
     console.error('Erro ao carregar categorias:', error)
     categorias.value = []

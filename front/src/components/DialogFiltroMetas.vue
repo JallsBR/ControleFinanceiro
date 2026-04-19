@@ -11,12 +11,24 @@
       <div class="filtro-header">
         <h2 class="filtro-title">Filtrar metas</h2>
         <p class="filtro-subtitle">
-          Defina período, prioridade e conclusão.
+          Defina nome, período, prioridade e conclusão.
         </p>
       </div>
     </template>
 
     <div class="filtro-body">
+      <div class="field">
+        <label class="field-label">Nome</label>
+        <div class="field-input">
+          <InputText
+            v-model="nome"
+            class="w-full"
+            placeholder="Contém o texto…"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
       <div class="field">
         <label class="field-label">Período</label>
         <div class="field-input period">
@@ -102,6 +114,7 @@ import { ref, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
+import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 
 const props = defineProps({
@@ -120,6 +133,7 @@ const visible = computed({
 
 const modelValue = visible
 
+const nome = ref('')
 const dataInicial = ref(null)
 const dataFinal = ref(null)
 const prioridade = ref(null)
@@ -151,6 +165,8 @@ function onAplicar() {
   const ini = toIsoDate(dataInicial.value)
   const fim = toIsoDate(dataFinal.value)
 
+  const nomeTrim = (nome.value || '').trim()
+  if (nomeTrim) filtros.nome__icontains = nomeTrim
   if (ini) filtros['data_meta__gte'] = ini
   if (fim) filtros['data_meta__lte'] = fim
   if (prioridade.value) filtros.prioridade = prioridade.value
@@ -163,6 +179,7 @@ function onAplicar() {
 }
 
 function onLimpar() {
+  nome.value = ''
   dataInicial.value = null
   dataFinal.value = null
   prioridade.value = null

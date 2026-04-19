@@ -1,6 +1,6 @@
 <template>
   <Dialog
-    v-model:visible="modelValue"
+    v-model:visible="visible"
     modal
     :closable="false"
     :dismissableMask="true"
@@ -10,43 +10,39 @@
     <template #header>
       <div class="filtro-header">
         <h2 class="filtro-title">Filtrar movimentações</h2>
-        <p class="filtro-subtitle">
-          Defina período e categoria para refinar a lista.
-        </p>
-      </div>
+              </div>
     </template>
 
     <div class="filtro-body">
       <div class="field">
-        <label class="field-label">Período</label>
-        <div class="field-input period">
-          <DatePicker
-            v-model="dataInicial"
-            dateFormat="dd/mm/yy"
-            placeholder="Data inicial"
-            showIcon
-          />
-          <span class="period-separator">até</span>
-          <DatePicker
-            v-model="dataFinal"
-            dateFormat="dd/mm/yy"
-            placeholder="Data final"
-            showIcon
+        <label class="field-label">Tipo</label>
+        <div class="field-input">
+          <Select
+            v-model="tipo"
+            :options="tipoOpcoes"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas"
+            class="w-full"
+            :showClear="true"
           />
         </div>
       </div>
 
       <div class="field">
-        <label class="field-label">Categoria</label>
+        <label class="field-label">Categorias</label>
         <div class="field-input">
-          <Select
-            v-model="categoria"
-            :options="categorias"
+          <MultiSelect
+            v-model="categoriasSelecionadas"
+            :options="categoriasFiltradas"
             optionLabel="nome"
             optionValue="id"
+            display="chip"
+            filter
             placeholder="Todas"
             class="w-full"
-            :showClear="true"
+            :maxSelectedLabels="3"
+            :showToggleAll="false"
           >
             <template #option="slotProps">
               <div class="categoria-option">
@@ -58,7 +54,19 @@
                 <span>{{ slotProps.option.nome }}</span>
               </div>
             </template>
-          </Select>
+          </MultiSelect>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Descrição</label>
+        <div class="field-input">
+          <InputText
+            v-model="descricao"
+            class="w-full"
+            placeholder="Contém o texto…"
+            autocomplete="off"
+          />
         </div>
       </div>
     </div>
@@ -96,8 +104,9 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import Dialog from 'primevue/dialog'
-import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
+import MultiSelect from 'primevue/multiselect'
+import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import financasService from '@/services/financasService'
 
@@ -105,11 +114,6 @@ const props = defineProps({
   modelValue: {
     type: Boolean,
     default: false
-  },
-  /** 'E' ou 'S' */
-  tipo: {
-    type: String,
-    required: true
   }
 })
 
@@ -120,61 +124,61 @@ const visible = computed({
   set: (v) => emit('update:modelValue', v)
 })
 
-const dataInicial = ref(null)
-const dataFinal = ref(null)
-const categoria = ref(null)
+const tipoOpcoes = [
+  { label: 'Todas', value: '' },
+  { label: 'Entrada', value: 'E' },
+  { label: 'Saída', value: 'S' }
+]
+
+const tipo = ref('')
+const categoriasSelecionadas = ref([])
+const descricao = ref('')
 const categorias = ref([])
 const iconesMap = ref({})
 
-const modelValue = visible
-
-function resetar() {
-  dataInicial.value = null
-  dataFinal.value = null
-  categoria.value = null
-}
-
-watch(visible, (v) => {
-  if (!v) return
+const categoriasFiltradas = computed(() => {
+  const t = tipo.value
+  const arr = categorias.value || []
+  if (!t) return arr
+  return arr.filter(c => c.tipo === t)
 })
 
-function formatarDataIso(date) {
-  if (!date) return null
-  const d = new Date(date)
-  if (Number.isNaN(d.getTime())) return null
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+watch(tipo, () => {
+  categoriasSelecionadas.value = []
+})
+
+function resetar () {
+  tipo.value = ''
+  categoriasSelecionadas.value = []
+  descricao.value = ''
 }
 
-function onAplicar() {
-  const filtros = {}
-
-  const ini = formatarDataIso(dataInicial.value)
-  const fim = formatarDataIso(dataFinal.value)
-
-  if (ini) filtros['data__gte'] = ini
-  if (fim) filtros['data__lte'] = fim
-  if (categoria.value) filtros['categoria'] = categoria.value
-
-  emit('apply', filtros)
+function onAplicar () {
+  const d = (descricao.value || '').trim()
+  const ids = (categoriasSelecionadas.value || [])
+    .map(id => Number(id))
+    .filter(id => !Number.isNaN(id))
+  emit('apply', {
+    tipo: tipo.value || null,
+    categorias: ids,
+    descricao: d || null
+  })
   visible.value = false
 }
 
-function onLimpar() {
+function onLimpar () {
   resetar()
   emit('clear')
   visible.value = false
 }
 
-function onFechar() {
+function onFechar () {
   visible.value = false
 }
 
-async function carregarCategoriasEIcones() {
+async function carregarCategoriasEIcones () {
   try {
-    const arr = await financasService.categorias.getAllFlat({ tipo: props.tipo })
+    const arr = await financasService.categorias.getAllFlat()
     categorias.value = arr || []
   } catch (error) {
     console.error('Erro ao carregar categorias para filtro:', error)
@@ -190,9 +194,13 @@ async function carregarCategoriasEIcones() {
   }
 }
 
-function classeIcone(id) {
+function classeIcone (id) {
   return iconesMap.value[id] || ''
 }
+
+watch(visible, (v) => {
+  if (v) return
+})
 
 onMounted(() => {
   carregarCategoriasEIcones()
@@ -254,17 +262,6 @@ onMounted(() => {
   width: 100%;
 }
 
-.field-input.period {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.period-separator {
-  color: var(--texto-secundario);
-  font-size: 0.85rem;
-}
-
 .filtro-footer {
   display: flex;
   justify-content: flex-end;
@@ -295,4 +292,3 @@ onMounted(() => {
   color: var(--texto-primario);
 }
 </style>
-

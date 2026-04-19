@@ -146,19 +146,27 @@
       <h2 class="section-title">Movimentações no período</h2>
 
       <BaseDataTable
-        :items="movimentos"
+        :items="movimentosFiltrados"
         :loading="loading"
-        :totalRecords="movimentos.length"
+        :totalRecords="movimentosFiltrados.length"
         :first="0"
         :lazy="false"
-        :reorderableColumns="false"
+        :reorderableColumns="true"
       >
+        <template #toolbar>
+          <div class="table-toolbar">
+            <div class="right">
+              <Button icon="pi pi-refresh" text label="Atualizar" @click="atualizarMovimentacoes" />
+              <Button icon="pi pi-search" text label="Filtrar" @click="abrirFiltro" />
+            </div>
+          </div>
+        </template>
         <template #columns>
           <Column
             field="data"
             columnKey="data"
             header="Data"
-            style="min-width: 7rem; max-width: 8rem"
+            style="min-width: 7rem; max-width: 9rem"
             sortable
           >
             <template #body="{ data }">
@@ -169,7 +177,7 @@
             field="tipo"
             columnKey="tipo"
             header="Tipo"
-            style="min-width: 6rem; max-width: 7rem"
+            style="min-width: 3rem; max-width: 4rem"
             sortable
           >
             <template #body="{ data }">
@@ -182,9 +190,28 @@
             </template>
           </Column>
           <Column
+            field="categoria"
+            columnKey="categoria"
+            header="Categoria"
+            style="min-width: 4rem; max-width: 6rem"
+            sortable
+          >
+            <template #body="{ data }">
+              <span class="categoria-cell">
+                <i
+                  v-if="classeIconeCategoria(data.categoria)"
+                  :class="classeIconeCategoria(data.categoria)"
+                  class="categoria-cell__icon"
+                />
+                <span>{{ nomeCategoria(data.categoria) }}</span>
+              </span>
+            </template>
+          </Column>
+          <Column
             field="descricao"
             columnKey="descricao"
             header="Descrição"
+            sortable
           />
           <Column
             field="valor"
@@ -203,14 +230,67 @@
               </span>
             </template>
           </Column>
+          <Column
+            v-if="!readOnly"
+            header="Ações"
+            columnKey="acoesRelatorio"
+            style="width: 8rem"
+            :reorderableColumn="false"
+          >
+            <template #body="slotProps">
+              <Button icon="pi pi-pencil" text @click="editarMovimentacao(slotProps.data)" />
+              <Button icon="pi pi-trash" text severity="danger" @click="deletarMovimentacao(slotProps.data)" />
+            </template>
+          </Column>
         </template>
       </BaseDataTable>
+
+      <div class="relatorio-tabela-totais" aria-live="polite">
+        <span class="relatorio-tabela-totais__label">Total da Seleção: </span>
+        <span
+          class="relatorio-tabela-totais__valor"
+          :class="totalLinhasVisiveis >= 0 ? 'positivo' : 'negativo'"
+        >
+          {{ Money.format(totalLinhasVisiveis, { currency: true }) }}
+        </span>
+      </div>
     </div>
+
+    <DialogEntradas
+      v-model:visible="visibleEntrada"
+      :movimentacao="entradaEmEdicao"
+      @saved="onMovimentacaoSalva"
+    />
+    <DialogSaida
+      v-model:visible="visibleSaida"
+      :movimentacao="saidaEmEdicao"
+      @saved="onMovimentacaoSalva"
+    />
+
+    <DialogConfirma
+      v-model="visibleExcluir"
+      :titulo="tituloExcluir"
+      :mensagem="mensagemExcluir"
+      icone="pi pi-trash"
+      tipo="danger"
+      labelConfirmar="Excluir"
+      labelCancelar="Cancelar"
+      iconeConfirmar="pi pi-trash"
+      severityConfirmar="danger"
+      :loading="excluindo"
+      @confirm="executarExclusao"
+    />
+
+    <DialogFiltroRelatorioMovimentacoes
+      v-model="visibleFiltro"
+      @apply="onFiltroApply"
+      @clear="onFiltroClear"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/pt-br'
 import CardStatus from '@/components/CardStatus.vue'
@@ -221,9 +301,15 @@ import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
 import { PAGE_SIZE } from '@/constants/pagination'
+import DialogEntradas from '@/pages/home/DialogEntradas.vue'
+import DialogSaida from '@/pages/home/DialogSaida.vue'
+import DialogConfirma from '@/components/DialogConfirma.vue'
+import DialogFiltroRelatorioMovimentacoes from '@/components/DialogFiltroRelatorioMovimentacoes.vue'
 
 const toast = useToast()
+const { readOnly } = useFinancasSubjectReadOnly()
 
 dayjs.locale('pt-br')
 
@@ -234,7 +320,25 @@ const dataFinal = ref(hoje.endOf('month').toDate())
 
 const loading = ref(false)
 const exportingPdf = ref(false)
-const movimentos = ref([])
+/** Lista completa do período (API); resumo e PDF usam isto. */
+const movimentosBrutos = ref([])
+const filtrosTabela = ref({
+  tipo: null,
+  categorias: [],
+  descricao: ''
+})
+
+const visibleEntrada = ref(false)
+const visibleSaida = ref(false)
+const visibleExcluir = ref(false)
+const visibleFiltro = ref(false)
+const entradaEmEdicao = ref(null)
+const saidaEmEdicao = ref(null)
+const itemParaExcluir = ref(null)
+const excluindo = ref(false)
+
+const categoriasMap = ref({})
+const iconesMap = ref({})
 
 const resumo = ref({
   totalEntradas: 0,
@@ -253,6 +357,44 @@ const consolidadosOrdenados = computed(() => {
     return b.ano - a.ano
   })
 })
+
+const movimentosFiltrados = computed(() => {
+  let list = movimentosBrutos.value
+  const f = filtrosTabela.value
+  if (f.tipo) {
+    list = list.filter(m => m.tipo === f.tipo)
+  }
+  if (f.categorias?.length) {
+    const set = new Set(f.categorias.map(Number))
+    list = list.filter(m => set.has(Number(m.categoria)))
+  }
+  if (f.descricao && String(f.descricao).trim()) {
+    const q = String(f.descricao).trim().toLowerCase()
+    list = list.filter(m => (m.descricao || '').toLowerCase().includes(q))
+  }
+  return list
+})
+
+/** Soma algebrica dos valores das linhas atualmente na tabela (entradas +, saídas −). */
+const totalLinhasVisiveis = computed(() => {
+  let t = 0
+  for (const m of movimentosFiltrados.value) {
+    const v = Number(m.valor) || 0
+    if (m.tipo === 'E') t += v
+    else if (m.tipo === 'S') t -= v
+  }
+  return t
+})
+
+const tituloExcluir = computed(() =>
+  itemParaExcluir.value?.tipo === 'E' ? 'Excluir entrada?' : 'Excluir saída?'
+)
+
+const mensagemExcluir = computed(() =>
+  itemParaExcluir.value?.tipo === 'E'
+    ? 'Esta ação não pode ser desfeita. Deseja realmente excluir esta entrada?'
+    : 'Esta ação não pode ser desfeita. Deseja realmente excluir esta saída?'
+)
 
 function toIsoDate (date) {
   if (date == null || date === '') return null
@@ -284,6 +426,109 @@ function formatMesAno (ano, mes) {
   const m = String(mes).padStart(2, '0')
   return dayjs(`${ano}-${m}-01`).format('MMMM [de] YYYY')
 }
+
+function nomeCategoria (id) {
+  const cat = categoriasMap.value[id]
+  return cat?.nome ?? id ?? '—'
+}
+
+function classeIconeCategoria (id) {
+  const cat = categoriasMap.value[id]
+  if (!cat || !cat.icone) return ''
+  return iconesMap.value[cat.icone] || ''
+}
+
+async function carregarCategoriasEIcones () {
+  try {
+    const arr = await financasService.categorias.getAllFlat()
+    categoriasMap.value = Object.fromEntries((arr || []).map(c => [c.id, c]))
+  } catch (_) {
+    categoriasMap.value = {}
+  }
+  try {
+    const arr = await financasService.icone.getAllFlat()
+    iconesMap.value = Object.fromEntries((arr || []).map(i => [i.id, i.classe_css]))
+  } catch (error) {
+    console.error('Erro ao carregar ícones:', error)
+    iconesMap.value = {}
+  }
+}
+
+function atualizarMovimentacoes () {
+  carregarRelatorio()
+}
+
+function abrirFiltro () {
+  visibleFiltro.value = true
+}
+
+function onFiltroApply (payload) {
+  const cats = payload?.categorias
+  const categoriasArr = Array.isArray(cats)
+    ? cats.map(Number).filter(id => !Number.isNaN(id))
+    : []
+  filtrosTabela.value = {
+    tipo: payload?.tipo ?? null,
+    categorias: categoriasArr,
+    descricao: payload?.descricao != null ? String(payload.descricao) : ''
+  }
+}
+
+function onFiltroClear () {
+  filtrosTabela.value = { tipo: null, categorias: [], descricao: '' }
+}
+
+function editarMovimentacao (item) {
+  if (readOnly.value || !item) return
+  if (item.tipo === 'E') {
+    entradaEmEdicao.value = item
+    visibleEntrada.value = true
+  } else {
+    saidaEmEdicao.value = item
+    visibleSaida.value = true
+  }
+}
+
+function deletarMovimentacao (item) {
+  if (readOnly.value || !item?.id) return
+  itemParaExcluir.value = item
+  visibleExcluir.value = true
+}
+
+async function executarExclusao () {
+  if (readOnly.value || !itemParaExcluir.value?.id) return
+  excluindo.value = true
+  try {
+    await financasService.movimentacoes.delete(itemParaExcluir.value.id)
+    visibleExcluir.value = false
+    itemParaExcluir.value = null
+    await carregarRelatorio()
+    await carregarConsolidados()
+    toast.success('Movimentação excluída', '')
+  } catch (error) {
+    console.error('Erro ao excluir:', error)
+    toast.error('Erro', 'Não foi possível excluir a movimentação.')
+  } finally {
+    excluindo.value = false
+  }
+}
+
+async function onMovimentacaoSalva () {
+  await carregarRelatorio()
+  await carregarConsolidados()
+}
+
+watch(visibleEntrada, (v) => {
+  if (!v) entradaEmEdicao.value = null
+})
+
+watch(visibleSaida, (v) => {
+  if (!v) saidaEmEdicao.value = null
+})
+
+watch(visibleExcluir, (v) => {
+  if (!v) itemParaExcluir.value = null
+})
 
 /** Agrega todas as páginas da listagem (PAGE_SIZE no backend). */
 async function listarMovimentacoesDoPeriodo (ini, fim) {
@@ -327,7 +572,7 @@ async function carregarRelatorio () {
       diaSemana: getDiaSemana(m.data)
     }))
 
-    movimentos.value = lista
+    movimentosBrutos.value = lista
 
     let totalEntradas = 0
     let totalSaidas = 0
@@ -348,7 +593,7 @@ async function carregarRelatorio () {
     }
   } catch (error) {
     console.error('Erro ao carregar relatório:', error)
-    movimentos.value = []
+    movimentosBrutos.value = []
     resumo.value = {
       totalEntradas: 0,
       totalSaidas: 0,
@@ -437,9 +682,10 @@ function setUltimos7Dias () {
   carregarRelatorio()
 }
 
-onMounted(() => {
-  carregarRelatorio()
-  carregarConsolidados()
+onMounted(async () => {
+  await carregarCategoriasEIcones()
+  await carregarRelatorio()
+  await carregarConsolidados()
 })
 </script>
 
@@ -669,6 +915,58 @@ onMounted(() => {
   margin: 0 0 0.75rem 0;
   font-size: 1.1rem;
   color: var(--texto-primario);
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.table-toolbar .right {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.categoria-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.categoria-cell__icon {
+  font-size: 1rem;
+}
+
+.relatorio-tabela-totais {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid color-mix(in srgb, var(--texto-secundario) 18%, transparent);
+}
+
+.relatorio-tabela-totais__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texto-secundario);
+}
+
+.relatorio-tabela-totais__valor {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.relatorio-tabela-totais__valor.positivo {
+  color: var(--sucesso);
+}
+
+.relatorio-tabela-totais__valor.negativo {
+  color: var(--perigo);
 }
 
 .mov-tipo-tag {

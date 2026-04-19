@@ -9,6 +9,64 @@
         style="margin-bottom: 1rem;"
     />
 
+    <div class="metas-insights-grid">
+      <div
+        class="meta-reserva-insight"
+        role="region"
+        :aria-busy="loading"
+        aria-labelledby="meta-insight-titulo"
+      >
+        <div class="meta-reserva-insight__head">
+          <i class="pi pi-wallet meta-reserva-insight__icon" aria-hidden="true" />
+          <div class="meta-reserva-insight__textwrap">
+            <h3 id="meta-insight-titulo" class="meta-reserva-insight__title">
+              Reserva vs. Metas
+            </h3>
+            <p class="meta-reserva-insight__copy">
+              Com a reserva atual (<strong>{{ Money.format(reservaAtual, { currency: true }) }}</strong>),
+              você atinge
+              <strong>{{ percentualReservaNasMetas }}%</strong>
+              do valor combinado das metas <strong>desta página</strong>
+              (<strong>{{ Money.format(somaValorMetasNaTabela, { currency: true }) }}</strong>).
+            </p>
+          </div>
+        </div>
+        <ProgressBar
+          :value="percentualReservaNasMetas"
+          :showValue="true"
+          class="meta-reserva-insight__bar"
+        />
+      </div>
+
+      <div
+        class="meta-reserva-insight meta-reserva-insight--investimento"
+        role="region"
+        :aria-busy="loading"
+        aria-labelledby="meta-investimento-titulo"
+      >
+        <div class="meta-reserva-insight__head">
+          <i class="pi pi-chart-line meta-reserva-insight__icon" aria-hidden="true" />
+          <div class="meta-reserva-insight__textwrap">
+            <h3 id="meta-investimento-titulo" class="meta-reserva-insight__title">
+              Investimento vs. Metas
+            </h3>
+            <p class="meta-reserva-insight__copy">
+              Com o total em investimentos ativos (<strong>{{ Money.format(investimentoAtivoTotal, { currency: true }) }}</strong>),
+              você atinge
+              <strong>{{ percentualInvestimentoNasMetas }}%</strong>
+              do valor combinado das metas <strong>desta página</strong>
+              (<strong>{{ Money.format(somaValorMetasNaTabela, { currency: true }) }}</strong>).
+            </p>
+          </div>
+        </div>
+        <ProgressBar
+          :value="percentualInvestimentoNasMetas"
+          :showValue="true"
+          class="meta-reserva-insight__bar"
+        />
+      </div>
+    </div>
+
     <BaseDataTable
       :items="lista"
       :loading="loading"
@@ -94,11 +152,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import CardStatus from '@/components/CardStatus.vue'
 import BaseDataTable from '@/components/BaseDataTable.vue'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
+import ProgressBar from 'primevue/progressbar'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
@@ -125,6 +184,60 @@ const currentPage = ref(1)
 const first = ref(0)
 const filtros = ref({})
 const ordering = ref(undefined)
+
+const reservaAtual = ref(0)
+const investimentoAtivoTotal = ref(0)
+
+/** Soma dos `valor_meta` das linhas atualmente na tabela (página atual). */
+const somaValorMetasNaTabela = computed(() =>
+  lista.value.reduce((acc, m) => acc + (Number(m.valor_meta) || 0), 0)
+)
+
+const percentualReservaNasMetas = computed(() => {
+  const r = Number(reservaAtual.value) || 0
+  const s = Number(somaValorMetasNaTabela.value) || 0
+  if (s <= 0) return 0
+  return Math.min(100, Math.round((r / s) * 100))
+})
+
+const percentualInvestimentoNasMetas = computed(() => {
+  const inv = Number(investimentoAtivoTotal.value) || 0
+  const s = Number(somaValorMetasNaTabela.value) || 0
+  if (s <= 0) return 0
+  return Math.min(100, Math.round((inv / s) * 100))
+})
+
+/** Soma só reservas ativas (`ativa=true`); inativas não entram no indicador. */
+async function carregarReserva () {
+  try {
+    const ativas = await financasService.reservas.getAllFlat({ ativa: true })
+    reservaAtual.value = (ativas || []).reduce(
+      (acc, r) => acc + (Number(r.valor) || 0),
+      0
+    )
+  } catch (error) {
+    console.error('Erro ao carregar reservas ativas:', error)
+    reservaAtual.value = 0
+  }
+}
+
+/** Soma `valor_inicial` só de investimentos ativos (`ativo=true`). */
+async function carregarInvestimentosAtivos () {
+  try {
+    const ativos = await financasService.investimentos.getAllFlat({ ativo: true })
+    investimentoAtivoTotal.value = (ativos || []).reduce(
+      (acc, i) => acc + (Number(i.valor_inicial) || 0),
+      0
+    )
+  } catch (error) {
+    console.error('Erro ao carregar investimentos ativos:', error)
+    investimentoAtivoTotal.value = 0
+  }
+}
+
+async function carregarIndicadoresPatrimonio () {
+  await Promise.all([carregarReserva(), carregarInvestimentosAtivos()])
+}
 
 const carregarLista = async () => {
   loading.value = true
@@ -169,28 +282,28 @@ function editarMeta(item) {
   visibleMeta.value = true
 }
 
-function atualizarLista() {
-  carregarLista()
+function atualizarLista () {
+  void Promise.all([carregarLista(), carregarIndicadoresPatrimonio()])
 }
 
 function abrirFiltro() {
   visibleFiltro.value = true
 }
 
-function onFiltroApply(novosFiltros) {
+function onFiltroApply (novosFiltros) {
   filtros.value = novosFiltros || {}
   currentPage.value = 1
   first.value = 0
   ordering.value = undefined
-  carregarLista()
+  void carregarLista()
 }
 
-function onFiltroClear() {
+function onFiltroClear () {
   filtros.value = {}
   currentPage.value = 1
   first.value = 0
   ordering.value = undefined
-  carregarLista()
+  void carregarLista()
 }
 
 function deletarMeta(item) {
@@ -206,7 +319,7 @@ async function executarExclusao() {
     await financasService.metas.delete(itemParaExcluir.value.id)
     visibleExcluir.value = false
     itemParaExcluir.value = null
-    await carregarLista()
+    await Promise.all([carregarLista(), carregarIndicadoresPatrimonio()])
     toast.success('Meta excluída', '')
   } catch (error) {
     console.error('Erro ao excluir meta:', error)
@@ -224,8 +337,8 @@ function formatarData(val) {
   return [day, m, y].filter(Boolean).join('/')
 }
 
-function onMetaSalva() {
-  carregarLista()
+function onMetaSalva () {
+  void Promise.all([carregarLista(), carregarIndicadoresPatrimonio()])
   toast.success('Meta salva', '')
 }
 
@@ -245,7 +358,7 @@ watch(visibleExcluir, (v) => {
 })
 
 onMounted(() => {
-  carregarLista()
+  void Promise.all([carregarLista(), carregarIndicadoresPatrimonio()])
 })
 </script>
 
@@ -277,5 +390,84 @@ onMounted(() => {
 .meta-status--pendente {
   background: color-mix(in srgb, var(--perigo) 20%, transparent);
   color: var(--neutro);
+}
+
+.metas-insights-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.metas-insights-grid .meta-reserva-insight {
+  margin-bottom: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.metas-insights-grid .meta-reserva-insight__bar {
+  margin-top: auto;
+}
+
+@media (max-width: 768px) {
+  .metas-insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.meta-reserva-insight {
+  background: var(--bg-secundario);
+  border-radius: 18px;
+  padding: 1rem 1.25rem 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.meta-reserva-insight__head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.meta-reserva-insight__icon {
+  font-size: 1.35rem;
+  color: var(--sucesso);
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.meta-reserva-insight__title {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--texto-primario);
+}
+
+.meta-reserva-insight__copy {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--texto-secundario);
+}
+
+.meta-reserva-insight__copy strong {
+  color: var(--texto-primario);
+  font-weight: 600;
+}
+
+.meta-reserva-insight__bar {
+  width: 100%;
+}
+
+.meta-reserva-insight__bar :deep(.p-progressbar) {
+  height: 0.65rem;
+  border-radius: 999px;
+}
+
+.meta-reserva-insight__bar :deep(.p-progressbar-value) {
+  border-radius: 999px;
 }
 </style>

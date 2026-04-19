@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.filters import OrderingFilter
 from rest_framework.response import Response
 from rest_framework import status   
 
@@ -19,6 +19,7 @@ class MetaListCreateView(generics.ListCreateAPIView):
         'prioridade': ['exact'],           # ?prioridade=R ou ?prioridade=M ou ?prioridade=L
         'data_meta': ['gte', 'lte'],      # ?data_meta__gte=2025-01-01
         'concluida': ['exact'],           # ?concluida=True ou ?concluida=False
+        'nome': ['icontains'],            # ?nome__icontains=férias
     }
     ordering_fields = [
         'id',

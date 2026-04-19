@@ -51,6 +51,29 @@ const financasService = {
       };
     },
 
+    /**
+     * Todas as categorias (varre todas as páginas; a listagem DRF é paginada).
+     * @param {object} [params] — ex.: `{ tipo: 'E' }` ou `{}` para todas.
+     * @returns {Promise<Array>}
+     */
+    getAllFlat: async (params = {}) => {
+      const results = [];
+      let response = await api.get('/financas/categorias/', { params: { ...params } });
+      let body = response.data;
+
+      for (;;) {
+        if (Array.isArray(body)) {
+          results.push(...body);
+          break;
+        }
+        results.push(...(body.results || []));
+        if (!body.next) break;
+        response = await api.get(body.next);
+        body = response.data;
+      }
+      return results;
+    },
+
     getAllPaginated: async (params = {}) => {
       const { page = 1, order = {}, filter = {} } = params;
 
@@ -303,6 +326,29 @@ const financasService = {
       };
     },
 
+    /**
+     * Todas as metas que obedecem a `params` (todas as páginas DRF).
+     * @param {object} [params] — mesmos filtros que em getPage (sem page).
+     * @returns {Promise<Array>}
+     */
+    getAllFlat: async (params = {}) => {
+      const results = [];
+      let response = await api.get('/financas/metas/', { params: { ...params } });
+      let body = response.data;
+
+      for (;;) {
+        if (Array.isArray(body)) {
+          results.push(...body);
+          break;
+        }
+        results.push(...(body.results || []));
+        if (!body.next) break;
+        response = await api.get(body.next);
+        body = response.data;
+      }
+      return results;
+    },
+
     getById: async (id) => {
       const response = await api.get(`/financas/metas/${id}/`);
       return response.data;
@@ -423,6 +469,29 @@ const financasService = {
       };
     },
 
+    /**
+     * Todas as reservas que obedecem a `params` (todas as páginas DRF).
+     * @param {object} [params] — ex.: `{ ativa: true }`
+     * @returns {Promise<Array>}
+     */
+    getAllFlat: async (params = {}) => {
+      const results = [];
+      let response = await api.get('/financas/reservas/', { params: { ...params } });
+      let body = response.data;
+
+      for (;;) {
+        if (Array.isArray(body)) {
+          results.push(...body);
+          break;
+        }
+        results.push(...(body.results || []));
+        if (!body.next) break;
+        response = await api.get(body.next);
+        body = response.data;
+      }
+      return results;
+    },
+
     getById: async (id) => {
       const response = await api.get(`/financas/reservas/${id}/`);
       return response.data;
@@ -457,6 +526,29 @@ const financasService = {
         data: body.results || [],
         total: body.count ?? 0
       };
+    },
+
+    /**
+     * Todos os investimentos que obedecem a `params` (todas as páginas DRF).
+     * @param {object} [params] — ex.: `{ ativo: true }`
+     * @returns {Promise<Array>}
+     */
+    getAllFlat: async (params = {}) => {
+      const results = [];
+      let response = await api.get('/financas/investimentos/', { params: { ...params } });
+      let body = response.data;
+
+      for (;;) {
+        if (Array.isArray(body)) {
+          results.push(...body);
+          break;
+        }
+        results.push(...(body.results || []));
+        if (!body.next) break;
+        response = await api.get(body.next);
+        body = response.data;
+      }
+      return results;
     },
 
     getAll: async () => {

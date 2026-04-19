@@ -198,8 +198,7 @@
   
   const carregarCategorias = async () => {
     try {
-      const data = await financasService.categorias.getAll({ tipo: 'S' })
-      categorias.value = Array.isArray(data) ? data : (data?.results || data?.data || [])
+      categorias.value = await financasService.categorias.getAllFlat({ tipo: 'S' })
     } catch (error) {
       console.error('Erro ao carregar categorias:', error)
       categorias.value = []

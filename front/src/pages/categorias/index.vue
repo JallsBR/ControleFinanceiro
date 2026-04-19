@@ -141,8 +141,7 @@ const tituloExcluir = computed(() => {
 async function carregarEntradas() {
   loadingEntradas.value = true
   try {
-    const data = await financasService.categorias.getAll({ tipo: TIPO_E })
-    listaEntradas.value = Array.isArray(data) ? data : (data?.results || data?.data || [])
+    listaEntradas.value = await financasService.categorias.getAllFlat({ tipo: TIPO_E })
   } catch (error) {
     console.error('Erro ao carregar categorias de entrada:', error)
     listaEntradas.value = []
@@ -155,8 +154,7 @@ async function carregarEntradas() {
 async function carregarSaidas() {
   loadingSaidas.value = true
   try {
-    const data = await financasService.categorias.getAll({ tipo: TIPO_S })
-    listaSaidas.value = Array.isArray(data) ? data : (data?.results || data?.data || [])
+    listaSaidas.value = await financasService.categorias.getAllFlat({ tipo: TIPO_S })
   } catch (error) {
     console.error('Erro ao carregar categorias de saída:', error)
     listaSaidas.value = []

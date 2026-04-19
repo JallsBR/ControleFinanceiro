@@ -141,7 +141,7 @@
   </table>
 
   <div class="secao-movimentacoes">
-    <h2>Movimentações no período</h2>
+    <h2>Movimentações no período{% with n=movimentacoes|length %} - {% if n == 1 %}1 movimentação{% else %}{{ n }} movimentações{% endif %}{% endwith %}</h2>
     {% if movimentacoes %}
     <table>
       <thead>
