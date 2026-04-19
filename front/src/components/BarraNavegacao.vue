@@ -2,7 +2,7 @@
     <Menubar class="custom-menubar">        
         <template #start>
             <div class="nav-left">
-                <RouterLink to="/" class="brand-link">
+                <RouterLink :to="{ name: 'home' }" class="brand-link">
                     <img src="/logoFinancasApp.png" alt="Logo Financas" class="logo-img" />
                     <h2 class="brand-title">Finanças <span>APP</span></h2>
                 </RouterLink>
