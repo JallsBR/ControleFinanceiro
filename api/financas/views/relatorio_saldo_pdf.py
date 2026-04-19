@@ -13,6 +13,22 @@ from weasyprint import HTML
 from app.financas_subject import get_financas_subject_user
 from financas.models import ConsolidadoMensal, Movimentacao
 
+_MESES_PT = (
+    "",
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+)
+
 
 class RelatorioSaldoPdfView(APIView):
     """
@@ -72,10 +88,16 @@ class RelatorioSaldoPdfView(APIView):
         for c in consolidados_qs:
             te = c.total_entradas or Decimal("0")
             ts = c.total_saidas or Decimal("0")
+            m = int(c.mes)
+            if 1 <= m <= 12:
+                periodo_label = f"{_MESES_PT[m]} - {c.ano}"
+            else:
+                periodo_label = f"{c.mes} - {c.ano}"
             consolidados_linhas.append(
                 {
                     "ano": c.ano,
                     "mes": c.mes,
+                    "periodo_label": periodo_label,
                     "total_entradas": te,
                     "total_saidas": ts,
                     "saldo_mes": te - ts,

@@ -3,29 +3,76 @@
 <head>
   <meta charset="utf-8">
   <title>Relatório de saldo</title>
+  <!-- Mesma família base do tema Aura (PrimeVue): Inter + stack ui-sans-serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     @page {
       size: A4;
       margin: 14mm 14mm 20mm 14mm;
       @bottom-center {
         content: "Finanças App";
-        font-family: DejaVu Sans, sans-serif;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "DejaVu Sans", sans-serif;
         font-size: 8.5pt;
         color: #555;
         vertical-align: top;
       }
     }
     body {
-      font-family: DejaVu Sans, sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "DejaVu Sans", sans-serif;
       font-size: 9.5pt;
       color: #1a1a1a;
       line-height: 1.35;
     }
+    /* Barra superior: utilizador (esq.) + marca como no tema claro da BarraNavegacao */
+    .doc-header-area {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4mm;
+      margin: 0 0 4mm 0;
+      padding-bottom: 2mm;
+    }
     .doc-user {
       font-size: 15pt;
       font-weight: bold;
-      margin: 0 0 5mm 0;
+      margin: 0;
       color: #111;
+      flex: 1;
+      min-width: 0;
+      line-height: 1.2;
+    }
+    .doc-brand {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      flex-shrink: 0;
+      text-decoration: none;
+      color: inherit;
+    }
+    .doc-brand-logo {
+      width: 10mm;
+      height: 10mm;
+      min-width: 10mm;
+      margin-right: 3.8mm;
+      display: block;
+      object-fit: contain;
+    }
+    /* Light theme: theme-global.css [data-tema="claro"] --texto-primario / --sucesso */
+    .doc-brand-title {
+      font-size: 14pt;
+      font-weight: 600;
+      color: #212529;
+      letter-spacing: 1px;
+      margin: 0;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .doc-brand-title span {
+      color: #198754;
+      font-weight: 700;
     }
     .doc-titulo-bloco {
       display: flex;
@@ -74,16 +121,176 @@
       font-weight: bold;
     }
     .num { text-align: right; white-space: nowrap; }
-    .resumo td { border: 1px solid #ccc; }
-    .resumo .label { width: 38%; background: #f7f7f7; font-weight: bold; }
+    .consolidados-row {
+      display: flex;
+      flex-direction: row;
+      gap: 3mm;
+      width: 100%;
+      align-items: stretch;
+      margin-bottom: 2mm;
+    }
+    .consolidados-card {
+      border: 1px solid #c5d0dc;
+      border-radius: 2mm;
+      background: #f8fafc;
+    }
+    .consolidados-card-aside {
+      flex: 0 0 30%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3mm 2mm;
+      gap: 2mm;
+    }
+    .consolidados-cal-ico {
+      width: 11mm;
+      height: 11mm;
+      flex-shrink: 0;
+      color: #1e4d7b;
+    }
+    .consolidados-aside-title {
+      margin: 0;
+      font-size: 10pt;
+      font-weight: bold;
+      color: #2f3841;
+      line-height: 1.25;
+    }
+    .consolidados-card-table {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 2mm 3mm 2.5mm 3mm;
+    }
+    table.table-consolidados-minimal {
+      width: 100%;
+      margin-bottom: 0;
+      border-collapse: collapse;
+    }
+    table.table-consolidados-minimal th,
+    table.table-consolidados-minimal td {
+      border: none;
+      padding: 0.6mm 0 0.6mm 1.5mm;
+      vertical-align: middle;
+      background: transparent;
+    }
+    table.table-consolidados-minimal th {
+      font-weight: bold;
+      font-size: 8pt;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding-top: 0;
+      padding-bottom: 1mm;
+    }
+    table.table-consolidados-minimal td:first-child,
+    table.table-consolidados-minimal th:first-child {
+      padding-left: 0;
+    }
+    table.table-consolidados-minimal .col-periodo {
+      width: 42%;
+    }
+    .resumo-cards {
+      display: flex;
+      flex-direction: row;
+      gap: 3mm;
+      width: 100%;
+      margin-bottom: 4mm;
+      align-items: stretch;
+    }
+    .resumo-card {
+      flex: 1 1 0;
+      min-width: 0;
+      border: 1px solid #c5d0dc;
+      border-radius: 2mm;
+      padding: 3mm 2.5mm;
+      text-align: center;
+      background: #f8fafc;
+      page-break-inside: avoid;
+    }
+    .resumo-card-label {
+      display: block;
+      font-size: 8.5pt;
+      color: #444;
+      font-weight: bold;
+      margin-bottom: 2mm;
+      line-height: 1.25;
+    }
+    .resumo-card-val {
+      display: block;
+      font-size: 12pt;
+      font-weight: bold;
+      color: #111;
+    }
     .tipo-e { color: #0d6e3e; }
     .tipo-s { color: #a61b1b; }
     .muted { color: #666; font-size: 8.5pt; }
     .secao-movimentacoes { page-break-before: auto; }
+    /* Mesmo traço fino que .doc-titulo-bloco (separação relatório → consolidados) */
+    hr.doc-secao-divisor {
+      border: 0;
+      border-top: 1px solid #333;
+      margin: 5mm 0 2mm 0;
+      padding: 0;
+      height: 0;
+      background: transparent;
+    }
+
+    table.table-movimentacoes {
+      font-size: 8.3pt;
+      margin-bottom: 3mm;
+    }
+    table.table-movimentacoes thead th {
+      border: none;
+      border-bottom: 1px solid #c8c8c8;
+      background: #ececec;
+      padding: 1.1mm 2mm;
+      font-size: 8pt;
+      vertical-align: middle;
+    }
+    table.table-movimentacoes tbody td {
+      border: none;
+      padding: 1mm 2mm;
+      vertical-align: top;
+    }
+    /* Zebra só nas linhas de dados (a linha de total não é <tfoot> para não repetir em cada página no PDF) */
+    table.table-movimentacoes tbody tr:not(.mov-total-row):nth-child(odd) td {
+      background: #fff;
+    }
+    table.table-movimentacoes tbody tr:not(.mov-total-row):nth-child(even) td {
+      background: #f0f0f0;
+    }
+    table.table-movimentacoes tbody tr.mov-total-row td {
+      border: none;
+      vertical-align: middle;
+      border-top: 1px solid #888;
+      padding: 2mm 2mm 1mm 2mm;
+      background: #fafafa;
+    }
+    .mov-total-row .mov-total-celula-label {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .mov-total-label {
+      font-weight: bold;
+      color: #333;
+    }
+    .mov-total-num {
+      font-weight: bold;
+      font-size: 9pt;
+    }
   </style>
 </head>
 <body>
-  <p class="doc-user">{{ nome_utilizador }}</p>
+  <div class="doc-header-area">
+    <p class="doc-user">{{ nome_utilizador }}</p>
+    <div class="doc-brand">
+      {% if logo_uri %}
+      <img src="{{ logo_uri }}" alt="" class="doc-brand-logo" />
+      {% endif %}
+      <h2 class="doc-brand-title">Finanças <span>APP</span></h2>
+    </div>
+  </div>
 
   <div class="doc-titulo-bloco">
     {% if logo_uri %}
@@ -97,53 +304,67 @@
     </div>
   </div>
 
-  <h2>Consolidados mensais</h2>
   {% if consolidados_linhas %}
-  <table>
-    <thead>
-      <tr>
-        <th>Mês / ano</th>
-        <th class="num">Entradas</th>
-        <th class="num">Saídas</th>
-        <th class="num">Saldo</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for c in consolidados_linhas %}
-      <tr>
-        <td>{{ c.mes|stringformat:"02d" }} / {{ c.ano }}</td>
-        <td class="num">{{ c.total_entradas|floatformat:2 }}</td>
-        <td class="num">{{ c.total_saidas|floatformat:2 }}</td>
-        <td class="num"><strong>{{ c.saldo_mes|floatformat:2 }}</strong></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <p class="muted">Saldo por linha = entradas − saídas (totais do mês).</p>
+  <div class="consolidados-row">
+    <div class="consolidados-card consolidados-card-aside">
+      <svg class="consolidados-cal-ico" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <rect x="3" y="4" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.75"/>
+        <path d="M3 10h18M8 2v4M16 2v4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+        <circle cx="8" cy="15" r="1" fill="currentColor"/>
+        <circle cx="12" cy="15" r="1" fill="currentColor"/>
+        <circle cx="16" cy="15" r="1" fill="currentColor"/>
+      </svg>
+      <p class="consolidados-aside-title">Consolidados mensais</p>
+    </div>
+    <div class="consolidados-card consolidados-card-table">
+      <table class="table-consolidados-minimal">
+        <thead>
+          <tr>
+            <th class="col-periodo">Período</th>
+            <th class="num">Entradas</th>
+            <th class="num">Saídas</th>
+            <th class="num">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in consolidados_linhas %}
+          <tr>
+            <td class="col-periodo">{{ c.periodo_label }}</td>
+            <td class="num tipo-e">{{ c.total_entradas|floatformat:2 }}</td>
+            <td class="num tipo-s">{{ c.total_saidas|floatformat:2 }}</td>
+            <td class="num"><strong>{{ c.saldo_mes|floatformat:2 }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
   {% else %}
+  <h2>Consolidados mensais</h2>
   <p class="muted">Nenhum consolidado mensal registado.</p>
   {% endif %}
-
+  <hr class="doc-secao-divisor" />
   <h2>Resumo do período</h2>
-  <table class="resumo">
-    <tr>
-      <td class="label">Total de entradas</td>
-      <td class="num">{{ total_entradas|floatformat:2 }}</td>
-    </tr>
-    <tr>
-      <td class="label">Total de saídas</td>
-      <td class="num">{{ total_saidas|floatformat:2 }}</td>
-    </tr>
-    <tr>
-      <td class="label">Saldo (entradas − saídas)</td>
-      <td class="num"><strong>{{ saldo_periodo|floatformat:2 }}</strong></td>
-    </tr>
-  </table>
-
+  <div class="resumo-cards">
+    <div class="resumo-card">
+      <span class="resumo-card-label">Total de entradas</span>
+      <span class="resumo-card-val tipo-e">{{ total_entradas|floatformat:2 }}</span>
+    </div>
+    <div class="resumo-card">
+      <span class="resumo-card-label">Total de saídas</span>
+      <span class="resumo-card-val tipo-s">{{ total_saidas|floatformat:2 }}</span>
+    </div>
+    <div class="resumo-card">
+      <span class="resumo-card-label">Saldo (entradas − saídas)</span>
+      <span class="resumo-card-val"><strong>{{ saldo_periodo|floatformat:2 }}</strong></span>
+    </div>
+  </div>
+  <hr class="doc-secao-divisor" />
   <div class="secao-movimentacoes">
     <h2>Movimentações no período{% with n=movimentacoes|length %} - {% if n == 1 %}1 movimentação{% else %}{{ n }} movimentações{% endif %}{% endwith %}</h2>
+    <br>
     {% if movimentacoes %}
-    <table>
+    <table class="table-movimentacoes">
       <thead>
         <tr>
           <th style="width:12%">Data</th>
@@ -162,9 +383,17 @@
           </td>
           <td>{{ m.categoria.nome|default:"—" }}</td>
           <td>{{ m.descricao|default:"" }}</td>
-          <td class="num">{{ m.valor|floatformat:2 }}</td>
+          <td class="num">{% if m.tipo == 'E' %}+{% else %}-{% endif %}{{ m.valor|floatformat:2 }}</td>
         </tr>
         {% endfor %}
+        <tr class="mov-total-row">
+          <td colspan="4" class="mov-total-celula-label">
+            <span class="mov-total-label">Valor total:</span>
+          </td>
+          <td class="num mov-total-num {% if saldo_periodo >= 0 %}tipo-e{% else %}tipo-s{% endif %}">
+            {% if saldo_periodo >= 0 %}+{% endif %}{{ saldo_periodo|floatformat:2 }}
+          </td>
+        </tr>
       </tbody>
     </table>
     {% else %}
