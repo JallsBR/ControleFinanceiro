@@ -66,15 +66,6 @@
               size="small"
               @click="carregarRelatorio"
             />
-            <Button
-              type="button"
-              label="PDF"
-              icon="pi pi-file-pdf"
-              size="small"
-              :loading="exportingPdf"
-              :disabled="exportingPdf"
-              @click="exportarPdfRelatorio"
-            />
           </div>
         </div>
       </div>
@@ -158,6 +149,14 @@
             <div class="right">
               <Button icon="pi pi-refresh" text label="Atualizar" @click="atualizarMovimentacoes" />
               <Button icon="pi pi-search" text label="Filtrar" @click="abrirFiltro" />
+              <Button
+                icon="pi pi-file-pdf"
+          
+                label="Exportar Relatório emPDF"
+                :loading="exportingPdf"
+                :disabled="exportingPdf"
+                @click="exportarPdfRelatorio"
+              />
             </div>
           </div>
         </template>
@@ -779,10 +778,10 @@ onMounted(async () => {
   scrollbar-width: thin;
 }
 
-/* Três atalhos de texto partilham o espaço flex; Aplicar/PDF só o necessário (mais folga para "Última Semana") */
+/* Três atalhos de texto partilham o espaço flex; Aplicar só o necessário (mais folga para "Última Semana") */
 .atalho-input--full {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(min-content, 1.35fr) max-content max-content;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(min-content, 1.35fr) max-content;
   gap: 0.35rem 0.4rem;
   width: 100%;
   align-items: center;
@@ -803,7 +802,7 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.atalho-input--full :deep(.p-button:nth-last-child(-n + 2)) {
+.atalho-input--full :deep(.p-button:last-child) {
   width: auto;
   justify-self: center;
   padding-inline: 0.45rem;
