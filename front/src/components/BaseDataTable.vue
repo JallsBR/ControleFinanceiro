@@ -137,4 +137,27 @@
     vertical-align: middle;
     box-sizing: border-box;
   }
+
+  /*
+   * Paginação: o tema Aura desenha uma caixa (borda em todos os lados) em torno do paginador,
+   * muito visível no tema claro. Removemos qualquer borda/sombra nessa região.
+   */
+  .table-wrapper :deep(.p-datatable-paginator-top),
+  .table-wrapper :deep(.p-datatable-paginator-bottom) {
+    border: 0 !important;
+    border-width: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .table-wrapper :deep(.p-datatable-paginator-top .p-paginator),
+  .table-wrapper :deep(.p-datatable-paginator-bottom .p-paginator) {
+    border: 0 !important;
+    border-width: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Evita linha extra entre a área scrollável da tabela e o paginador (gridlines) */
+  .table-wrapper :deep(.p-datatable-table-container) {
+    border-bottom: 0 !important;
+  }
   </style>
