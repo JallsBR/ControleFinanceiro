@@ -29,5 +29,7 @@ urlpatterns = [
     path('investimentos/<int:pk>/', views.InvestimentoRetrieveUpdateDestroyView.as_view(), name='investimento-retrieve-update-destroy'),
 
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
+
+    path('relatorios/saldo.pdf', views.RelatorioSaldoPdfView.as_view(), name='financas-relatorio-saldo-pdf'),
 ]
 

@@ -31,9 +31,10 @@
           </div>
         </div>
 
-        <div class="field">
-          <label class="field-label">&nbsp;</label>
-          <div class="field-input atalho-input">
+        <hr class="saldo-periodo-divider" />
+
+        <div class="saldo-atalhos-linha-full">
+          <div class="atalho-input atalho-input--full">
             <Button
               type="button"
               label="Hoje"
@@ -52,7 +53,7 @@
             />
             <Button
               type="button"
-              label="Últimos 7 dias"
+              label="Última Semana"
               text
               size="small"
               icon="pi pi-history"
@@ -64,6 +65,15 @@
               icon="pi pi-check"
               size="small"
               @click="carregarSaldo"
+            />
+            <Button
+              type="button"
+              label="PDF"
+              icon="pi pi-file-pdf"
+              size="small"
+              :loading="exportingPdf"
+              :disabled="exportingPdf"
+              @click="exportarPdfSaldo"
             />
           </div>
         </div>
@@ -79,7 +89,7 @@
           Nenhum consolidado disponível.
         </div>
 
-        <div v-else class="consolidados-scroll-wrapper" >
+        <div v-else class="consolidados-scroll-wrapper">
           <div class="consolidados-lista" style="padding-right: 15px;">
             <div
               v-for="item in consolidadosOrdenados"
@@ -222,6 +232,7 @@ const dataInicial = ref(hoje.startOf('month').toDate())
 const dataFinal = ref(hoje.endOf('month').toDate())
 
 const loading = ref(false)
+const exportingPdf = ref(false)
 const movimentos = ref([])
 
 const resumo = ref({
@@ -341,6 +352,50 @@ async function carregarSaldo () {
   }
 }
 
+async function exportarPdfSaldo () {
+  const ini = toIsoDate(dataInicial.value)
+  const fim = toIsoDate(dataFinal.value)
+  if (!ini || !fim) {
+    toast.error('PDF', 'Defina a data inicial e a data final.')
+    return
+  }
+  exportingPdf.value = true
+  try {
+    const blob = await financasService.relatorios.downloadSaldoPdf({
+      dataInicio: ini,
+      dataFim: fim,
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `saldo-${ini}_${fim}.pdf`
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    toast.success('PDF', 'Relatório descarregado.')
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error)
+    let msg = 'Não foi possível gerar o relatório.'
+    const data = error?.response?.data
+    if (data instanceof Blob) {
+      try {
+        const text = await data.text()
+        const parsed = JSON.parse(text)
+        if (parsed?.detail) msg = typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail)
+      } catch (_) {
+        /* ignore */
+      }
+    } else if (data?.detail) {
+      msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)
+    }
+    toast.error('PDF', msg)
+  } finally {
+    exportingPdf.value = false
+  }
+}
+
 async function carregarConsolidados () {
   loadingConsolidados.value = true
   try {
@@ -453,11 +508,54 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 
-.atalho-input {
-  display: flex;
+.saldo-periodo-divider {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--texto-secundario) 22%, transparent);
+}
+
+.saldo-atalhos-linha-full {
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 0.65rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Três atalhos de texto partilham o espaço flex; Aplicar/PDF só o necessário (mais folga para "Última Semana") */
+.atalho-input--full {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(min-content, 1.35fr) max-content max-content;
+  gap: 0.35rem 0.4rem;
+  width: 100%;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+}
+
+.atalho-input--full :deep(.p-button) {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  justify-content: center;
+  font-size: 0.8125rem;
+  padding-block: 0.35rem;
+  padding-inline: 0.35rem;
+}
+
+.atalho-input--full :deep(.p-button:nth-child(-n + 3)) {
+  white-space: nowrap;
+}
+
+.atalho-input--full :deep(.p-button:nth-last-child(-n + 2)) {
+  width: auto;
+  justify-self: center;
+  padding-inline: 0.45rem;
+}
+
+.atalho-input--full :deep(.p-button .p-button-icon) {
+  font-size: 0.875rem;
 }
 
 .consolidados-state {

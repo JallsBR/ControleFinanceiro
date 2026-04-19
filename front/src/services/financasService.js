@@ -12,6 +12,21 @@ const financasService = {
       return response.data;
     },
   },
+
+  relatorios: {
+    /**
+     * Descarrega PDF do relatório de saldo (período + movimentações + consolidados).
+     * @param {{ dataInicio: string, dataFim: string }} params — datas ISO YYYY-MM-DD
+     * @returns {Promise<Blob>}
+     */
+    downloadSaldoPdf: async ({ dataInicio, dataFim }) => {
+      const response = await api.get('/financas/relatorios/saldo.pdf', {
+        params: { data_inicio: dataInicio, data_fim: dataFim },
+        responseType: 'blob',
+      });
+      return response.data;
+    },
+  },
   categorias: {
 
     getAll: async (params = {}) => {

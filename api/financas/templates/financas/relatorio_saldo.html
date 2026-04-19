@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório de saldo</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    body {
+      font-family: DejaVu Sans, sans-serif;
+      font-size: 9.5pt;
+      color: #1a1a1a;
+      line-height: 1.35;
+    }
+    h1 {
+      font-size: 16pt;
+      margin: 0 0 4mm 0;
+      border-bottom: 1px solid #333;
+      padding-bottom: 2mm;
+    }
+    .meta { font-size: 9pt; color: #444; margin-bottom: 6mm; }
+    h2 {
+      font-size: 11pt;
+      margin: 5mm 0 2mm 0;
+      color: #222;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4mm;
+    }
+    th, td {
+      border: 1px solid #bbb;
+      padding: 2mm 2.5mm;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f0f0f0;
+      font-weight: bold;
+    }
+    .num { text-align: right; white-space: nowrap; }
+    .resumo td { border: 1px solid #ccc; }
+    .resumo .label { width: 38%; background: #f7f7f7; font-weight: bold; }
+    .tipo-e { color: #0d6e3e; }
+    .tipo-s { color: #a61b1b; }
+    .secao-consolidados { page-break-before: auto; }
+    .muted { color: #666; font-size: 8.5pt; }
+  </style>
+</head>
+<body>
+  <h1>Relatório de saldo</h1>
+  <p class="meta">
+    Período: <strong>{{ data_inicio|date:"d/m/Y" }}</strong> a <strong>{{ data_fim|date:"d/m/Y" }}</strong>
+  </p>
+
+  <h2>Resumo do período</h2>
+  <table class="resumo">
+    <tr>
+      <td class="label">Total de entradas</td>
+      <td class="num">{{ total_entradas|floatformat:2 }}</td>
+    </tr>
+    <tr>
+      <td class="label">Total de saídas</td>
+      <td class="num">{{ total_saidas|floatformat:2 }}</td>
+    </tr>
+    <tr>
+      <td class="label">Saldo (entradas − saídas)</td>
+      <td class="num"><strong>{{ saldo_periodo|floatformat:2 }}</strong></td>
+    </tr>
+  </table>
+
+  <h2>Movimentações no período</h2>
+  {% if movimentacoes %}
+  <table>
+    <thead>
+      <tr>
+        <th style="width:12%">Data</th>
+        <th style="width:10%">Tipo</th>
+        <th style="width:22%">Categoria</th>
+        <th>Descrição</th>
+        <th class="num" style="width:14%">Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in movimentacoes %}
+      <tr>
+        <td>{{ m.data|date:"d/m/Y" }}</td>
+        <td class="{% if m.tipo == 'E' %}tipo-e{% else %}tipo-s{% endif %}">
+          {% if m.tipo == 'E' %}Entrada{% else %}Saída{% endif %}
+        </td>
+        <td>{{ m.categoria.nome|default:"—" }}</td>
+        <td>{{ m.descricao|default:"" }}</td>
+        <td class="num">{{ m.valor|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Nenhuma movimentação neste período.</p>
+  {% endif %}
+
+  <div class="secao-consolidados">
+    <h2>Consolidados mensais</h2>
+    {% if consolidados_linhas %}
+    <table>
+      <thead>
+        <tr>
+          <th>Mês / ano</th>
+          <th class="num">Entradas</th>
+          <th class="num">Saídas</th>
+          <th class="num">Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in consolidados_linhas %}
+        <tr>
+          <td>{{ c.mes|stringformat:"02d" }} / {{ c.ano }}</td>
+          <td class="num">{{ c.total_entradas|floatformat:2 }}</td>
+          <td class="num">{{ c.total_saidas|floatformat:2 }}</td>
+          <td class="num"><strong>{{ c.saldo_mes|floatformat:2 }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted">Saldo por linha = entradas − saídas (totais do mês).</p>
+    {% else %}
+    <p class="muted">Nenhum consolidado mensal registado.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
