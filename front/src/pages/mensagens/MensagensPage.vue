@@ -7,29 +7,31 @@
       class="mensagens-page__card"
     />
 
-    <div class="mensagens-toolbar">
-      <Button
-        type="button"
-        icon="pi pi-refresh"
-        text
-        label="Atualizar"
-        :loading="loadingConversas || loadingThread"
-        @click="atualizarTudo"
-      />
-      <Button
-        type="button"
-        icon="pi pi-filter"
-        text
-        label="Filtrar"
-        @click="visibleFiltro = true"
-      />
-      <Button
-        type="button"
-        label="Nova mensagem"
-        icon="pi pi-plus"
-        text
-        @click="abrirNovaMensagemDialog"
-      />
+    <div class="mensagens-toolbar-card" aria-label="Ações da caixa de mensagens">
+      <div class="mensagens-toolbar">
+        <Button
+          type="button"
+          icon="pi pi-refresh"
+          text
+          label="Atualizar"
+          :loading="loadingConversas || loadingThread"
+          @click="atualizarTudo"
+        />
+        <Button
+          type="button"
+          icon="pi pi-filter"
+          text
+          label="Filtrar"
+          @click="visibleFiltro = true"
+        />
+        <Button
+          type="button"
+          label="Nova mensagem"
+          icon="pi pi-plus"
+          text
+          @click="abrirNovaMensagemDialog"
+        />
+      </div>
     </div>
 
     <div class="mensagens-layout">
@@ -314,13 +316,38 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
+/* Cartão compacto: contraste no tema claro (botões text sobre fundo secundário) */
+.mensagens-toolbar-card {
+  background: var(--bg-secundario);
+  border-radius: 14px;
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--texto-primario) 5%, transparent);
+}
+
 .mensagens-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.5rem 0.65rem;
-  margin-bottom: 1rem;
+  gap: 0.25rem 0.35rem;
+}
+
+.mensagens-toolbar-card :deep(.p-button.p-button-text) {
+  color: var(--sucesso);
+}
+
+.mensagens-toolbar-card :deep(.p-button.p-button-text .p-button-icon) {
+  color: var(--sucesso);
+}
+
+.mensagens-toolbar-card :deep(.p-button.p-button-text:not(:disabled):hover) {
+  background: color-mix(in srgb, var(--sucesso) 14%, transparent);
+  color: var(--sucesso);
+}
+
+.mensagens-toolbar-card :deep(.p-button.p-button-text:not(:disabled):hover .p-button-icon) {
+  color: var(--sucesso);
 }
 
 .mensagens-layout {

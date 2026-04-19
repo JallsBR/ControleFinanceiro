@@ -1,8 +1,7 @@
 <template>
   <section class="chat" aria-label="Mensagens da conversa">
     <header v-if="otherUser" class="chat__header">
-      <h2 class="chat__titulo">{{ nomeContato(otherUser) }}</h2>
-      <p v-if="linhaPreview" class="chat__sub">{{ linhaPreview }}</p>
+      <h2 class="chat__titulo">{{ nomeContato(otherUser) }}</h2>   
     </header>
     <div v-else class="chat__placeholder">
       <i class="pi pi-comments" aria-hidden="true" />
@@ -195,6 +194,8 @@ function segmentosMensagem (raw) {
 .chat__header {
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--msg-borda);
+  background: var(--bg-secundario);
+  border-radius: 12px 12px 0 0;
 }
 
 .chat__titulo {

@@ -25,8 +25,8 @@ body,
 
 /* ===== TEMA CLARO ===== */
 [data-tema="claro"] {
-  --bg-primario: #e6eaec;
-  --bg-secundario: #ffffff;
+  --bg-primario: #c8ccce;
+  --bg-secundario: #e6eaec;
 
   --texto-primario: #212529;
   --texto-secundario: #6c757d;
@@ -211,6 +211,18 @@ select:-webkit-autofill:active {
   background: var(--sucesso) !important;
   color: var(--texto-primario) !important;
   border-color: var(--sucesso) !important;
+}
+
+/* ===== Tag (PrimeVue) — modo escuro: todas com fundo --bg-primario ===== */
+html:not([data-tema="claro"]) .p-tag.p-component {
+  background: var(--bg-primario) !important;
+  color: var(--texto-primario) !important;
+  border-color: color-mix(in srgb, var(--texto-secundario) 30%, transparent) !important;
+}
+
+html:not([data-tema="claro"]) .p-tag.p-component .p-tag-label,
+html:not([data-tema="claro"]) .p-tag.p-component .p-tag-icon {
+  color: inherit !important;
 }
 
 /* ===== TieredMenu (popup, ex.: menu do usuário) — tema claro/escuro ===== */

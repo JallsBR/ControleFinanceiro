@@ -40,20 +40,17 @@
                 <Tag
                   v-if="data.is_superuser"
                   value="Superuser"
-                  severity="danger"
-                  class="username-badge"
+                  severity="secondary"
                 />
                 <Tag
                   v-if="data.is_staff"
                   value="Staff"
-                  severity="warn"
-                  class="username-badge"
+                  severity="secondary"
                 />
                 <Tag
                   v-if="data.is_gerente"
                   value="Consultor"
-                  severity="info"
-                  class="username-badge"
+                  severity="secondary"
                 />
               </span>
             </div>
@@ -445,11 +442,6 @@ onMounted(() => {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-}
-
-.username-badge :deep(.p-tag) {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.4rem;
 }
 
 .grupos-cell {

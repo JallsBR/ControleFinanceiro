@@ -9,10 +9,14 @@
     <div class="categorias-grid">
         <!-- Coluna Esquerda: Categorias de Entrada (E) -->
         <div class="coluna">
-            <h2 class="coluna-titulo">Categorias de Entrada</h2>
-            <div v-if="!readOnly" class="table-toolbar">
-                <div class="right">
-                    <Button icon="pi pi-plus" text label="Cadastrar nova categoria" @click="abrirNovaCategoria('E')" />
+            <div class="categorias-toolbar-card" aria-label="Categorias de entrada">
+                <div class="categorias-toolbar-row">
+                    <h2 class="coluna-titulo">Categorias de Entrada</h2>
+                    <div v-if="!readOnly" class="table-toolbar">
+                        <div class="right">
+                            <Button icon="pi pi-plus" text label="Cadastrar nova categoria" @click="abrirNovaCategoria('E')" />
+                        </div>
+                    </div>
                 </div>
             </div>
             <BaseDataTable
@@ -41,10 +45,14 @@
 
         <!-- Coluna Direita: Categorias de Saída (S) -->
         <div class="coluna">
-            <h2 class="coluna-titulo">Categorias de Saída</h2>
-            <div v-if="!readOnly" class="table-toolbar">
-                <div class="right">
-                    <Button icon="pi pi-plus" text label="Cadastrar nova categoria" @click="abrirNovaCategoria('S')" />
+            <div class="categorias-toolbar-card" aria-label="Categorias de saída">
+                <div class="categorias-toolbar-row">
+                    <h2 class="coluna-titulo">Categorias de Saída</h2>
+                    <div v-if="!readOnly" class="table-toolbar">
+                        <div class="right">
+                            <Button icon="pi pi-plus" text label="Cadastrar nova categoria" @click="abrirNovaCategoria('S')" />
+                        </div>
+                    </div>
                 </div>
             </div>
             <BaseDataTable
@@ -265,20 +273,58 @@ onMounted(async () => {
 }
 
 .coluna-titulo {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.25rem;
+  margin: 0;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--texto-primario);
+  line-height: 1.3;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Cartão: título à esquerda, ação à direita (alinhado a Mensagens) */
+.categorias-toolbar-card {
+  background: var(--bg-secundario);
+  border-radius: 14px;
+  padding: 0.45rem 0.65rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--texto-primario) 5%, transparent);
+}
+
+.categorias-toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 0.75rem;
+  flex-wrap: wrap;
 }
 
 .table-toolbar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+  flex: 0 0 auto;
 }
 
 .table-toolbar .right {
   display: flex;
   gap: 0.5rem;
+}
+
+.categorias-toolbar-card :deep(.p-button.p-button-text) {
+  color: var(--sucesso);
+}
+
+.categorias-toolbar-card :deep(.p-button.p-button-text .p-button-icon) {
+  color: var(--sucesso);
+}
+
+.categorias-toolbar-card :deep(.p-button.p-button-text:not(:disabled):hover) {
+  background: color-mix(in srgb, var(--sucesso) 14%, transparent);
+  color: var(--sucesso);
+}
+
+.categorias-toolbar-card :deep(.p-button.p-button-text:not(:disabled):hover .p-button-icon) {
+  color: var(--sucesso);
 }
 </style>
