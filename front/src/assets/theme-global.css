@@ -38,6 +38,11 @@ body,
   --input-autofill-fundo: #f1f3f5;
 }
 
+/* Trilho da barra de progresso: no Aura o padrão fica escuro; no claro usamos cinza suave */
+[data-tema="claro"] .p-progressbar.p-component {
+  background: color-mix(in srgb, var(--texto-secundario) 12%, var(--bg-primario)) !important;
+}
+
 /* ===== PRIMEVUE: dialogs, inputs e datatable seguem o tema da app ===== */
 .p-dialog,
 .p-dialog .p-dialog-header,
