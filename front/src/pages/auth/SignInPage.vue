@@ -11,6 +11,16 @@
             </div>
           </div>
 
+          <!-- Aviso em telas pequenas (celular) -->
+          <Message
+            v-if="isMobileView"
+            severity="warn"
+            :closable="false"
+            class="signin-mobile-notice"
+          >
+            A experiência foi otimizada apenas para desktop.
+          </Message>
+
           <!-- Mensagem de erro -->
           <Message v-if="error" severity="error" :closable="false" class="signin-error">
             Credenciais não encontradas. Tente novamente.
@@ -91,7 +101,25 @@ export default {
     return {
       login: '',
       password: '',
-      error: null
+      error: null,
+      isMobileView: false,
+      _mobileMq: null,
+      _onMobileMqChange: null
+    }
+  },
+
+  mounted() {
+    this._mobileMq = window.matchMedia('(max-width: 768px)')
+    this.isMobileView = this._mobileMq.matches
+    this._onMobileMqChange = (e) => {
+      this.isMobileView = e.matches
+    }
+    this._mobileMq.addEventListener('change', this._onMobileMqChange)
+  },
+
+  beforeUnmount() {
+    if (this._mobileMq && this._onMobileMqChange) {
+      this._mobileMq.removeEventListener('change', this._onMobileMqChange)
     }
   },
 
@@ -159,6 +187,10 @@ export default {
 
 .signin-title .brand {
   font-weight: 700;
+}
+
+.signin-mobile-notice {
+  margin-bottom: 1rem;
 }
 
 .signin-error {
