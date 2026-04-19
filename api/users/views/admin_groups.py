@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group, Permission
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
+from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -97,13 +98,16 @@ class AdminGroupOptionsView(APIView):
 class AdminGroupListCreateView(generics.ListCreateAPIView):
     """
     Lista paginada de grupos (GET) e criação (POST).
-    Query: name (icontains).
+    Query: name (icontains), ordering (DRF).
     """
 
     permission_classes = [IsAuthenticated, IsAdminUser]
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["name", "permissions_count", "user_count"]
+    ordering = ["name"]
 
     def get_queryset(self):
-        qs = admin_groups_list_queryset().order_by("name")
+        qs = admin_groups_list_queryset()
         if v := (self.request.query_params.get("name") or "").strip():
             qs = qs.filter(name__icontains=v)
         return qs

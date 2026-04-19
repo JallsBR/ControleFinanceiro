@@ -21,12 +21,14 @@ class MetaListCreateView(generics.ListCreateAPIView):
         'concluida': ['exact'],           # ?concluida=True ou ?concluida=False
     }
     ordering_fields = [
+        'id',
         'nome',
+        'valor_meta',
         'data_meta',
         'prioridade',
         'concluida',
         'created_at',
-        'created_by'
+        'created_by',
     ]
     ordering = ['-data_meta']  # padrão
     def get_queryset(self):

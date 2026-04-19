@@ -8,6 +8,7 @@
       :lazy="true"
       :reorderableColumns="true"
       @page="onPage"
+      @sort="onSort"
     >
       <template #toolbar>
         <div class="table-toolbar">
@@ -86,6 +87,7 @@
         />
         <Column
           field="nomeCompleto"
+          sortField="first_name"
           columnKey="nomeCompleto"
           header="Nome e sobrenome"
           style="min-width: 11rem"
@@ -93,6 +95,7 @@
         />
         <Column
           field="assinatura"
+          sortField="assinatura__plano"
           columnKey="assinatura"
           header="Assinatura"
           style="min-width: 8rem"
@@ -187,6 +190,7 @@ import DialogFiltroUsuarios from '../dialogs/DialogFiltroUsuarios.vue'
 import UsuarioDialog from '../dialogs/UsuarioDialog.vue'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import { PAGE_SIZE } from '@/constants/pagination'
+import { drfOrderingFromPrimeSort } from '@/utils/primeLazySort'
 import { labelAssinatura } from './usuariosAdminMock'
 import { adminService } from '@/services/adminService'
 import { useToast } from '@/utils/useToast'
@@ -213,6 +217,7 @@ const loading = ref(false)
 const lista = ref([])
 const totalRecords = ref(0)
 const filtros = ref({})
+const ordering = ref(undefined)
 const currentPage = ref(1)
 const first = ref(0)
 const visibleFiltro = ref(false)
@@ -265,6 +270,7 @@ function buildQueryParams (page) {
   if (f.nome?.trim()) params.nome = f.nome.trim()
   if (f.assinatura) params.plano = f.assinatura
   if (f.tipoUsuario) params.tipo_usuario = f.tipoUsuario
+  if (ordering.value) params.ordering = ordering.value
   return params
 }
 
@@ -291,6 +297,12 @@ function onPage (event) {
   carregarLista(page)
 }
 
+function onSort (event) {
+  ordering.value = drfOrderingFromPrimeSort(event.sortField, event.sortOrder)
+  first.value = 0
+  carregarLista(1)
+}
+
 function atualizarLista () {
   carregarLista(currentPage.value)
 }
@@ -302,12 +314,14 @@ function abrirFiltro () {
 function onFiltroApply (novos) {
   filtros.value = { ...(novos || {}) }
   first.value = 0
+  ordering.value = undefined
   carregarLista(1)
 }
 
 function onFiltroClear () {
   filtros.value = {}
   first.value = 0
+  ordering.value = undefined
   carregarLista(1)
 }
 

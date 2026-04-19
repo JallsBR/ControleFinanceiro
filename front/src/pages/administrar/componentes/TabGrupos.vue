@@ -8,6 +8,7 @@
       :lazy="true"
       :reorderableColumns="true"
       @page="onPage"
+      @sort="onSort"
     >
       <template #toolbar>
         <div class="table-toolbar">
@@ -120,6 +121,7 @@ import DialogFiltroGrupos from '../dialogs/DialogFiltroGrupos.vue'
 import GrupoDialog from '../dialogs/GrupoDialog.vue'
 import GrupoPermissoesDialog from '../dialogs/GrupoPermissoesDialog.vue'
 import { PAGE_SIZE } from '@/constants/pagination'
+import { drfOrderingFromPrimeSort } from '@/utils/primeLazySort'
 import { adminService } from '@/services/adminService'
 import { useToast } from '@/utils/useToast'
 import { resolveAdminCapabilities } from '@/utils/adminCapabilities'
@@ -137,6 +139,7 @@ const loading = ref(false)
 const lista = ref([])
 const totalRecords = ref(0)
 const filtros = ref({})
+const ordering = ref(undefined)
 const currentPage = ref(1)
 const first = ref(0)
 const visibleFiltro = ref(false)
@@ -179,6 +182,7 @@ function buildQueryParams (page) {
   const f = filtros.value
   const params = { page }
   if (f.nomeGrupo?.trim()) params.name = f.nomeGrupo.trim()
+  if (ordering.value) params.ordering = ordering.value
   return params
 }
 
@@ -215,6 +219,12 @@ function onPage (event) {
   carregarLista((event.page ?? 0) + 1)
 }
 
+function onSort (event) {
+  ordering.value = drfOrderingFromPrimeSort(event.sortField, event.sortOrder)
+  first.value = 0
+  carregarLista(1)
+}
+
 function atualizarLista () {
   carregarLista(currentPage.value)
 }
@@ -226,12 +236,14 @@ function abrirFiltro () {
 function onFiltroApply (novos) {
   filtros.value = { ...(novos || {}) }
   first.value = 0
+  ordering.value = undefined
   carregarLista(1)
 }
 
 function onFiltroClear () {
   filtros.value = {}
   first.value = 0
+  ordering.value = undefined
   carregarLista(1)
 }
 

@@ -21,10 +21,12 @@ class MovimentacaoListCreateView(generics.ListCreateAPIView):
         'categoria': ['exact'],      # ?categoria=1
     }
     ordering_fields = [
+        'id',
         'valor',
         'data',
         'categoria',
-        'created_by'
+        'descricao',
+        'created_by',
     ]
     ordering = ['-data']  # padrão
     def get_queryset(self):

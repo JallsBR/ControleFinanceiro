@@ -19,8 +19,12 @@ class ReservaListCreateView(generics.ListCreateAPIView):
         'ativa': ['exact'],           # ?ativa=True ou ?ativa=False
     }
     ordering_fields = [
+        'id',
+        'nome',
         'valor',
-        'created_by'
+        'ativa',
+        'created_at',
+        'created_by',
     ]
     ordering = ['-created_at']  # padrão
     def get_queryset(self):

@@ -1,4 +1,5 @@
 from django.db.models import Q
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -11,18 +12,24 @@ class AdminUserListView(ListAPIView):
     """
     Listagem paginada de usuários com dados de assinatura (staff).
     Query: page, username, email, nome, plano (comum|premium),
-    tipo_usuario (superuser | staff | comum).
+    tipo_usuario (superuser | staff | comum), ordering (DRF).
     """
 
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = AdminUserListSerializer
+    filter_backends = [OrderingFilter]
+    ordering_fields = [
+        "id",
+        "username",
+        "email",
+        "first_name",
+        "last_name",
+        "assinatura__plano",
+    ]
+    ordering = ["id"]
 
     def get_queryset(self):
-        qs = (
-            User.objects.select_related("assinatura")
-            .prefetch_related("groups")
-            .order_by("id")
-        )
+        qs = User.objects.select_related("assinatura").prefetch_related("groups")
         p = self.request.query_params
 
         if v := (p.get("username") or "").strip():

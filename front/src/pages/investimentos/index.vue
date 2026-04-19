@@ -16,6 +16,7 @@
       :first="first"
       :reorderableColumns="true"
       @page="onPage"
+      @sort="onSort"
     >
         <template #toolbar>
             <div class="table-toolbar">
@@ -112,6 +113,7 @@ import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
 import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
+import { drfOrderingFromPrimeSort } from '@/utils/primeLazySort'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogInvestimento from '@/pages/investimentos/DialogInvestimento.vue'
 import DialogFiltroInvestimentos from '@/components/DialogFiltroInvestimentos.vue'
@@ -132,11 +134,14 @@ const totalRecords = ref(0)
 const currentPage = ref(1)
 const first = ref(0)
 const filtros = ref({})
+const ordering = ref(undefined)
 
 const carregarLista = async () => {
   loading.value = true
   try {
-    const { data, total } = await financasService.investimentos.getPage(currentPage.value, filtros.value)
+    const params = { ...filtros.value }
+    if (ordering.value) params.ordering = ordering.value
+    const { data, total } = await financasService.investimentos.getPage(currentPage.value, params)
     lista.value = data
     totalRecords.value = total
   } catch (error) {
@@ -152,6 +157,13 @@ const carregarLista = async () => {
 function onPage(event) {
   first.value = event.first
   currentPage.value = event.page + 1
+  carregarLista()
+}
+
+function onSort(event) {
+  ordering.value = drfOrderingFromPrimeSort(event.sortField, event.sortOrder)
+  first.value = 0
+  currentPage.value = 1
   carregarLista()
 }
 
@@ -178,12 +190,16 @@ function abrirFiltro() {
 function onFiltroApply(novosFiltros) {
   filtros.value = novosFiltros || {}
   currentPage.value = 1
+  first.value = 0
+  ordering.value = undefined
   carregarLista()
 }
 
 function onFiltroClear() {
   filtros.value = {}
   currentPage.value = 1
+  first.value = 0
+  ordering.value = undefined
   carregarLista()
 }
 

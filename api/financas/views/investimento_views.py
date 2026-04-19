@@ -30,12 +30,15 @@ class InvestimentoListCreateView(generics.ListCreateAPIView):
         'taxa_rendimento': ['exact', 'gte', 'lte'],
     }
     ordering_fields = [
+        'id',
+        'nome',
+        'tipo',
+        'ativo',
         'data_aplicacao',
         'data_vencimento',
         'valor_inicial',
         'taxa_rendimento',
         'created_at',
-        
     ]
     ordering = ['-created_at']  # padrão
     def get_queryset(self):

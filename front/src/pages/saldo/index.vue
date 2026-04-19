@@ -149,6 +149,7 @@
             columnKey="data"
             header="Data"
             style="min-width: 7rem; max-width: 8rem"
+            sortable
           >
             <template #body="{ data }">
               {{ formatarData(data.data) }} ({{ data.diaSemana }})
@@ -159,6 +160,7 @@
             columnKey="tipo"
             header="Tipo"
             style="min-width: 6rem; max-width: 7rem"
+            sortable
           >
             <template #body="{ data }">
               <span
@@ -179,6 +181,7 @@
             columnKey="valor"
             header="Valor"
             style="min-width: 7rem; max-width: 8rem"
+            sortable
           >
             <template #body="{ data }">
               <span

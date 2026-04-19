@@ -9,6 +9,7 @@
         :totalRecords="totalRecords"
         :lazy="lazy"
         :reorderableColumns="reorderableColumns"
+        sortMode="single"
         stripedRows
         showGridlines
         responsiveLayout="scroll"
@@ -18,6 +19,7 @@
         @rowClick="$emit('rowClick', $event)"
         @rowSelect="$emit('rowSelect', $event)"
         @page="$emit('page', $event)"
+        @sort="$emit('sort', $event)"
         v-model:selection="selection"
       >
         <template #header>
@@ -69,7 +71,7 @@
     reorderableColumns: { type: Boolean, default: false }
   })
 
-  const emit = defineEmits(['rowClick', 'rowSelect', 'page', 'filterApply', 'filterClear'])
+  const emit = defineEmits(['rowClick', 'rowSelect', 'page', 'sort', 'filterApply', 'filterClear'])
 
   const selection = ref([])
   const expandedRows = ref({})

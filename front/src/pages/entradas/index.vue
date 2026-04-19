@@ -17,6 +17,7 @@
       :lazy="true"
       :reorderableColumns="true"
       @page="onPage"
+      @sort="onSort"
     >
         <template #toolbar>
             <div class="table-toolbar">
@@ -104,6 +105,7 @@ import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
 import { useFinancasSubjectReadOnly } from '@/utils/useFinancasSubjectReadOnly'
+import { drfOrderingFromPrimeSort } from '@/utils/primeLazySort'
 import DialogEntradas from '@/pages/home/DialogEntradas.vue'
 import DialogConfirma from '@/components/DialogConfirma.vue'
 import DialogFiltroMovimentacoes from '@/components/DialogFiltroMovimentacoes.vue'
@@ -123,6 +125,8 @@ const totalRecords = ref(0)
 const currentPage = ref(1)
 const first = ref(0)
 const filtros = ref({})
+/** Ordenação servidor (DRF `ordering`); definida pelo `@sort` do DataTable em modo lazy. */
+const ordering = ref(undefined)
 const categoriasMap = ref({})
 const iconesMap = ref({})
 
@@ -149,7 +153,9 @@ const carregarIcones = async () => {
 const carregarLista = async () => {
   loading.value = true
   try {
-    const { data, total } = await financasService.movimentacoes.getPage(currentPage.value, { tipo: 'E', ...filtros.value })
+    const params = { tipo: 'E', ...filtros.value }
+    if (ordering.value) params.ordering = ordering.value
+    const { data, total } = await financasService.movimentacoes.getPage(currentPage.value, params)
     lista.value = data
     totalRecords.value = total
   } catch (error) {
@@ -165,6 +171,13 @@ const carregarLista = async () => {
 function onPage(event) {
   first.value = event.first
   currentPage.value = event.page + 1
+  carregarLista()
+}
+
+function onSort(event) {
+  ordering.value = drfOrderingFromPrimeSort(event.sortField, event.sortOrder)
+  first.value = 0
+  currentPage.value = 1
   carregarLista()
 }
 
@@ -219,6 +232,7 @@ function onFiltroApply(novosFiltros) {
   filtros.value = novosFiltros || {}
   currentPage.value = 1
   first.value = 0
+  ordering.value = undefined
   carregarLista()
 }
 
@@ -226,6 +240,7 @@ function onFiltroClear() {
   filtros.value = {}
   currentPage.value = 1
   first.value = 0
+  ordering.value = undefined
   carregarLista()
 }
 
