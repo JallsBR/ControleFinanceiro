@@ -28,11 +28,11 @@
       />
 
       <CardStatus
-        :titulo="'Saldo ' + mesAtualLabel"
+        :titulo="'Relatório ' + mesAtualLabel"
         :valor="Money.format(dashboard.saldo)"
-        icone="pi pi-dollar"
+        icone="pi pi-chart-line"
         :variante="getVarianteByValor(dashboard.saldo)"
-        to="/saldo"
+        to="/relatorio"
       />
       <CardStatus
         :titulo="'Reserva Total '"

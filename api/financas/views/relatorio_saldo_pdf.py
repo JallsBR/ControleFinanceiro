@@ -1,6 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from rest_framework.permissions import IsAuthenticated
@@ -80,9 +82,28 @@ class RelatorioSaldoPdfView(APIView):
                 }
             )
 
+        auth_user = request.user
+        fn = (getattr(auth_user, "first_name", None) or "").strip()
+        ln = (getattr(auth_user, "last_name", None) or "").strip()
+        if fn or ln:
+            nome_utilizador = f"{fn} {ln}".strip()
+        else:
+            nome_utilizador = auth_user.get_username()
+
+        logo_path = (
+            Path(settings.BASE_DIR).parent
+            / "front"
+            / "src"
+            / "assets"
+            / "logoFinancasApp.png"
+        )
+        logo_uri = logo_path.resolve().as_uri() if logo_path.is_file() else ""
+
         html = render_to_string(
             "financas/relatorio_saldo.html",
             {
+                "nome_utilizador": nome_utilizador,
+                "logo_uri": logo_uri,
                 "data_inicio": d0,
                 "data_fim": d1,
                 "movimentacoes": movimentacoes,

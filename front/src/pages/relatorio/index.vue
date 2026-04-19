@@ -1,7 +1,7 @@
 <template>
-  <div class="saldo-page">
+  <div class="relatorio-page">
     <CardStatus
-      tituloPrincipal="Saldo"
+      tituloPrincipal="Relatório"
       subtitulo="Analise entradas, saídas e saldo por período"
       icone="pi pi-chart-line"
       style="margin-bottom: 1rem;"
@@ -10,7 +10,7 @@
     <div class="top-grid">
       <div class="filtros-wrapper">
         <h2 class="card-title">Período</h2>
-        <p class="card-subtitle">Defina o intervalo de datas para analisar o saldo.</p>
+        <p class="card-subtitle">Defina o intervalo de datas para analisar o relatório.</p>
 
         <div class="field">
           <label class="field-label">Datas</label>
@@ -31,9 +31,9 @@
           </div>
         </div>
 
-        <hr class="saldo-periodo-divider" />
+        <hr class="relatorio-periodo-divider" />
 
-        <div class="saldo-atalhos-linha-full">
+        <div class="relatorio-atalhos-linha-full">
           <div class="atalho-input atalho-input--full">
             <Button
               type="button"
@@ -64,7 +64,7 @@
               label="Aplicar"
               icon="pi pi-check"
               size="small"
-              @click="carregarSaldo"
+              @click="carregarRelatorio"
             />
             <Button
               type="button"
@@ -73,7 +73,7 @@
               size="small"
               :loading="exportingPdf"
               :disabled="exportingPdf"
-              @click="exportarPdfSaldo"
+              @click="exportarPdfRelatorio"
             />
           </div>
         </div>
@@ -142,7 +142,7 @@
       />
     </div>
 
-    <div class="saldo-detalhe">
+    <div class="relatorio-detalhe">
       <h2 class="section-title">Movimentações no período</h2>
 
       <BaseDataTable
@@ -221,6 +221,7 @@ import Button from 'primevue/button'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
+import { PAGE_SIZE } from '@/constants/pagination'
 
 const toast = useToast()
 
@@ -254,13 +255,10 @@ const consolidadosOrdenados = computed(() => {
 })
 
 function toIsoDate (date) {
-  if (!date) return null
-  const d = new Date(date)
-  if (Number.isNaN(d.getTime())) return null
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  if (date == null || date === '') return null
+  const d = dayjs(date)
+  if (!d.isValid()) return null
+  return d.format('YYYY-MM-DD')
 }
 
 function formatarData (val) {
@@ -292,24 +290,34 @@ async function listarMovimentacoesDoPeriodo (ini, fim) {
   const filtros = { data__gte: ini, data__lte: fim }
   const acumulado = []
   let page = 1
-  let totalEsperado = Infinity
 
-  while (acumulado.length < totalEsperado) {
+  for (;;) {
     const { data, total } = await financasService.movimentacoes.getPage(page, filtros)
-    totalEsperado = total ?? 0
-    if (!data?.length) break
-    acumulado.push(...data)
+    const batch = Array.isArray(data) ? data : []
+    if (!batch.length) break
+    acumulado.push(...batch)
+
+    const totalRegistros = typeof total === 'number' && !Number.isNaN(total) ? total : null
+    if (totalRegistros != null && totalRegistros > 0) {
+      if (acumulado.length >= totalRegistros) break
+    } else if (batch.length < PAGE_SIZE) {
+      break
+    }
     page += 1
+    if (page > 5000) break
   }
 
   return acumulado
 }
 
-async function carregarSaldo () {
+async function carregarRelatorio () {
   const ini = toIsoDate(dataInicial.value)
   const fim = toIsoDate(dataFinal.value)
 
-  if (!ini || !fim) return
+  if (!ini || !fim) {
+    toast.error('Período', 'Defina a data inicial e a data final.')
+    return
+  }
 
   loading.value = true
   try {
@@ -339,20 +347,20 @@ async function carregarSaldo () {
       saldoPeriodo: totalEntradas - totalSaidas
     }
   } catch (error) {
-    console.error('Erro ao carregar saldo:', error)
+    console.error('Erro ao carregar relatório:', error)
     movimentos.value = []
     resumo.value = {
       totalEntradas: 0,
       totalSaidas: 0,
       saldoPeriodo: 0
     }
-    toast.error('Erro', 'Não foi possível carregar o saldo do período.')
+    toast.error('Erro', 'Não foi possível carregar o relatório do período.')
   } finally {
     loading.value = false
   }
 }
 
-async function exportarPdfSaldo () {
+async function exportarPdfRelatorio () {
   const ini = toIsoDate(dataInicial.value)
   const fim = toIsoDate(dataFinal.value)
   if (!ini || !fim) {
@@ -368,7 +376,7 @@ async function exportarPdfSaldo () {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `saldo-${ini}_${fim}.pdf`
+    a.download = `relatorio-${ini}_${fim}.pdf`
     a.rel = 'noopener'
     document.body.appendChild(a)
     a.click()
@@ -414,29 +422,29 @@ async function carregarConsolidados () {
 function setHoje () {
   dataInicial.value = hoje.toDate()
   dataFinal.value = hoje.toDate()
-  carregarSaldo()
+  carregarRelatorio()
 }
 
 function setMesAtual () {
   dataInicial.value = hoje.startOf('month').toDate()
   dataFinal.value = hoje.endOf('month').toDate()
-  carregarSaldo()
+  carregarRelatorio()
 }
 
 function setUltimos7Dias () {
   dataInicial.value = hoje.subtract(6, 'day').toDate()
   dataFinal.value = hoje.toDate()
-  carregarSaldo()
+  carregarRelatorio()
 }
 
 onMounted(() => {
-  carregarSaldo()
+  carregarRelatorio()
   carregarConsolidados()
 })
 </script>
 
 <style scoped>
-.saldo-page {
+.relatorio-page {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -508,14 +516,14 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 
-.saldo-periodo-divider {
+.relatorio-periodo-divider {
   width: 100%;
   margin: 0;
   border: none;
   border-top: 1px solid color-mix(in srgb, var(--texto-secundario) 22%, transparent);
 }
 
-.saldo-atalhos-linha-full {
+.relatorio-atalhos-linha-full {
   width: 100%;
   box-sizing: border-box;
   padding-top: 0.65rem;
@@ -651,7 +659,7 @@ onMounted(() => {
   gap: 1.25rem;
 }
 
-.saldo-detalhe {
+.relatorio-detalhe {
   background: var(--bg-secundario);
   border-radius: 18px;
   padding: 1.25rem 1.5rem;

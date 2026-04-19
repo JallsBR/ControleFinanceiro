@@ -6,7 +6,7 @@ import LogoutPage from '../pages/auth/LogoutPage.vue'
 import HomePage from '../pages/home/index.vue'
 import EntradasPage from '../pages/entradas/index.vue'
 import SaidasPage from '../pages/saidas/index.vue'
-import SaldoPage from '../pages/saldo/index.vue'
+import RelatorioPage from '../pages/relatorio/index.vue'
 import ReservasPage from '../pages/reservas/index.vue'
 import InvestimentosPage from '../pages/investimentos/index.vue'
 import MetasPage from '../pages/metas/index.vue'
@@ -73,9 +73,13 @@ const routes = [
         component: SaidasPage
       },
       {
+        path: '/relatorio',
+        name: 'relatorio',
+        component: RelatorioPage
+      },
+      {
         path: '/saldo',
-        name: 'saldo',
-        component: SaldoPage
+        redirect: { name: 'relatorio' }
       },
       {
         path: '/reservas',

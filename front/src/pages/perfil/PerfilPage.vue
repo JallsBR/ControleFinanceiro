@@ -321,7 +321,7 @@ onMounted(() => {
   margin-bottom: 1rem;
 }
 
-/* Alinhado ao título de seções (ex.: saldo filtros-wrapper .card-title) */
+/* Alinhado ao título de seções (ex.: relatório filtros-wrapper .card-title) */
 .perfil-secao-titulo {
   margin: 0 0 1rem 0;
   font-size: 1.1rem;
