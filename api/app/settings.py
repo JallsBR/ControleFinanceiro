@@ -113,19 +113,42 @@ ROOT_URLCONF = 'app.urls'
 # CORS: origens via .env (CORS_ALLOWED_ORIGINS=url1,url2). Regex opcional para localhost (Vite em porta variável).
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = _env_csv_urls(
-    "CORS_ALLOWED_ORIGINS",
-    [
-        "http://localhost:2486",
-        "http://127.0.0.1:2486",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5175",
-    ],
+
+_default_cors_origins = [
+    # Vite (vite.config.js → 2486)
+    "http://localhost:2486",
+    "http://127.0.0.1:2486",
+    # Vite default / alternativas
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
+    # vite preview
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+]
+
+_env_cors_raw = os.getenv("CORS_ALLOWED_ORIGINS", "").strip()
+_env_cors_list = (
+    [item.strip() for item in _env_cors_raw.split(",") if item.strip()]
+    if _env_cors_raw
+    else []
 )
+
+if DEBUG and _env_cors_list:
+    # Dev: união env + defaults (sem duplicar). Evita .env só com :2486 bloquear quem abre :5173, etc.
+    _seen = set()
+    CORS_ALLOWED_ORIGINS = []
+    for origin in _env_cors_list + _default_cors_origins:
+        if origin not in _seen:
+            _seen.add(origin)
+            CORS_ALLOWED_ORIGINS.append(origin)
+else:
+    CORS_ALLOWED_ORIGINS = (
+        _env_cors_list if _env_cors_list else list(_default_cors_origins)
+    )
 # CORS_ALLOW_LOCALHOST_REGEX: se não definido, ativa quando DEBUG=True
 _cors_localhost_regex = os.getenv("CORS_ALLOW_LOCALHOST_REGEX")
 if _cors_localhost_regex is None or _cors_localhost_regex.strip() == "":

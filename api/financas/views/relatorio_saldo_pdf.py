@@ -13,6 +13,32 @@ from weasyprint import HTML
 from app.financas_subject import get_financas_subject_user
 from financas.models import ConsolidadoMensal, Movimentacao
 
+def _inter_font_face_css() -> str:
+    """Carrega Inter a partir de ficheiros em static (sem pedidos a fonts.googleapis.com)."""
+    fonts_dir = (
+        Path(__file__).resolve().parent.parent / "static" / "financas" / "fonts"
+    )
+    chunks: list[str] = []
+    for weight, filename in (
+        (400, "Inter-Regular.ttf"),
+        (500, "Inter-Medium.ttf"),
+        (600, "Inter-SemiBold.ttf"),
+        (700, "Inter-Bold.ttf"),
+    ):
+        path = fonts_dir / filename
+        if not path.is_file():
+            continue
+        uri = path.resolve().as_uri()
+        # str.format: chaves do bloco CSS têm de ser {{ }} senão {font-family…} vira KeyError.
+        chunks.append(
+            (
+                "@font-face{{font-family:Inter;font-style:normal;font-weight:{weight};"
+                "font-display:swap;src:url('{uri}') format('truetype');}}"
+            ).format(weight=weight, uri=uri)
+        )
+    return "".join(chunks)
+
+
 _MESES_PT = (
     "",
     "Janeiro",
@@ -126,6 +152,7 @@ class RelatorioSaldoPdfView(APIView):
             {
                 "nome_utilizador": nome_utilizador,
                 "logo_uri": logo_uri,
+                "inter_font_face_css": _inter_font_face_css(),
                 "data_inicio": d0,
                 "data_fim": d1,
                 "movimentacoes": movimentacoes,
