@@ -299,6 +299,9 @@
       <p class="meta">
         Período: <strong>{{ data_inicio|date:"d/m/Y" }}</strong> a <strong>{{ data_fim|date:"d/m/Y" }}</strong>
       </p>
+      {% if filtros_resumo %}
+      <p class="meta"><strong>Filtros aplicados:</strong> {{ filtros_resumo }}</p>
+      {% endif %}
     </div>
   </div>
 

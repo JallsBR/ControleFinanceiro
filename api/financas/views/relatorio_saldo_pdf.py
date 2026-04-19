@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from weasyprint import HTML
 
 from app.financas_subject import get_financas_subject_user
-from financas.models import ConsolidadoMensal, Movimentacao
+from financas.models import Categoria, ConsolidadoMensal, Movimentacao
 
 def _inter_font_face_css() -> str:
     """Carrega Inter a partir de ficheiros em static (sem pedidos a fonts.googleapis.com)."""
@@ -56,11 +56,55 @@ _MESES_PT = (
 )
 
 
+def _parse_categorias_ids(raw: str | None) -> list[int]:
+    if not raw or not str(raw).strip():
+        return []
+    out: list[int] = []
+    for part in str(raw).split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            out.append(int(part))
+        except ValueError:
+            continue
+    return out
+
+
+def _filtros_resumo_texto(
+    user,
+    tipo: str | None,
+    categorias_ids: list[int],
+    descricao: str | None,
+) -> str:
+    partes: list[str] = []
+    if tipo == "E":
+        partes.append("Tipo: Entrada")
+    elif tipo == "S":
+        partes.append("Tipo: Saída")
+    if categorias_ids:
+        nomes = list(
+            Categoria.objects.filter(created_by=user, id__in=categorias_ids)
+            .values_list("nome", flat=True)
+            .order_by("nome")
+        )
+        if nomes:
+            partes.append("Categorias: " + ", ".join(nomes))
+    if descricao:
+        partes.append(f'Descrição contém: "{descricao}"')
+    return " · ".join(partes)
+
+
 class RelatorioSaldoPdfView(APIView):
     """
     GET ?data_inicio=YYYY-MM-DD&data_fim=YYYY-MM-DD
-    Gera PDF com resumo do período, movimentações e consolidados mensais
-    (mesmo utilizador sujeito que /financas/movimentacoes/).
+    Opcional (alinhado com o filtro da tabela no front):
+    - tipo=E|S
+    - categorias=1,2,3 (ids de categoria)
+    - descricao=... (contém, sem distinção de maiúsculas)
+
+    Gera PDF com resumo do período (sobre as movimentações filtradas),
+    movimentações filtradas e consolidados mensais globais do utilizador.
     """
 
     permission_classes = [IsAuthenticated]
@@ -89,13 +133,29 @@ class RelatorioSaldoPdfView(APIView):
                 status=400,
             )
 
+        tipo_raw = (request.query_params.get("tipo") or "").strip().upper()
+        tipo_filtro = tipo_raw if tipo_raw in ("E", "S") else None
+        categorias_ids = _parse_categorias_ids(request.query_params.get("categorias"))
+        descricao_filtro = (request.query_params.get("descricao") or "").strip() or None
+
         user = get_financas_subject_user(request)
         movs_qs = (
             Movimentacao.objects.filter(created_by=user, data__gte=d0, data__lte=d1)
             .select_related("categoria")
             .order_by("data", "id")
         )
+        if tipo_filtro:
+            movs_qs = movs_qs.filter(tipo=tipo_filtro)
+        if categorias_ids:
+            movs_qs = movs_qs.filter(categoria_id__in=categorias_ids)
+        if descricao_filtro:
+            movs_qs = movs_qs.filter(descricao__icontains=descricao_filtro)
+
         movimentacoes = list(movs_qs)
+
+        filtros_resumo = _filtros_resumo_texto(
+            user, tipo_filtro, categorias_ids, descricao_filtro
+        )
 
         total_entradas = Decimal("0")
         total_saidas = Decimal("0")
@@ -155,6 +215,7 @@ class RelatorioSaldoPdfView(APIView):
                 "inter_font_face_css": _inter_font_face_css(),
                 "data_inicio": d0,
                 "data_fim": d1,
+                "filtros_resumo": filtros_resumo,
                 "movimentacoes": movimentacoes,
                 "total_entradas": total_entradas,
                 "total_saidas": total_saidas,

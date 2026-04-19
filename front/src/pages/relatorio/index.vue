@@ -320,7 +320,7 @@ const dataFinal = ref(hoje.endOf('month').toDate())
 
 const loading = ref(false)
 const exportingPdf = ref(false)
-/** Lista completa do período (API); resumo e PDF usam isto. */
+/** Lista completa do período (API); filtros aplicam-se no computed. */
 const movimentosBrutos = ref([])
 const filtrosTabela = ref({
   tipo: null,
@@ -340,11 +340,6 @@ const excluindo = ref(false)
 const categoriasMap = ref({})
 const iconesMap = ref({})
 
-const resumo = ref({
-  totalEntradas: 0,
-  totalSaidas: 0,
-  saldoPeriodo: 0
-})
 
 const consolidados = ref([])
 const loadingConsolidados = ref(false)
@@ -373,6 +368,25 @@ const movimentosFiltrados = computed(() => {
     list = list.filter(m => (m.descricao || '').toLowerCase().includes(q))
   }
   return list
+})
+
+/** Resumo alinhado com as linhas visíveis na tabela (e com o PDF quando exportado com os mesmos filtros). */
+const resumo = computed(() => {
+  let totalEntradas = 0
+  let totalSaidas = 0
+  for (const mov of movimentosFiltrados.value) {
+    const valor = Number(mov.valor) || 0
+    if (mov.tipo === 'E') {
+      totalEntradas += valor
+    } else if (mov.tipo === 'S') {
+      totalSaidas += valor
+    }
+  }
+  return {
+    totalEntradas,
+    totalSaidas,
+    saldoPeriodo: totalEntradas - totalSaidas
+  }
 })
 
 /** Soma algebrica dos valores das linhas atualmente na tabela (entradas +, saídas −). */
@@ -573,32 +587,9 @@ async function carregarRelatorio () {
     }))
 
     movimentosBrutos.value = lista
-
-    let totalEntradas = 0
-    let totalSaidas = 0
-
-    for (const mov of lista) {
-      const valor = Number(mov.valor) || 0
-      if (mov.tipo === 'E') {
-        totalEntradas += valor
-      } else if (mov.tipo === 'S') {
-        totalSaidas += valor
-      }
-    }
-
-    resumo.value = {
-      totalEntradas,
-      totalSaidas,
-      saldoPeriodo: totalEntradas - totalSaidas
-    }
   } catch (error) {
     console.error('Erro ao carregar relatório:', error)
     movimentosBrutos.value = []
-    resumo.value = {
-      totalEntradas: 0,
-      totalSaidas: 0,
-      saldoPeriodo: 0
-    }
     toast.error('Erro', 'Não foi possível carregar o relatório do período.')
   } finally {
     loading.value = false
@@ -614,9 +605,19 @@ async function exportarPdfRelatorio () {
   }
   exportingPdf.value = true
   try {
+    const f = filtrosTabela.value
+    const cats = f.categorias?.length
+      ? f.categorias.map(Number).filter(id => !Number.isNaN(id)).join(',')
+      : undefined
+    const desc = f.descricao != null && String(f.descricao).trim()
+      ? String(f.descricao).trim()
+      : undefined
     const blob = await financasService.relatorios.downloadSaldoPdf({
       dataInicio: ini,
       dataFim: fim,
+      tipo: f.tipo || undefined,
+      categorias: cats,
+      descricao: desc,
     })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
