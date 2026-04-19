@@ -383,6 +383,22 @@ const financasService = {
       return response.data;
     },
 
+    /** Meses civis que intersectam o intervalo (relatório / período). */
+    getByPeriod: async ({ dataInicio, dataFim }) => {
+      const response = await api.get('/financas/consolidados-mensais/', {
+        params: { data_inicio: dataInicio, data_fim: dataFim },
+      });
+      return response.data;
+    },
+
+    /** Todos os consolidados do utilizador (análise; sem limite de 12 meses). */
+    getTodos: async () => {
+      const response = await api.get('/financas/consolidados-mensais/', {
+        params: { todos: 1 },
+      });
+      return response.data;
+    },
+
     getById: async (id) => {
       const response = await api.get(`/financas/consolidados-mensais/${id}/`);
       return response.data;

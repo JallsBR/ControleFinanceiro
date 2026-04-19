@@ -71,7 +71,19 @@
       </div>
 
       <div class="consolidados-card">
-        <h2 class="card-title">Consolidados mensais</h2>
+        <div class="consolidados-card-header">
+          <h2 class="card-title consolidados-card-title">Consolidados mensais</h2>
+          <Button
+            type="button"
+            icon="pi pi-search"
+            text
+            rounded
+            severity="secondary"
+            title="Ver todos os consolidados na base de dados"
+            aria-label="Análise de todos os consolidados mensais"
+            @click="abrirDialogConsolidadosAnalise"
+          />
+        </div>
         <div v-if="loadingConsolidados" class="consolidados-state">
           Carregando consolidados...
         </div>
@@ -150,8 +162,7 @@
               <Button icon="pi pi-refresh" text label="Atualizar" @click="atualizarMovimentacoes" />
               <Button icon="pi pi-search" text label="Filtrar" @click="abrirFiltro" />
               <Button
-                icon="pi pi-file-pdf"
-          
+                icon="pi pi-file-pdf"          
                 label="Exportar Relatório emPDF"
                 :loading="exportingPdf"
                 :disabled="exportingPdf"
@@ -285,6 +296,58 @@
       @apply="onFiltroApply"
       @clear="onFiltroClear"
     />
+
+    <Dialog
+      v-model:visible="visibleConsolidadosAnalise"
+      header="Consolidados mensais — análise completa"
+      :modal="true"
+      :dismissableMask="true"
+      :style="{ width: 'min(960px, 96vw)' }"
+      class="dialog-consolidados-analise"
+      @show="carregarConsolidadosAnaliseTodos"
+    >
+      <p class="dialog-consolidados-analise__hint">
+        Todos os meses registados na base de dados para este utilizador (fora do período do relatório).
+      </p>
+      <BaseDataTable
+        :items="consolidadosAnaliseTodos"
+        :loading="loadingConsolidadosAnalise"
+        :totalRecords="consolidadosAnaliseTodos.length"
+        :first="0"
+        :lazy="false"
+        :reorderableColumns="true"
+        :rows="12"
+      >
+        <template #columns>
+          <Column header="Período" style="min-width: 11rem">
+            <template #body="{ data }">
+              {{ formatMesAno(data.ano, data.mes) }}
+            </template>
+          </Column>
+          <Column field="ano" header="Ano" sortable style="width: 5rem" />
+          <Column field="mes" header="Mês" sortable style="width: 4rem" />
+          <Column field="total_entradas" header="Entradas" sortable style="min-width: 8rem">
+            <template #body="{ data }">
+              <span class="tipo-entrada-tab">{{ Money.format(data.total_entradas, { currency: true }) }}</span>
+            </template>
+          </Column>
+          <Column field="total_saidas" header="Saídas" sortable style="min-width: 8rem">
+            <template #body="{ data }">
+              <span class="tipo-saida-tab">{{ Money.format(data.total_saidas, { currency: true }) }}</span>
+            </template>
+          </Column>
+          <Column header="Saldo" style="min-width: 8rem">
+            <template #body="{ data }">
+              <span
+                :class="saldoConsolidadoNum(data) >= 0 ? 'tipo-entrada-tab' : 'tipo-saida-tab'"
+              >
+                {{ Money.format(saldoConsolidadoNum(data), { currency: true }) }}
+              </span>
+            </template>
+          </Column>
+        </template>
+      </BaseDataTable>
+    </Dialog>
   </div>
 </template>
 
@@ -297,6 +360,7 @@ import BaseDataTable from '@/components/BaseDataTable.vue'
 import Column from 'primevue/column'
 import DatePicker from 'primevue/datepicker'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import Money from '@/utils/Money.js'
 import financasService from '@/services/financasService'
 import { useToast } from '@/utils/useToast'
@@ -343,12 +407,15 @@ const iconesMap = ref({})
 const consolidados = ref([])
 const loadingConsolidados = ref(false)
 
+const visibleConsolidadosAnalise = ref(false)
+const consolidadosAnaliseTodos = ref([])
+const loadingConsolidadosAnalise = ref(false)
+
+/** Ordem cronológica dentro do período escolhido (mais antigo primeiro). */
 const consolidadosOrdenados = computed(() => {
   return [...consolidados.value].sort((a, b) => {
-    if (a.ano === b.ano) {
-      return b.mes - a.mes
-    }
-    return b.ano - a.ano
+    if (a.ano !== b.ano) return a.ano - b.ano
+    return a.mes - b.mes
   })
 })
 
@@ -440,6 +507,31 @@ function formatMesAno (ano, mes) {
   return dayjs(`${ano}-${m}-01`).format('MMMM [de] YYYY')
 }
 
+function saldoConsolidadoNum (row) {
+  const e = Number(row?.total_entradas) || 0
+  const s = Number(row?.total_saidas) || 0
+  return e - s
+}
+
+function abrirDialogConsolidadosAnalise () {
+  visibleConsolidadosAnalise.value = true
+}
+
+async function carregarConsolidadosAnaliseTodos () {
+  loadingConsolidadosAnalise.value = true
+  try {
+    const raw = await financasService.consolidadosMensais.getTodos()
+    const arr = Array.isArray(raw) ? raw : (raw?.results || raw?.data || [])
+    consolidadosAnaliseTodos.value = arr || []
+  } catch (error) {
+    console.error('Erro ao carregar consolidados para análise:', error)
+    consolidadosAnaliseTodos.value = []
+    toast.error('Erro', 'Não foi possível carregar todos os consolidados.')
+  } finally {
+    loadingConsolidadosAnalise.value = false
+  }
+}
+
 function nomeCategoria (id) {
   const cat = categoriasMap.value[id]
   return cat?.nome ?? id ?? '—'
@@ -516,7 +608,6 @@ async function executarExclusao () {
     visibleExcluir.value = false
     itemParaExcluir.value = null
     await carregarRelatorio()
-    await carregarConsolidados()
     toast.success('Movimentação excluída', '')
   } catch (error) {
     console.error('Erro ao excluir:', error)
@@ -528,7 +619,6 @@ async function executarExclusao () {
 
 async function onMovimentacaoSalva () {
   await carregarRelatorio()
-  await carregarConsolidados()
 }
 
 watch(visibleEntrada, (v) => {
@@ -574,6 +664,7 @@ async function carregarRelatorio () {
 
   if (!ini || !fim) {
     toast.error('Período', 'Defina a data inicial e a data final.')
+    consolidados.value = []
     return
   }
 
@@ -593,6 +684,7 @@ async function carregarRelatorio () {
   } finally {
     loading.value = false
   }
+  await carregarConsolidados()
 }
 
 async function exportarPdfRelatorio () {
@@ -650,9 +742,18 @@ async function exportarPdfRelatorio () {
 }
 
 async function carregarConsolidados () {
+  const ini = toIsoDate(dataInicial.value)
+  const fim = toIsoDate(dataFinal.value)
+  if (!ini || !fim) {
+    consolidados.value = []
+    return
+  }
   loadingConsolidados.value = true
   try {
-    const raw = await financasService.consolidadosMensais.getAll()
+    const raw = await financasService.consolidadosMensais.getByPeriod({
+      dataInicio: ini,
+      dataFim: fim
+    })
     const arr = Array.isArray(raw) ? raw : (raw?.results || raw?.data || [])
     consolidados.value = arr || []
   } catch (error) {
@@ -664,28 +765,27 @@ async function carregarConsolidados () {
   }
 }
 
-function setHoje () {
+async function setHoje () {
   dataInicial.value = hoje.toDate()
   dataFinal.value = hoje.toDate()
-  carregarRelatorio()
+  await carregarRelatorio()
 }
 
-function setMesAtual () {
+async function setMesAtual () {
   dataInicial.value = hoje.startOf('month').toDate()
   dataFinal.value = hoje.endOf('month').toDate()
-  carregarRelatorio()
+  await carregarRelatorio()
 }
 
-function setUltimos7Dias () {
+async function setUltimos7Dias () {
   dataInicial.value = hoje.subtract(6, 'day').toDate()
   dataFinal.value = hoje.toDate()
-  carregarRelatorio()
+  await carregarRelatorio()
 }
 
 onMounted(async () => {
   await carregarCategoriasEIcones()
   await carregarRelatorio()
-  await carregarConsolidados()
 })
 </script>
 
@@ -715,6 +815,21 @@ onMounted(async () => {
 
 .consolidados-card {
   min-height: 0;
+}
+
+.consolidados-card-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.consolidados-card-title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .card-title {
@@ -1002,5 +1117,27 @@ onMounted(async () => {
   .top-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+</style>
+
+<style>
+/* Dialog pode renderizar fora do scoped (teleport). */
+.dialog-consolidados-analise .dialog-consolidados-analise__hint {
+  font-size: 0.875rem;
+  color: var(--texto-secundario, #6c757d);
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.dialog-consolidados-analise .tipo-entrada-tab {
+  color: var(--sucesso, #198754);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dialog-consolidados-analise .tipo-saida-tab {
+  color: var(--perigo, #dc3545);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 </style>

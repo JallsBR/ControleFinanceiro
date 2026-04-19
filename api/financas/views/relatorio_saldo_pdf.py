@@ -12,6 +12,7 @@ from weasyprint import HTML
 
 from app.financas_subject import get_financas_subject_user
 from financas.models import Categoria, ConsolidadoMensal, Movimentacao
+from financas.periodo_consolidado import consolidado_q_por_intervalo
 
 def _inter_font_face_css() -> str:
     """Carrega Inter a partir de ficheiros em static (sem pedidos a fonts.googleapis.com)."""
@@ -167,8 +168,10 @@ class RelatorioSaldoPdfView(APIView):
                 total_saidas += v
         saldo_periodo = total_entradas - total_saidas
 
-        consolidados_qs = ConsolidadoMensal.objects.filter(created_by=user).order_by(
-            "-ano", "-mes"
+        consolidados_qs = (
+            ConsolidadoMensal.objects.filter(created_by=user)
+            .filter(consolidado_q_por_intervalo(d0, d1))
+            .order_by("ano", "mes")
         )
         consolidados_linhas = []
         for c in consolidados_qs:
