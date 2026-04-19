@@ -82,13 +82,13 @@ class RelatorioSaldoPdfView(APIView):
                 }
             )
 
-        auth_user = request.user
-        fn = (getattr(auth_user, "first_name", None) or "").strip()
-        ln = (getattr(auth_user, "last_name", None) or "").strip()
+        # Nome no cabeçalho: dono dos dados (subject), não o staff/consultor autenticado.
+        fn = (getattr(user, "first_name", None) or "").strip()
+        ln = (getattr(user, "last_name", None) or "").strip()
         if fn or ln:
             nome_utilizador = f"{fn} {ln}".strip()
         else:
-            nome_utilizador = auth_user.get_username()
+            nome_utilizador = user.get_username()
 
         logo_path = (
             Path(settings.BASE_DIR).parent
