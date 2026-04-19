@@ -108,6 +108,7 @@ import Message from 'primevue/message'
 import Dialog from 'primevue/dialog'
 import ProgressBar from 'primevue/progressbar'
 import { RouterLink } from 'vue-router'
+import { routeLocationAfterLogin } from '@/utils/postLoginRoute'
 
 const PROGRESSO_MAX_ANTES = 85
 const PROGRESSO_INTERVALO_MS = 150
@@ -175,7 +176,8 @@ export default {
 
         if (success) {
           this.loading = false
-          this.$router.push({ name: 'home' })
+          const u = this.$store.getters.getUser
+          this.$router.push(routeLocationAfterLogin(u))
         } else {
           this.loading = false
         }

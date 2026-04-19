@@ -71,6 +71,24 @@
                 :disabled="somenteLeituraMonitor"
               />
             </div>
+
+            <div v-if="!somenteLeituraMonitor" class="field mb-0">
+              <label for="perfil-pagina-inicial" class="field-label">Página inicial após login</label>
+              <Select
+                id="perfil-pagina-inicial"
+                v-model="paginaInicial"
+                :options="opcoesPaginaInicial"
+                optionLabel="label"
+                optionValue="value"
+                class="w-full"
+                placeholder="Onde abrir ao entrar"
+                :disabled="carregando"
+              />
+              <p class="perfil-hint">
+                Painel ou relatório para todos; Administrar só para equipa (staff);
+                Consultoria só para utilizadores registados como consultor.
+              </p>
+            </div>
           </div>
 
           <Divider
@@ -83,9 +101,6 @@
           <!-- Direita: toda a alteração de senha -->
           <div v-if="!somenteLeituraMonitor" class="perfil-col perfil-col--senha">
             <h2 class="perfil-secao-titulo">Senha</h2>
-            <p class="perfil-hint perfil-hint--intro">
-              Deixe as novas senhas em branco para manter a atual. Se preencher, as duas devem ser iguais e a senha atual é obrigatória.
-            </p>
 
             <div class="field mb-3">
               <label for="perfil-cur" class="field-label">Senha atual</label>
@@ -99,6 +114,7 @@
                 inputClass="w-full"
                 autocomplete="current-password"
               />
+              <p class="perfil-hint">Obrigatório para definir uma nova senha.</p>
             </div>
 
             <div class="field mb-3">
@@ -153,6 +169,7 @@ import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Divider from 'primevue/divider'
+import Select from 'primevue/select'
 import { authService } from '@/services/authService'
 import { useToast } from '@/utils/useToast'
 
@@ -179,9 +196,34 @@ const username = ref('')
 const email = ref('')
 const firstName = ref('')
 const lastName = ref('')
+const paginaInicial = ref('dashboard')
 const currentPassword = ref('')
 const newPassword = ref('')
 const newPasswordConfirm = ref('')
+
+function opcoesPaginaInicialParaUsuario (u) {
+  const list = [
+    { label: 'Painel (dashboard)', value: 'dashboard' },
+    { label: 'Relatório', value: 'relatorio' }
+  ]
+  if (u?.is_staff || u?.is_superuser) {
+    list.push({ label: 'Administrar', value: 'administrar' })
+  }
+  if (u?.is_gerente) {
+    list.push({ label: 'Consultoria', value: 'consultoria' })
+  }
+  return list
+}
+
+const opcoesPaginaInicial = computed(() =>
+  opcoesPaginaInicialParaUsuario(store.getters.getUser)
+)
+
+function paginaInicialCoerente (u, valor) {
+  const v = (valor && String(valor).trim()) || 'dashboard'
+  const permitidas = new Set(opcoesPaginaInicialParaUsuario(u).map((o) => o.value))
+  return permitidas.has(v) ? v : 'dashboard'
+}
 
 function aplicarUsuario (u) {
   if (!u) return
@@ -189,6 +231,7 @@ function aplicarUsuario (u) {
   email.value = u.email ?? ''
   firstName.value = u.first_name ?? ''
   lastName.value = u.last_name ?? ''
+  paginaInicial.value = paginaInicialCoerente(u, u.pagina_inicial)
 }
 
 function formatarErroApi (data) {
@@ -267,7 +310,8 @@ async function salvar () {
     const payload = {
       email: email.value.trim(),
       first_name: firstName.value.trim(),
-      last_name: lastName.value.trim()
+      last_name: lastName.value.trim(),
+      pagina_inicial: paginaInicial.value
     }
     if (nova) {
       payload.current_password = currentPassword.value

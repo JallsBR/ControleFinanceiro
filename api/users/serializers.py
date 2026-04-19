@@ -23,6 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
             'is_staff',
             'is_superuser',
             'is_gerente',
+            'pagina_inicial',
             'admin_capabilities',
         )
 
@@ -76,6 +77,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
+            'pagina_inicial',
             'current_password',
             'new_password',
         )
@@ -83,6 +85,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'email': {'required': False},
             'first_name': {'required': False, 'allow_blank': True},
             'last_name': {'required': False, 'allow_blank': True},
+            'pagina_inicial': {'required': False},
         }
 
     def validate_email(self, value):
@@ -98,6 +101,24 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             .exists()
         ):
             raise serializers.ValidationError('Já existe um usuário com este e-mail.')
+        return value
+
+    def validate_pagina_inicial(self, value):
+        if value is None or value == '':
+            return value
+        user = self.context['request'].user
+        allowed = {
+            User.PaginaInicial.DASHBOARD,
+            User.PaginaInicial.RELATORIO,
+        }
+        if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+            allowed.add(User.PaginaInicial.ADMINISTRAR)
+        if getattr(user, 'is_gerente', False):
+            allowed.add(User.PaginaInicial.CONSULTORIA)
+        if value not in allowed:
+            raise serializers.ValidationError(
+                'Esta página inicial não está disponível para a sua conta.'
+            )
         return value
 
     def validate(self, attrs):

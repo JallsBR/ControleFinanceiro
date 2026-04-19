@@ -75,6 +75,8 @@ import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import { RouterLink } from 'vue-router'
+import { routeLocationAfterLogin } from '@/utils/postLoginRoute'
+
 export default {
   name: 'SignInPage',
   components: {
@@ -108,7 +110,8 @@ export default {
       })
 
       if (success) {
-        this.$router.push({ name: 'home' })
+        const u = this.$store.getters.getUser
+        this.$router.push(routeLocationAfterLogin(u))
       } else {
         this.error = true
         this.$toast.add({

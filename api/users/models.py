@@ -6,6 +6,12 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
+    class PaginaInicial(models.TextChoices):
+        DASHBOARD = "dashboard", _("Painel (dashboard)")
+        RELATORIO = "relatorio", _("Relatório")
+        ADMINISTRAR = "administrar", _("Administrar")
+        CONSULTORIA = "consultoria", _("Consultoria")
+
     username_validator = UnicodeUsernameValidator()
     username = models.CharField(
         _("username"),
@@ -29,6 +35,13 @@ class User(AbstractUser):
         ),
     )
     tenant_db_name = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    pagina_inicial = models.CharField(
+        _("página inicial após login"),
+        max_length=20,
+        choices=PaginaInicial.choices,
+        default=PaginaInicial.DASHBOARD,
+        db_index=True,
+    )
 
     class Meta:
         verbose_name = _("Usuario")

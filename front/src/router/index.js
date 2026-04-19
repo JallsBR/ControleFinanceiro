@@ -17,6 +17,7 @@ import AdministrarPage from '../pages/administrar/index.vue'
 import SignInPage from '../pages/auth/SignInPage.vue'
 import SignUpPage from '../pages/auth/SignUpPage.vue'
 import store from '../store'
+import { routeLocationAfterLogin } from '@/utils/postLoginRoute'
 import {
   FINANCAS_VIEW_AS_DISPLAY_QUERY,
   FINANCAS_VIEW_AS_KIND_QUERY,
@@ -254,7 +255,7 @@ router.beforeEach((to, from) => {
     return { name: 'signin' }
   }
   if ((to.name === 'signin' || to.name === 'signup') && isAuthenticated) {
-    return { name: 'home' }
+    return routeLocationAfterLogin(store.getters.getUser)
   }
 
   const requiresStaff = to.matched.some(record => record.meta.requiresStaff)
