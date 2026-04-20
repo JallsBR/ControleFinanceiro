@@ -115,9 +115,11 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
 _default_cors_origins = [
-    # Vite (vite.config.js → 2486)
+    # Vite (vite.config.js → 2487; mantém 2486 por compatibilidade)
     "http://localhost:2486",
     "http://127.0.0.1:2486",
+    "http://localhost:2487",
+    "http://127.0.0.1:2487",
     # Vite default / alternativas
     "http://localhost:5173",
     "http://localhost:5174",

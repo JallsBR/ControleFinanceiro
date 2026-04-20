@@ -7,8 +7,10 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    // Porta fixa para não colidir com outros Vite (5173) nem confundir com forwarding antigo.
-    port: 2486,
+    // Só 127.0.0.1: o terminal mostra apenas Local (localhost), sem URLs de rede.
+    // Porta alinhada com o URL local habitual (evita abrir :2486 quando o Vite só serve :2487).
+    host: 'localhost',
+    port: 2487,
     strictPort: true,
   },
   plugins: [

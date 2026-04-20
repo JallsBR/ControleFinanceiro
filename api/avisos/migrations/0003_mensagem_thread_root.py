@@ -3,18 +3,26 @@ from django.db import migrations, models
 
 def backfill_thread_root(apps, schema_editor):
     Mensagem = apps.get_model("avisos", "Mensagem")
-    for m in Mensagem.objects.all().order_by("created_at"):
-        if m.thread_root_id:
+    # .values() evita SELECT * com colunas do estado histórico (ex.: assunto) que a
+    # tabela tenant pode ainda não ter se o schema foi criado a partir do modelo atual.
+    rows = list(
+        Mensagem.objects.order_by("created_at").values(
+            "id", "resposta_id", "thread_root_id"
+        )
+    )
+    by_pk = {r["id"]: r for r in rows}
+    for m in rows:
+        if m["thread_root_id"]:
             continue
-        root = m
+        current = m
         seen = set()
-        while root.resposta_id and root.resposta_id not in seen:
-            seen.add(root.pk)
-            try:
-                root = Mensagem.objects.get(pk=root.resposta_id)
-            except Mensagem.DoesNotExist:
+        while current["resposta_id"] and current["resposta_id"] not in seen:
+            seen.add(current["id"])
+            parent = by_pk.get(current["resposta_id"])
+            if not parent:
                 break
-        Mensagem.objects.filter(pk=m.pk).update(thread_root_id=root.pk)
+            current = parent
+        Mensagem.objects.filter(pk=m["id"]).update(thread_root_id=current["id"])
 
 
 class Migration(migrations.Migration):

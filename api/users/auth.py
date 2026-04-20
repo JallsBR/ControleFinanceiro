@@ -28,11 +28,11 @@ def _create_tenant_db_for_user(created_user):
         conn = connections["tenant"]
         conn.settings_dict["NAME"] = db_name
         conn.close()
-        # Thread-local tenant + migrate_tenant para que a migration 0003 (criar_icones) use User e Icone no tenant
+        # Thread-local tenant + migrate_tenant para financas/users no alias tenant (router).
         set_tenant_db_name(db_name)
         set_migrate_tenant(True)
         try:
-            call_command("migrate", database="tenant", run_syncdb=True)
+            call_command("migrate", database="tenant")
         finally:
             set_migrate_tenant(False)
         # Copia o usuário para o tenant DB para que FKs (created_by) funcionem

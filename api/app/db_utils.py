@@ -57,10 +57,18 @@ def ensure_default_database_exists():
     conn = pymysql.connect(user=user, password=password, **kw)
     with conn.cursor() as cursor:
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{name}` CHARACTER SET utf8mb4")
-        # O entrypoint do MySQL só faz GRANT em MYSQL_DATABASE; se NAME for outro, o user do Docker fica sem acesso.
-        if mu and re.match(r"^[a-zA-Z0-9_]+$", mu):
+        # O entrypoint do MySQL já faz GRANT de MYSQL_USER sobre MYSQL_DATABASE. Só precisamos
+        # de GRANT extra quando DB_NAME difere de MYSQL_DATABASE (senão o MySQL 8 pode devolver
+        # 1410 "not allowed to create a user with GRANT" se o utilizador do .env não existir na instância).
+        mysql_database = os.getenv("MYSQL_DATABASE", "").strip()
+        if (
+            mu
+            and re.match(r"^[a-zA-Z0-9_]+$", mu)
+            and mysql_database
+            and name != mysql_database
+        ):
             cursor.execute(
-                f"GRANT ALL PRIVILEGES ON `{name}`.* TO %s@'%'",
+                f"GRANT ALL PRIVILEGES ON `{name}`.* TO %s@'%%'",
                 (mu,),
             )
             cursor.execute("FLUSH PRIVILEGES")
