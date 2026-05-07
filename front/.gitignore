@@ -1,7 +1,7 @@
 # Env (copie .env.example para .env e ajuste)
 .env
 .env.local
-
+.cursor
 # Logs
 logs
 *.log

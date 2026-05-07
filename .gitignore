@@ -325,3 +325,6 @@ docs/_book
 test/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,django,vue
+
+# Anotações locais do desenvolvedor (não versionadas)
+Documentos/
