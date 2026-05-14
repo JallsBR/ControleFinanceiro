@@ -11,8 +11,8 @@ from rest_framework.views import APIView
 from weasyprint import HTML
 
 from app.financas_subject import get_financas_subject_user
-from financas.models import Categoria, ConsolidadoMensal, Movimentacao
-from financas.periodo_consolidado import consolidado_q_por_intervalo
+from financas import services as financas_services
+from financas.models import Categoria, Movimentacao
 
 def _inter_font_face_css() -> str:
     """Carrega Inter a partir de ficheiros em static (sem pedidos a fonts.googleapis.com)."""
@@ -105,7 +105,8 @@ class RelatorioSaldoPdfView(APIView):
     - descricao=... (contém, sem distinção de maiúsculas)
 
     Gera PDF com resumo do período (sobre as movimentações filtradas),
-    movimentações filtradas e consolidados mensais globais do utilizador.
+    movimentações filtradas e consolidados mensais (totais por mês civil
+    calculados a partir das movimentações do utilizador).
     """
 
     permission_classes = [IsAuthenticated]
@@ -154,6 +155,10 @@ class RelatorioSaldoPdfView(APIView):
 
         movimentacoes = list(movs_qs)
 
+        movimentacoes_pdf_linhas = (
+            financas_services.linhas_pdf_movimentacoes_com_quebras_mes(movimentacoes)
+        )
+
         filtros_resumo = _filtros_resumo_texto(
             user, tipo_filtro, categorias_ids, descricao_filtro
         )
@@ -168,24 +173,20 @@ class RelatorioSaldoPdfView(APIView):
                 total_saidas += v
         saldo_periodo = total_entradas - total_saidas
 
-        consolidados_qs = (
-            ConsolidadoMensal.objects.filter(created_by=user)
-            .filter(consolidado_q_por_intervalo(d0, d1))
-            .order_by("ano", "mes")
-        )
         consolidados_linhas = []
-        for c in consolidados_qs:
-            te = c.total_entradas or Decimal("0")
-            ts = c.total_saidas or Decimal("0")
-            m = int(c.mes)
+        for c in financas_services.consolidados_mensais_por_intervalo(user, d0, d1):
+            te = c["total_entradas"] or Decimal("0")
+            ts = c["total_saidas"] or Decimal("0")
+            m = int(c["mes"])
+            ano = int(c["ano"])
             if 1 <= m <= 12:
-                periodo_label = f"{_MESES_PT[m]} - {c.ano}"
+                periodo_label = f"{_MESES_PT[m]} - {ano}"
             else:
-                periodo_label = f"{c.mes} - {c.ano}"
+                periodo_label = f"{c['mes']} - {ano}"
             consolidados_linhas.append(
                 {
-                    "ano": c.ano,
-                    "mes": c.mes,
+                    "ano": ano,
+                    "mes": m,
                     "periodo_label": periodo_label,
                     "total_entradas": te,
                     "total_saidas": ts,
@@ -220,6 +221,7 @@ class RelatorioSaldoPdfView(APIView):
                 "data_fim": d1,
                 "filtros_resumo": filtros_resumo,
                 "movimentacoes": movimentacoes,
+                "movimentacoes_pdf_linhas": movimentacoes_pdf_linhas,
                 "total_entradas": total_entradas,
                 "total_saidas": total_saidas,
                 "saldo_periodo": saldo_periodo,

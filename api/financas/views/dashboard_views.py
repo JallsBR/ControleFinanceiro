@@ -8,13 +8,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from financas.models import (
-    ConsolidadoMensal,
-    Movimentacao,
-    Meta,
-    Investimento,
-    Reserva,
-)
+from financas import services as financas_services
+from financas.models import Movimentacao, Meta, Investimento, Reserva
 
 
 class DashboardView(generics.GenericAPIView):
@@ -78,18 +73,10 @@ class DashboardView(generics.GenericAPIView):
             mes_anterior = mes_atual - 1
             ano_anterior = ano_atual
 
-        consolidado_obj = ConsolidadoMensal.objects.filter(
-            created_by=user,
-            ano=ano_anterior,
-            mes=mes_anterior,
-        ).first()
-
-        if consolidado_obj:
-            consolidado = (
-                consolidado_obj.total_entradas - consolidado_obj.total_saidas
-            )
-        else:
-            consolidado = Decimal("0")
+        te_ant, ts_ant = financas_services.totais_movimentacoes_mes_civil(
+            user, ano_anterior, mes_anterior
+        )
+        consolidado = te_ant - ts_ant
 
         # Saídas dos últimos 7 e 30 dias
         sete_dias_atras = today - timedelta(days=7)

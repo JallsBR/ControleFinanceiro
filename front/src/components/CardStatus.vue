@@ -40,8 +40,8 @@
       <p class="card-descricao" style="margin-top: 0px;">
         {{ descricao }}
       </p>
-      <h2  v-if="valor" class="card-valor" :class="classeValor">
-        <span style="font-size: 1.0rem;">R$</span>{{ valor }}
+      <h2 v-if="valorTexto" class="card-valor" :class="classeValor">
+        <span v-if="mostrarPrefixoMoeda" style="font-size: 1.0rem;">R$</span>{{ valorTexto }}
       </h2>
   
     </div>
@@ -110,6 +110,17 @@
       'valor-saida': props.variante === 'saida',
       'valor-neutro': props.variante === 'neutro'
     }
+  })
+
+  /** Evita R$ duplicado quando o valor já vem de Intl (ex.: Money.format(..., { currency: true })). */
+  const valorTexto = computed(() => {
+    if (props.valor == null || props.valor === '') return ''
+    return String(props.valor).trim()
+  })
+
+  const mostrarPrefixoMoeda = computed(() => {
+    const t = valorTexto.value
+    return t.length > 0 && !t.startsWith('R$')
   })
   </script>
   

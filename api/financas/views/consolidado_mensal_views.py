@@ -3,8 +3,8 @@ from datetime import datetime
 from app.financas_subject import get_financas_subject_user
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from financas import services as financas_services
 from financas.models import ConsolidadoMensal
-from financas.periodo_consolidado import consolidado_q_por_intervalo
 from financas.serializers import ConsolidadoMensalSerializer
 from rest_framework import generics, status
 from rest_framework.filters import OrderingFilter
@@ -39,7 +39,7 @@ class ConsolidadoMensalListCreateView(generics.ListCreateAPIView):
         )
 
     def list(self, request, *args, **kwargs):
-        base = self.filter_queryset(self.get_queryset())
+        user = get_financas_subject_user(request)
         todos = str(request.query_params.get("todos", "")).lower() in (
             "1",
             "true",
@@ -49,9 +49,8 @@ class ConsolidadoMensalListCreateView(generics.ListCreateAPIView):
         df = request.query_params.get("data_fim")
 
         if todos:
-            qs = base.order_by("-ano", "-mes")
-            serializer = self.get_serializer(qs, many=True)
-            return Response(serializer.data)
+            data = financas_services.consolidados_mensais_todos_calculados(user)
+            return Response(data)
 
         if di and df:
             try:
@@ -69,13 +68,13 @@ class ConsolidadoMensalListCreateView(generics.ListCreateAPIView):
                     {"detail": "data_inicio não pode ser posterior a data_fim."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            qs = base.filter(consolidado_q_por_intervalo(d0, d1)).order_by("ano", "mes")
-            serializer = self.get_serializer(qs, many=True)
-            return Response(serializer.data)
+            data = financas_services.consolidados_mensais_por_intervalo(user, d0, d1)
+            return Response(data)
 
-        queryset = base.order_by("-ano", "-mes")[:CONSOLIDADOS_ULTIMOS_MESES]
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        data = financas_services.consolidados_mensais_ultimos_n(
+            user, CONSOLIDADOS_ULTIMOS_MESES
+        )
+        return Response(data)
     def perform_create(self, serializer):
         serializer.save(created_by=get_financas_subject_user(self.request))
 
@@ -104,9 +103,9 @@ class ConsolidadoMensalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyA
 """
 Modo de Uso
     Listagem (GET):
-    - Sem parâmetros: últimos 12 meses (comportamento anterior).
-    - ?todos=1 — todos os consolidados do utilizador (análise).
-    - ?data_inicio=YYYY-MM-DD&data_fim=YYYY-MM-DD — meses civis que intersectam o período.
+    - Sem parâmetros: até os últimos 12 meses com movimentações (totais calculados).
+    - ?todos=1 — todos os meses com movimentações (análise).
+    - ?data_inicio=YYYY-MM-DD&data_fim=YYYY-MM-DD — meses civis que intersectam o período (totais por mês calculados a partir das movimentações).
 
     Trazer todos os consolidados mensais (12 últimos por omissão):
     /api/consolidados-mensais/

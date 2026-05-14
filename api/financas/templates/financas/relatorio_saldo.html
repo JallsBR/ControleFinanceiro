@@ -251,12 +251,31 @@
       padding: 1mm 2mm;
       vertical-align: top;
     }
-    /* Zebra só nas linhas de dados (a linha de total não é <tfoot> para não repetir em cada página no PDF) */
-    table.table-movimentacoes tbody tr:not(.mov-total-row):nth-child(odd) td {
+    table.table-movimentacoes tbody tr.mov-linha-mov.ze-odd td {
       background: #fff;
     }
-    table.table-movimentacoes tbody tr:not(.mov-total-row):nth-child(even) td {
+    table.table-movimentacoes tbody tr.mov-linha-mov.ze-even td {
       background: #f0f0f0;
+    }
+    table.table-movimentacoes tbody tr.mov-quebra-mes td {
+      background: #e8eef5 !important;
+      font-size: 8.3pt;
+      border-top: 1px solid #b8c4d4;
+      padding: 1.4mm 2mm;
+      vertical-align: middle;
+    }
+    table.table-movimentacoes tbody tr.mov-linha-titulo-mes td {
+      background: #dce5f0 !important;
+      font-size: 8.6pt;
+      font-weight: 700;
+      color: #1a2a3d;
+      border-top: none;
+      padding: 1.2mm 2mm 1.6mm 2mm;
+      vertical-align: middle;
+    }
+    .mov-consolidado-mes-label {
+      font-weight: 600;
+      color: #222;
     }
     table.table-movimentacoes tbody tr.mov-total-row td {
       border: none;
@@ -333,7 +352,7 @@
             <td class="col-periodo">{{ c.periodo_label }}</td>
             <td class="num tipo-e">{{ c.total_entradas|floatformat:2 }}</td>
             <td class="num tipo-s">{{ c.total_saidas|floatformat:2 }}</td>
-            <td class="num"><strong>{{ c.saldo_mes|floatformat:2 }}</strong></td>
+            <td class="num {% if c.saldo_mes > 0 %}tipo-e{% elif c.saldo_mes < 0 %}tipo-s{% endif %}"><strong>{{ c.saldo_mes|floatformat:2 }}</strong></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -357,7 +376,7 @@
     </div>
     <div class="resumo-card">
       <span class="resumo-card-label">Saldo (entradas − saídas)</span>
-      <span class="resumo-card-val"><strong>{{ saldo_periodo|floatformat:2 }}</strong></span>
+      <span class="resumo-card-val {% if saldo_periodo > 0 %}tipo-e{% elif saldo_periodo < 0 %}tipo-s{% endif %}"><strong>{{ saldo_periodo|floatformat:2 }}</strong></span>
     </div>
   </div>
   <hr class="doc-secao-divisor" />
@@ -376,8 +395,10 @@
         </tr>
       </thead>
       <tbody>
-        {% for m in movimentacoes %}
-        <tr>
+        {% for item in movimentacoes_pdf_linhas %}
+        {% if item.tipo == "mov" %}
+        {% with m=item.mov %}
+        <tr class="mov-linha-mov {% cycle 'ze-odd' 'ze-even' %}">
           <td>{{ m.data|date:"d/m/Y" }}</td>
           <td class="{% if m.tipo == 'E' %}tipo-e{% else %}tipo-s{% endif %}">
             {% if m.tipo == 'E' %}Entrada{% else %}Saída{% endif %}
@@ -386,6 +407,26 @@
           <td>{{ m.descricao|default:"" }}</td>
           <td class="num">{% if m.tipo == 'E' %}+{% else %}-{% endif %}{{ m.valor|floatformat:2 }}</td>
         </tr>
+        {% endwith %}
+        {% elif item.tipo == "subtotal_mes" %}
+        <tr class="mov-quebra-mes">
+          <td colspan="5">
+            <span class="mov-consolidado-mes-label">Consolidado {{ item.mes_fechado_label }} (no período):</span>
+            Entradas <span class="tipo-e">+{{ item.total_entradas|floatformat:2 }}</span>
+            &nbsp;·&nbsp; Saídas <span class="tipo-s">−{{ item.total_saidas|floatformat:2 }}</span>
+            &nbsp;·&nbsp; Saldo
+            {% if item.saldo >= 0 %}
+            <span class="tipo-e">+{{ item.saldo|floatformat:2 }}</span>
+            {% else %}
+            <span class="tipo-s">{{ item.saldo|floatformat:2 }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% elif item.tipo == "titulo_mes" %}
+        <tr class="mov-linha-titulo-mes">
+          <td colspan="5">{{ item.titulo }}</td>
+        </tr>
+        {% endif %}
         {% endfor %}
         <tr class="mov-total-row">
           <td colspan="4" class="mov-total-celula-label">

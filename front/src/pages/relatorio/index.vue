@@ -307,7 +307,7 @@
       @show="carregarConsolidadosAnaliseTodos"
     >
       <p class="dialog-consolidados-analise__hint">
-        Todos os meses registados na base de dados para este utilizador (fora do período do relatório).
+        Todos os meses com movimentações (totais calculados a partir das movimentações), para este utilizador.
       </p>
       <BaseDataTable
         :items="consolidadosAnaliseTodos"
