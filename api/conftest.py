@@ -1,8 +1,40 @@
+"""Fixtures pytest partilhadas por todos os apps em ``api/`` (users, financas, …)."""
+
+import os
+
 import pytest
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import User
+
+
+@pytest.fixture(autouse=True)
+def _marcador_por_metodo(request):
+    """
+    Saída por método no terminal antes e depois do corpo do teste (granularidade
+    semelhante a um print antes de cada bloco de asserts).
+
+    Requer captura desligada: ``-s`` já está em ``api/pytest.ini`` (``addopts``).
+    Desligar: ``PYTEST_SILENCIAR_MARCADOR=1``.
+    """
+    if os.environ.get("PYTEST_SILENCIAR_MARCADOR", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    ):
+        yield
+        return
+
+    node = request.node.nodeid
+    if os.environ.get("NO_COLOR", "").strip():
+        prefix = suffix = ""
+    else:
+        prefix, suffix = "\033[96m", "\033[0m"
+
+    print(f"\n{prefix}▶ {node}{suffix}", flush=True)
+    yield
+    print(f"{prefix}◀ fim {node}{suffix}\n", flush=True)
 
 
 @pytest.fixture
