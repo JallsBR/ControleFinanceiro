@@ -12,7 +12,7 @@ from users.models import User
 
 @pytest.mark.django_db
 @patch("users.auth._create_tenant_db_for_user")
-def test_post_signup_success(mock_tenant, db):
+def test_post_signup_success(mock_tenant, termo_uso_vigente):
     mock_tenant.return_value = None
     client = APIClient()
     url = reverse("signup")
@@ -20,6 +20,8 @@ def test_post_signup_success(mock_tenant, db):
         "username": "novo_cadastro",
         "email": "novo_cadastro@example.com",
         "password": "SenhaSegura123!",
+        "termo_versao": "1.0.0",
+        "termo_aceite": True,
     }
     resp = client.post(url, payload, format="json")
     assert resp.status_code == status.HTTP_201_CREATED
@@ -30,7 +32,7 @@ def test_post_signup_success(mock_tenant, db):
 
 
 @pytest.mark.django_db
-def test_post_signup_validation_duplicate_username(usuario_comum):
+def test_post_signup_validation_duplicate_username(usuario_comum, termo_uso_vigente):
     client = APIClient()
     url = reverse("signup")
     resp = client.post(
@@ -39,6 +41,8 @@ def test_post_signup_validation_duplicate_username(usuario_comum):
             "username": usuario_comum.username,
             "email": "outro_email_unico@example.com",
             "password": "SenhaSegura123!",
+            "termo_versao": "1.0.0",
+            "termo_aceite": True,
         },
         format="json",
     )
@@ -46,7 +50,7 @@ def test_post_signup_validation_duplicate_username(usuario_comum):
 
 
 @pytest.mark.django_db
-def test_post_signup_validation_duplicate_email(usuario_comum):
+def test_post_signup_validation_duplicate_email(usuario_comum, termo_uso_vigente):
     client = APIClient()
     url = reverse("signup")
     resp = client.post(
@@ -55,6 +59,8 @@ def test_post_signup_validation_duplicate_email(usuario_comum):
             "username": "username_totalmente_novo",
             "email": usuario_comum.email,
             "password": "SenhaSegura123!",
+            "termo_versao": "1.0.0",
+            "termo_aceite": True,
         },
         format="json",
     )
@@ -63,7 +69,7 @@ def test_post_signup_validation_duplicate_email(usuario_comum):
 
 @pytest.mark.django_db
 @patch("users.auth._create_tenant_db_for_user")
-def test_post_signup_validation_required_empty_username(mock_tenant, db):
+def test_post_signup_validation_required_empty_username(mock_tenant, termo_uso_vigente):
     mock_tenant.return_value = None
     client = APIClient()
     url = reverse("signup")
@@ -77,7 +83,7 @@ def test_post_signup_validation_required_empty_username(mock_tenant, db):
 
 @pytest.mark.django_db
 @patch("users.auth._create_tenant_db_for_user")
-def test_post_signup_validation_required_empty_password(mock_tenant, db):
+def test_post_signup_validation_required_empty_password(mock_tenant, termo_uso_vigente):
     mock_tenant.return_value = None
     client = APIClient()
     url = reverse("signup")
