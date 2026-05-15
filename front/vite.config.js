@@ -4,14 +4,17 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
+/** URL oficial do app em desenvolvimento (WSL2 + browser no Windows). */
+const DEV_URL = 'http://localhost:2488/'
+
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    // Só 127.0.0.1: o terminal mostra apenas Local (localhost), sem URLs de rede.
-    // Porta alinhada com o URL local habitual (evita abrir :2486 quando o Vite só serve :2487).
+    // Só 127.0.0.1 — WSL2 encaminha localhost:2488 do Windows para aqui (evita abrir IP 172.x).
     host: 'localhost',
-    port: 2487,
+    port: 2488,
     strictPort: true,
+    open: DEV_URL,
   },
   plugins: [
     vue(),

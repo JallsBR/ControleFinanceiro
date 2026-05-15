@@ -72,6 +72,9 @@ class Authentication:
         if not check_password(password, user.password):
             raise exception_auth
 
+        if not user.is_active:
+            raise exception_auth
+
         return user
     
     def signup(self, username, email, password ):

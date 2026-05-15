@@ -157,3 +157,69 @@ class Assinatura(models.Model):
 
     def __str__(self):
         return f"{self.user_id} — {self.plano} ({self.status})"
+
+
+class TermoUso(models.Model):
+    """
+    Versão publicada do Termo de Uso / aviso de privacidade (banco default).
+    Apenas um registro deve permanecer com ``ativo=True`` por vez.
+    """
+
+    version = models.CharField(_("versão"), max_length=32, unique=True)
+    titulo = models.CharField(_("título"), max_length=255)
+    conteudo = models.TextField(_("conteúdo"))
+    vigente_desde = models.DateTimeField(_("vigente desde"), db_index=True)
+    ativo = models.BooleanField(_("ativo"), default=False, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-vigente_desde"]
+        verbose_name = _("termo de uso")
+        verbose_name_plural = _("termos de uso")
+
+    def __str__(self):
+        return f"{self.version} ({'ativo' if self.ativo else 'inativo'})"
+
+
+class AceiteTermoUso(models.Model):
+    """Registro de aceite do titular para auditoria e conformidade LGPD."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="aceites_termo",
+        verbose_name=_("usuário"),
+    )
+    termo = models.ForeignKey(
+        TermoUso,
+        on_delete=models.PROTECT,
+        related_name="aceites",
+        verbose_name=_("termo"),
+    )
+    aceito_em = models.DateTimeField(_("aceito em"), auto_now_add=True, db_index=True)
+    ip_address = models.GenericIPAddressField(
+        _("endereço IP"),
+        null=True,
+        blank=True,
+        unpack_ipv4=True,
+    )
+    user_agent = models.CharField(
+        _("user agent"),
+        max_length=512,
+        blank=True,
+        default="",
+    )
+
+    class Meta:
+        ordering = ["-aceito_em"]
+        verbose_name = _("aceite de termo de uso")
+        verbose_name_plural = _("aceites de termo de uso")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "termo"),
+                name="uniq_aceite_user_termo",
+            ),
+        ]
+
+    def __str__(self):
+        return f"user={self.user_id} termo={self.termo_id} @ {self.aceito_em}"

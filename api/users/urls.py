@@ -1,5 +1,6 @@
 from users.views.signin import Signin
 from users.views.signup import Signup
+from users.views.termo_uso import TermoUsoAtualView
 from users.views.user import UserProfileView
 from users.views.logout import Logout
 from users.views.token_refresh import TokenRefreshViewDefaultDB
@@ -21,8 +22,9 @@ from users.views.consultoria import (
 from django.urls import path
 
 urlpatterns = [
-    path('signin', Signin.as_view()),
-    path('signup', Signup.as_view()),
+    path('signin', Signin.as_view(), name='signin'),
+    path('signup', Signup.as_view(), name='signup'),
+    path('termos-uso/atual', TermoUsoAtualView.as_view(), name='termos_uso_atual'),
     path('logout', Logout.as_view(), name='logout'),
     path('token/refresh/', TokenRefreshViewDefaultDB.as_view(), name='token_refresh'),
     path('user', UserProfileView.as_view(), name='user'),

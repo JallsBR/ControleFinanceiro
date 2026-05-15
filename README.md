@@ -91,7 +91,7 @@ npm run frontend
 # ou, para subir Docker + front juntos: npm run dev
 ```
 
-- **App:** `http://localhost:5174` (Vite na porta 5174).
+- **App:** `http://localhost:2488` (Vite — porta fixa em `front/vite.config.js`).
 - Se quiser mudar a URL da API, crie `front/.env` a partir de `front/.env.example` e defina `VITE_API_URL`.
 
 ### 4. Rodar sem Docker (opcional)
@@ -131,7 +131,7 @@ python manage.py createsuperuser
 
 | Uso              | URL |
 |------------------|-----|
-| App (interface)  | `http://localhost:5174` |
+| App (interface)  | `http://localhost:2488` |
 | API (base)       | `http://127.0.0.1:8001/api/v1/` |
 | Admin (Django)   | `http://127.0.0.1:8001/admin/` |
 
@@ -176,4 +176,4 @@ Regras de negócio, filtros e padrões por módulo estão em **`docs/ai/`** (`co
 1. Copiar `.env.example` para `.env` e configurar `SECRET_KEY` (e conferir `DB_*` para bater com o `docker-compose.yml`).
 2. Na raiz: `npm install` e `npm run docker:up:build` (ou `npm run dev` para subir Docker + frontend).
 3. Rodar migrations e criar superusuário: `docker-compose exec web python manage.py migrate` e `createsuperuser`.
-4. App em `http://localhost:5174`; API e admin em `http://127.0.0.1:8001` e `http://127.0.0.1:8001/admin/`.
+4. App em `http://localhost:2488`; API e admin em `http://127.0.0.1:8001` e `http://127.0.0.1:8001/admin/`.
