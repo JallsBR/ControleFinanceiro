@@ -11,7 +11,7 @@ docs/*
 !docs/ai/
 !docs/ai/**
 mysql_data/
-
+.cursor
 
 # Logs
 logs
