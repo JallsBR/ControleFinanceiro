@@ -1,0 +1,5 @@
+# Documentos/ é metadados locais do git-O5o (contador, log de commits, deploys).
+# Propositalmente NÃO versionado — cada dev tem seu próprio histórico local.
+# Se quiser compartilhar com o time, apague este .gitignore.
+*
+!.gitignore

@@ -61,6 +61,11 @@
             />
           </div>
 
+          <!-- Termos -->
+          <p class="signup-termos-hint">
+            Ao cadastrar, você precisará ler e aceitar o Termo de Uso vigente.
+          </p>
+
           <!-- Botão -->
           <Button
             type="submit"
@@ -80,6 +85,13 @@
         </form>
       </template>
     </Card>
+
+    <TermoUsoDialog
+      v-model="termoDialogVisivel"
+      :processando="loading"
+      @aceito="onTermoAceito"
+      @cancelado="onTermoCancelado"
+    />
 
     <Dialog
       v-model:visible="loading"
@@ -109,6 +121,7 @@ import Dialog from 'primevue/dialog'
 import ProgressBar from 'primevue/progressbar'
 import { RouterLink } from 'vue-router'
 import { routeLocationAfterLogin } from '@/utils/postLoginRoute'
+import TermoUsoDialog from '@/components/auth/TermoUsoDialog.vue'
 
 const PROGRESSO_MAX_ANTES = 85
 const PROGRESSO_INTERVALO_MS = 150
@@ -124,7 +137,8 @@ export default {
     Message,
     Dialog,
     ProgressBar,
-    RouterLink
+    RouterLink,
+    TermoUsoDialog
   },
   data() {
     return {
@@ -134,10 +148,25 @@ export default {
       error: '',
       loading: false,
       progresso: 0,
-      progressoTimer: null
+      progressoTimer: null,
+      termoDialogVisivel: false,
+      termoVersaoAceita: null
     }
   },
   methods: {
+    handleSignup() {
+      this.error = ''
+      this.termoVersaoAceita = null
+      this.termoDialogVisivel = true
+    },
+    onTermoCancelado() {
+      this.termoDialogVisivel = false
+    },
+    async onTermoAceito({ version }) {
+      this.termoVersaoAceita = version
+      this.termoDialogVisivel = false
+      await this.executarCadastro()
+    },
     iniciarProgresso() {
       this.progresso = 0
       this.progressoTimer = setInterval(() => {
@@ -152,7 +181,7 @@ export default {
         this.progressoTimer = null
       }
     },
-    async handleSignup() {
+    async executarCadastro() {
       this.error = ''
       this.loading = true
       this.iniciarProgresso()
@@ -161,7 +190,9 @@ export default {
         await api.post('/auth/signup', {
           username: this.username,
           email: this.email,
-          password: this.password
+          password: this.password,
+          termo_versao: this.termoVersaoAceita,
+          termo_aceite: true
         })
 
         this.progresso = 90
@@ -256,6 +287,13 @@ export default {
 
 .w-full {
   width: 100%;
+}
+
+.signup-termos-hint {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--p-text-muted-color);
+  line-height: 1.4;
 }
 
 .signup-footer {

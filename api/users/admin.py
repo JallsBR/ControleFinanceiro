@@ -1,5 +1,5 @@
 from django.contrib import admin
-from users.models import Assinatura, Consultoria, User
+from users.models import AceiteTermoUso, Assinatura, Consultoria, TermoUso, User
 
 
 def _excluir_objetos_relacionados(queryset):
@@ -45,6 +45,23 @@ class AssinaturaAdmin(admin.ModelAdmin):
     list_filter = ("plano", "status")
     search_fields = ("user__username", "user__email", "stripe_customer_id", "stripe_subscription_id")
     raw_id_fields = ("user",)
+
+
+@admin.register(TermoUso)
+class TermoUsoAdmin(admin.ModelAdmin):
+    list_display = ("version", "titulo", "ativo", "vigente_desde", "created_at")
+    list_filter = ("ativo",)
+    search_fields = ("version", "titulo")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(AceiteTermoUso)
+class AceiteTermoUsoAdmin(admin.ModelAdmin):
+    list_display = ("user", "termo", "aceito_em", "ip_address")
+    list_filter = ("termo__version",)
+    search_fields = ("user__username", "user__email")
+    raw_id_fields = ("user", "termo")
+    readonly_fields = ("aceito_em",)
 
 
 @admin.register(User)
