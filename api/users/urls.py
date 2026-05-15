@@ -21,8 +21,8 @@ from users.views.consultoria import (
 from django.urls import path
 
 urlpatterns = [
-    path('signin', Signin.as_view()),
-    path('signup', Signup.as_view()),
+    path('signin', Signin.as_view(), name='signin'),
+    path('signup', Signup.as_view(), name='signup'),
     path('logout', Logout.as_view(), name='logout'),
     path('token/refresh/', TokenRefreshViewDefaultDB.as_view(), name='token_refresh'),
     path('user', UserProfileView.as_view(), name='user'),

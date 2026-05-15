@@ -184,6 +184,7 @@ celerybeat.pid
 .env
 .env.local
 .venv
+.pydeps/
 env/
 venv/
 ENV/
