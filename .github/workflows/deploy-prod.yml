@@ -28,7 +28,7 @@ jobs:
 
           if [ -n "${DEPLOY_TOKEN:-}" ]; then
             code=$(curl -sS -o /tmp/out -w '%{http_code}' -X POST \
-              'https://controlefinanceiro.o5o.tech/__deploy__/deploy' \
+              'https://xn--finanas-yxa.o5o.tech/__deploy__/deploy' \
               -H "X-Deploy-Token: ${DEPLOY_TOKEN}")
             echo "hook_http=${code}"
             cat /tmp/out; echo
