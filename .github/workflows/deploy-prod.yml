@@ -1,0 +1,87 @@
+name: Deploy produção
+
+on:
+  push:
+    branches:
+      - deploy
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-controlefinanceiro-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Deploy via SSH
+        env:
+          # Preferir base64 (uma linha) — evita quebra de BEGIN/END no secret do GitHub
+          SSH_KEY_B64: ${{ secrets.VPS_SSH_KEY_B64 }}
+          # Alternativa: PEM multilinha (pode falhar se colado errado)
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_HOOK_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${DEPLOY_TOKEN:-}" ]; then
+            code=$(curl -sS -o /tmp/out -w '%{http_code}' -X POST \
+              'https://controlefinanceiro.o5o.tech/__deploy__/deploy' \
+              -H "X-Deploy-Token: ${DEPLOY_TOKEN}")
+            echo "hook_http=${code}"
+            cat /tmp/out; echo
+            if [ "${code}" = "202" ]; then
+              echo "Deploy acionado via webhook."
+              exit 0
+            fi
+            echo "hook falhou; tentando SSH..."
+          else
+            echo "DEPLOY_HOOK_TOKEN ausente; tentando SSH..."
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          KEY=~/.ssh/deploy_key
+
+          if [ -n "${SSH_KEY_B64:-}" ]; then
+            echo "Usando secret VPS_SSH_KEY_B64 (base64)."
+            echo "${SSH_KEY_B64}" | tr -d '\n\r\t ' | base64 -d > "$KEY"
+          elif [ -n "${SSH_KEY:-}" ]; then
+            echo "Usando secret VPS_SSH_KEY (PEM / normalização)."
+            printf '%s\n' "$SSH_KEY" | sed 's/\r$//' > "$KEY"
+            if ! grep -q 'BEGIN' "$KEY"; then
+              printf '%s' "$SSH_KEY" | sed 's/\\n/\n/g' > "$KEY"
+            fi
+            if ! grep -q 'BEGIN' "$KEY"; then
+              echo "$SSH_KEY" | tr -d '\n\r\t ' | base64 -d > "$KEY"
+            fi
+          else
+            echo "::error::Configure VPS_SSH_KEY_B64 (recomendado) ou VPS_SSH_KEY, ou DEPLOY_HOOK_TOKEN."
+            exit 1
+          fi
+
+          [ -n "$(tail -c1 "$KEY" 2>/dev/null || true)" ] && echo >> "$KEY"
+          chmod 600 "$KEY"
+
+          if ! grep -q 'BEGIN' "$KEY"; then
+            echo "::error::Chave SSH inválida após decodificação (sem BEGIN). Recrie o secret."
+            exit 1
+          fi
+
+          echo "key_header=$(head -1 "$KEY")"
+          ssh-keyscan -H 76.13.231.242 >> ~/.ssh/known_hosts 2>/dev/null
+
+          set +e
+          out=$(ssh -i "$KEY" -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o ConnectTimeout=20 root@76.13.231.242 \
+            '/opt/o5o/apps/controlefinanceiro/deploy-sync.sh --force' 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::SSH/deploy falhou (exit=${rc}). Verifique authorized_keys no VPS e o secret da chave."
+            exit "$rc"
+          fi
+          echo "Deploy via SSH concluído."
