@@ -62,6 +62,9 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+    volumes:
+      # Mesmo volume da API; o Nginx serve /media/ somente para leitura.
+      - media_data:/var/www/media:ro
     ports:
       - "127.0.0.1:8083:80"
 
