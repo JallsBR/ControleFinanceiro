@@ -73,3 +73,55 @@ def test_patch_partial_update_validation_pagina_inicial_nao_permitida(
     )
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert "pagina_inicial" in resp.json()
+
+
+@pytest.mark.django_db
+def test_get_user_inclui_two_factor_enabled(client_autenticado_comum, usuario_comum):
+    resp = client_autenticado_comum.get(reverse("user"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["user"]["two_factor_enabled"] is False
+
+
+@pytest.mark.django_db
+def test_patch_ativar_2fa_exige_senha_atual(client_autenticado_comum, usuario_comum):
+    resp = client_autenticado_comum.patch(
+        reverse("user"),
+        {"two_factor_enabled": True},
+        format="json",
+    )
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert "current_password" in resp.json()
+    usuario_comum.refresh_from_db()
+    assert usuario_comum.two_factor_enabled is False
+
+
+@pytest.mark.django_db
+def test_patch_ativar_2fa_com_senha_ok(client_autenticado_comum, usuario_comum):
+    resp = client_autenticado_comum.patch(
+        reverse("user"),
+        {
+            "two_factor_enabled": True,
+            "current_password": "SenhaSegura123!",
+        },
+        format="json",
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["user"]["two_factor_enabled"] is True
+    usuario_comum.refresh_from_db()
+    assert usuario_comum.two_factor_enabled is True
+
+
+@pytest.mark.django_db
+def test_patch_desativar_2fa_com_senha_ok(client_autenticado_comum, usuario_comum):
+    usuario_comum.two_factor_enabled = True
+    usuario_comum.save(update_fields=["two_factor_enabled"])
+    resp = client_autenticado_comum.patch(
+        reverse("user"),
+        {
+            "two_factor_enabled": False,
+            "current_password": "SenhaSegura123!",
+        },
+        format="json",
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["user"]["two_factor_enabled"] is False

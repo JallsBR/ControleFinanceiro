@@ -148,7 +148,16 @@ export default createStore({
           password
         })
 
-        const { user, access, refresh } = response.data
+        const data = response.data || {}
+
+        if (data.requires_2fa && data.challenge_id) {
+          return {
+            requires_2fa: true,
+            challenge_id: data.challenge_id
+          }
+        }
+
+        const { user, access, refresh } = data
 
         if (!access || !refresh) {
           throw new Error('Tokens inválidos')
@@ -176,9 +185,55 @@ export default createStore({
           console.log('login fetchMensagensNaoLidas', e)
         }
 
-        return true
+        return { ok: true }
       } catch (error) {
         console.error('Erro no login:', error)
+        return { ok: false }
+      } finally {
+        commit('SET_LOADING', false)
+      }
+    },
+
+    async verifyTwoFactor ({ commit, dispatch }, { challenge_id, code, link_token }) {
+      try {
+        commit('SET_LOADING', true)
+        const { authService } = await import('../services/authService')
+        const data = await authService.verifyTwoFactor({
+          challenge_id,
+          code,
+          link_token
+        })
+        const { user, access, refresh } = data || {}
+
+        if (!access || !refresh) {
+          throw new Error('Tokens inválidos')
+        }
+
+        commit('SET_AUTH', {
+          user: user || {},
+          access,
+          refresh
+        })
+
+        try {
+          await dispatch('refreshUserProfile')
+        } catch (e) {
+          console.log('verifyTwoFactor refreshUserProfile', e)
+        }
+        try {
+          await dispatch('fetchConsultoriaResumo')
+        } catch (e) {
+          console.log('verifyTwoFactor fetchConsultoriaResumo', e)
+        }
+        try {
+          await dispatch('fetchMensagensNaoLidas')
+        } catch (e) {
+          console.log('verifyTwoFactor fetchMensagensNaoLidas', e)
+        }
+
+        return true
+      } catch (error) {
+        console.error('Erro na verificação 2FA:', error)
         return false
       } finally {
         commit('SET_LOADING', false)

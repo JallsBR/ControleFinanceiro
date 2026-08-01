@@ -16,6 +16,9 @@ import AssinaturaPage from '../pages/assinatura/AssinaturaPage.vue'
 import AdministrarPage from '../pages/administrar/index.vue'
 import SignInPage from '../pages/auth/SignInPage.vue'
 import SignUpPage from '../pages/auth/SignUpPage.vue'
+import TwoFactorLinkPage from '../pages/auth/TwoFactorLinkPage.vue'
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage.vue'
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage.vue'
 import store from '../store'
 import { routeLocationAfterLogin } from '@/utils/postLoginRoute'
 import {
@@ -45,6 +48,39 @@ const routes = [
         path: '',
         name: 'signup',
         component: SignUpPage
+      }
+    ]
+  },
+  {
+    path: '/auth/2fa-link',
+    component: PublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'twoFactorLink',
+        component: TwoFactorLinkPage
+      }
+    ]
+  },
+  {
+    path: '/auth/esqueci-senha',
+    component: PublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'forgotPassword',
+        component: ForgotPasswordPage
+      }
+    ]
+  },
+  {
+    path: '/auth/redefinir-senha',
+    component: PublicLayout,
+    children: [
+      {
+        path: '',
+        name: 'resetPassword',
+        component: ResetPasswordPage
       }
     ]
   },

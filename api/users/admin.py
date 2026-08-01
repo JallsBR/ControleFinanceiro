@@ -1,5 +1,13 @@
 from django.contrib import admin
-from users.models import AceiteTermoUso, Assinatura, Consultoria, TermoUso, User
+from users.models import (
+    AceiteTermoUso,
+    Assinatura,
+    Consultoria,
+    PasswordResetChallenge,
+    TermoUso,
+    TwoFactorChallenge,
+    User,
+)
 
 
 def _excluir_objetos_relacionados(queryset):
@@ -64,11 +72,36 @@ class AceiteTermoUsoAdmin(admin.ModelAdmin):
     readonly_fields = ("aceito_em",)
 
 
+@admin.register(PasswordResetChallenge)
+class PasswordResetChallengeAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "expires_at", "consumed_at", "created_at")
+    list_filter = ("consumed_at",)
+    search_fields = ("user__username", "user__email", "id")
+    raw_id_fields = ("user",)
+    readonly_fields = ("id", "token_hash", "created_at")
+
+
+@admin.register(TwoFactorChallenge)
+class TwoFactorChallengeAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "expires_at", "consumed_at", "attempts", "created_at")
+    list_filter = ("consumed_at",)
+    search_fields = ("user__username", "user__email", "id")
+    raw_id_fields = ("user",)
+    readonly_fields = ("id", "code_hash", "created_at")
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("username", "last_name", "email", "is_gerente", "tenant_db_name")
+    list_display = (
+        "username",
+        "last_name",
+        "email",
+        "is_gerente",
+        "two_factor_enabled",
+        "tenant_db_name",
+    )
     search_fields = ("username", "last_name", "email")
-    list_filter = ("is_staff", "is_superuser", "is_gerente")
+    list_filter = ("is_staff", "is_superuser", "is_gerente", "two_factor_enabled")
     ordering = ('email',)
 
     def save_model(self, request, obj, form, change):
