@@ -45,6 +45,15 @@ services:
       DB_PORT: "3306"
       JWT_ACCESS_TOKEN_LIFETIME_MINUTES: ${JWT_ACCESS_TOKEN_LIFETIME_MINUTES:-25}
       JWT_REFRESH_TOKEN_LIFETIME_DAYS: ${JWT_REFRESH_TOKEN_LIFETIME_DAYS:-1}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.smtp.EmailBackend}
+      EMAIL_HOST: ${EMAIL_HOST:-mail.o5o.tech}
+      EMAIL_PORT: ${EMAIL_PORT:-465}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-financas@o5o.tech}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-False}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-True}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-financas@o5o.tech}
+      FRONTEND_URL: ${FRONTEND_URL:-https://xn--finanas-yxa.o5o.tech}
     volumes:
       - media_data:/app/api/media
     ports:
