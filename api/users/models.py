@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -42,6 +44,14 @@ class User(AbstractUser):
         default=PaginaInicial.DASHBOARD,
         db_index=True,
     )
+    two_factor_enabled = models.BooleanField(
+        _("autenticação em dois fatores"),
+        default=False,
+        db_index=True,
+        help_text=_(
+            "Se verdadeiro, o login exige um código OTP enviado ao e-mail cadastrado."
+        ),
+    )
 
     class Meta:
         verbose_name = _("Usuario")
@@ -50,6 +60,68 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class TwoFactorChallenge(models.Model):
+    """Desafio OTP de login (banco default). O código em claro nunca é persistido."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="two_factor_challenges",
+        verbose_name=_("usuário"),
+    )
+    code_hash = models.CharField(_("hash do código"), max_length=128)
+    link_token_hash = models.CharField(
+        _("hash do link mágico"),
+        max_length=128,
+        blank=True,
+        default="",
+        help_text=_("Token do link de login no e-mail; nunca em claro."),
+    )
+    expires_at = models.DateTimeField(_("expira em"), db_index=True)
+    consumed_at = models.DateTimeField(_("consumido em"), null=True, blank=True)
+    attempts = models.PositiveSmallIntegerField(_("tentativas"), default=0)
+    created_at = models.DateTimeField(_("criado em"), auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("desafio 2FA")
+        verbose_name_plural = _("desafios 2FA")
+        indexes = [
+            models.Index(fields=["user", "expires_at"]),
+        ]
+
+    def __str__(self):
+        return f"2fa:{self.id} user={self.user_id}"
+
+
+class PasswordResetChallenge(models.Model):
+    """Desafio de redefinição de senha (banco default). Token em claro nunca é persistido."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="password_reset_challenges",
+        verbose_name=_("usuário"),
+    )
+    token_hash = models.CharField(_("hash do token"), max_length=128)
+    expires_at = models.DateTimeField(_("expira em"), db_index=True)
+    consumed_at = models.DateTimeField(_("consumido em"), null=True, blank=True)
+    created_at = models.DateTimeField(_("criado em"), auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("desafio de redefinição de senha")
+        verbose_name_plural = _("desafios de redefinição de senha")
+        indexes = [
+            models.Index(fields=["user", "expires_at"]),
+        ]
+
+    def __str__(self):
+        return f"pwdreset:{self.id} user={self.user_id}"
 
 
 class Consultoria(models.Model):

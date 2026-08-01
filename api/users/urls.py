@@ -1,6 +1,8 @@
 from users.views.signin import Signin
 from users.views.signup import Signup
 from users.views.termo_uso import TermoUsoAtualView
+from users.views.two_factor import TwoFactorVerify
+from users.views.password_reset import PasswordResetConfirm, PasswordResetRequest
 from users.views.user import UserProfileView
 from users.views.logout import Logout
 from users.views.token_refresh import TokenRefreshViewDefaultDB
@@ -23,6 +25,17 @@ from django.urls import path
 
 urlpatterns = [
     path('signin', Signin.as_view(), name='signin'),
+    path('2fa/verify', TwoFactorVerify.as_view(), name='two_factor_verify'),
+    path(
+        'password-reset/request',
+        PasswordResetRequest.as_view(),
+        name='password_reset_request',
+    ),
+    path(
+        'password-reset/confirm',
+        PasswordResetConfirm.as_view(),
+        name='password_reset_confirm',
+    ),
     path('signup', Signup.as_view(), name='signup'),
     path('termos-uso/atual', TermoUsoAtualView.as_view(), name='termos_uso_atual'),
     path('logout', Logout.as_view(), name='logout'),
@@ -30,14 +43,26 @@ urlpatterns = [
     path('user', UserProfileView.as_view(), name='user'),
 
     path('consultoria/vinculo-atual', ConsultoriaVinculoAtualView.as_view(), name='consultoria_vinculo_atual'),
-    path('consultoria/clientes', ConsultoriaClientesView.as_view(), name='consultoria_clientes' ),
-    path('consultoria/solicitacoes-pendentes-count', ConsultoriaSolicitacoesPendentesCountView.as_view(), name='consultoria_solicitacoes_pendentes_count' ),
-    path('consultoria/vinculos/<int:pk>', ConsultoriaVinculoEncerrarView.as_view(), name='consultoria_vinculo_encerrar' ),
+    path('consultoria/clientes', ConsultoriaClientesView.as_view(), name='consultoria_clientes'),
+    path(
+        'consultoria/solicitacoes-pendentes-count',
+        ConsultoriaSolicitacoesPendentesCountView.as_view(),
+        name='consultoria_solicitacoes_pendentes_count',
+    ),
+    path(
+        'consultoria/vinculos/<int:pk>',
+        ConsultoriaVinculoEncerrarView.as_view(),
+        name='consultoria_vinculo_encerrar',
+    ),
 
     path('admin/users', AdminUserListView.as_view(), name='admin_users'),
     path('admin/users/<int:pk>', AdminUserDetailView.as_view(), name='admin_user_detail'),
     path('admin/permissions/tree', AdminPermissionTreeView.as_view(), name='admin_permissions_tree'),
-    path('admin/groups/<int:pk>/permissions', AdminGroupPermissionsView.as_view(), name='admin_group_permissions' ),
+    path(
+        'admin/groups/<int:pk>/permissions',
+        AdminGroupPermissionsView.as_view(),
+        name='admin_group_permissions',
+    ),
     path('admin/groups/options', AdminGroupOptionsView.as_view(), name='admin_group_options'),
     path('admin/groups/<int:pk>', AdminGroupDetailView.as_view(), name='admin_group_detail'),
     path('admin/groups', AdminGroupListCreateView.as_view(), name='admin_groups'),
