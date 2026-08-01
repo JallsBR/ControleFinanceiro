@@ -137,7 +137,10 @@ python manage.py createsuperuser
 
 ### API – Autenticação (`/api/v1/auth/`)
 
-- `POST /api/v1/auth/signin` – login (`login`: e-mail ou nome de usuário + `password`) → retorna `user`, `access`, `refresh` (aceita também o campo legado `email` no lugar de `login`)
+- `POST /api/v1/auth/signin` – login (`login`: e-mail ou nome de usuário + `password`) → `user`, `access`, `refresh`; se 2FA ativo → `requires_2fa` + `challenge_id` (aceita também o campo legado `email` no lugar de `login`)
+- `POST /api/v1/auth/2fa/verify` – conclui login com OTP (`challenge_id` + `code`) → `user`, `access`, `refresh`
+- `POST /api/v1/auth/password-reset/request` – solicita e-mail de redefinição (`login`)
+- `POST /api/v1/auth/password-reset/confirm` – confirma token e define nova senha
 - `POST /api/v1/auth/signup` – cadastro
 - `POST /api/v1/auth/logout` – invalida refresh token (body: `refresh`)
 - `POST /api/v1/auth/token/refresh/` – renova access token (body: `refresh`)
