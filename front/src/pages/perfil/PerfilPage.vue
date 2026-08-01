@@ -89,6 +89,26 @@
                 Consultoria só para utilizadores registados como consultor.
               </p>
             </div>
+
+            <div v-if="!somenteLeituraMonitor" class="field mb-0 perfil-2fa">
+              <h2 class="perfil-secao-titulo">Segurança</h2>
+              <div class="perfil-2fa-row">
+                <Checkbox
+                  v-model="twoFactorEnabled"
+                  inputId="perfil-2fa"
+                  binary
+                  :disabled="carregando"
+                />
+                <label for="perfil-2fa" class="perfil-2fa-label">
+                  Ativar autenticação em dois fatores por e-mail
+                </label>
+              </div>
+              <p class="perfil-hint">
+                Quando ativo, após a senha enviamos um código de 6 dígitos para
+                <strong>{{ email || 'o e-mail cadastrado' }}</strong>.
+                Para ativar ou desativar, informe a senha atual abaixo (mesmo sem trocar a senha).
+              </p>
+            </div>
           </div>
 
           <Divider
@@ -170,6 +190,7 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Divider from 'primevue/divider'
 import Select from 'primevue/select'
+import Checkbox from 'primevue/checkbox'
 import { authService } from '@/services/authService'
 import { useToast } from '@/utils/useToast'
 
@@ -197,6 +218,8 @@ const email = ref('')
 const firstName = ref('')
 const lastName = ref('')
 const paginaInicial = ref('dashboard')
+const twoFactorEnabled = ref(false)
+const twoFactorEnabledInicial = ref(false)
 const currentPassword = ref('')
 const newPassword = ref('')
 const newPasswordConfirm = ref('')
@@ -232,6 +255,9 @@ function aplicarUsuario (u) {
   firstName.value = u.first_name ?? ''
   lastName.value = u.last_name ?? ''
   paginaInicial.value = paginaInicialCoerente(u, u.pagina_inicial)
+  const tfa = Boolean(u.two_factor_enabled)
+  twoFactorEnabled.value = tfa
+  twoFactorEnabledInicial.value = tfa
 }
 
 function formatarErroApi (data) {
@@ -286,6 +312,7 @@ async function salvar () {
 
   const nova = newPassword.value.trim()
   const conf = newPasswordConfirm.value.trim()
+  const tfaMudou = twoFactorEnabled.value !== twoFactorEnabledInicial.value
 
   if (nova !== conf) {
     erroSalvar.value = 'A nova senha e a confirmação devem ser iguais.'
@@ -305,20 +332,31 @@ async function salvar () {
     return
   }
 
+  if (tfaMudou && !currentPassword.value) {
+    erroSalvar.value =
+      'Informe a senha atual para alterar a autenticação em dois fatores.'
+    toast.error('Validação', erroSalvar.value)
+    return
+  }
+
   salvando.value = true
   try {
     const payload = {
       email: email.value.trim(),
       first_name: firstName.value.trim(),
       last_name: lastName.value.trim(),
-      pagina_inicial: paginaInicial.value
+      pagina_inicial: paginaInicial.value,
+      two_factor_enabled: twoFactorEnabled.value
     }
     if (nova) {
       payload.current_password = currentPassword.value
       payload.new_password = newPassword.value
+    } else if (tfaMudou) {
+      payload.current_password = currentPassword.value
     }
     const atualizado = await authService.updateProfile(payload)
     store.commit('UPDATE_USER', atualizado)
+    aplicarUsuario(atualizado)
     currentPassword.value = ''
     newPassword.value = ''
     newPasswordConfirm.value = ''
@@ -417,6 +455,25 @@ onMounted(() => {
 .perfil-hint--intro {
   margin: 0 0 1rem 0;
   line-height: 1.45;
+}
+
+.perfil-2fa {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--texto-secundario) 18%, transparent);
+}
+
+.perfil-2fa-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.perfil-2fa-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--texto-primario);
+  cursor: pointer;
 }
 
 .perfil-actions {

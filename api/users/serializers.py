@@ -24,6 +24,7 @@ class UserSerializer(serializers.ModelSerializer):
             'is_superuser',
             'is_gerente',
             'pagina_inicial',
+            'two_factor_enabled',
             'admin_capabilities',
         )
 
@@ -78,6 +79,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'pagina_inicial',
+            'two_factor_enabled',
             'current_password',
             'new_password',
         )
@@ -86,6 +88,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'first_name': {'required': False, 'allow_blank': True},
             'last_name': {'required': False, 'allow_blank': True},
             'pagina_inicial': {'required': False},
+            'two_factor_enabled': {'required': False},
         }
 
     def validate_email(self, value):
@@ -125,6 +128,10 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
         new_pw = (attrs.get('new_password') or '').strip()
         cur_pw = (attrs.get('current_password') or '').strip()
         user = self.context['request'].user
+        toggling_2fa = (
+            'two_factor_enabled' in attrs
+            and attrs['two_factor_enabled'] != user.two_factor_enabled
+        )
 
         if new_pw and not cur_pw:
             raise serializers.ValidationError(
@@ -134,7 +141,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
                     )
                 }
             )
-        if cur_pw and not new_pw:
+        if cur_pw and not new_pw and not toggling_2fa:
             raise serializers.ValidationError(
                 {
                     'new_password': (
@@ -142,11 +149,20 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
                     )
                 }
             )
-        if new_pw:
+        if toggling_2fa and not cur_pw:
+            raise serializers.ValidationError(
+                {
+                    'current_password': (
+                        'Informe a senha atual para alterar a autenticação em dois fatores.'
+                    )
+                }
+            )
+        if new_pw or toggling_2fa:
             if not user.check_password(cur_pw):
                 raise serializers.ValidationError(
                     {'current_password': 'Senha atual incorreta.'}
                 )
+        if new_pw:
             try:
                 validate_password(new_pw, user=user)
             except DjangoValidationError as exc:

@@ -123,6 +123,19 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_THROTTLE_RATES': {
+        'auth_signin': '30/hour',
+        'auth_2fa_verify': '30/hour',
+        'auth_password_reset': '10/hour',
+        'auth_password_reset_confirm': '20/hour',
+    },
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'controlefinanceiro-default',
+    },
 }
 
 ROOT_URLCONF = 'app.urls'
@@ -296,6 +309,31 @@ if not DEBUG:
     }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# E-mail (OTP 2FA, etc.).
+# Prioridade: EMAIL_BACKEND explícito → SMTP se houver host/user → console em DEBUG.
+_email_backend_env = os.getenv("EMAIL_BACKEND", "").strip()
+EMAIL_HOST = os.getenv("EMAIL_HOST", "").strip() or "localhost"
+EMAIL_PORT = _env_int("EMAIL_PORT", 587)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("true", "1", "yes")
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() in ("true", "1", "yes")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "financas@o5o.tech")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:2488").rstrip("/")
+
+_smtp_configurado = bool(EMAIL_HOST_USER) or (
+    EMAIL_HOST not in ("", "localhost", "127.0.0.1")
+)
+if _email_backend_env:
+    EMAIL_BACKEND = _email_backend_env
+elif _smtp_configurado:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+elif DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 # Tempos JWT via .env (ex.: access curto em prod, maior em dev)
 _jwt_access_minutes = _env_int("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", 48 * 60)
