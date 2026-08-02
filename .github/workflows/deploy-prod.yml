@@ -26,17 +26,22 @@ jobs:
         run: |
           set -euo pipefail
 
+          # 1) Webhook (rápido). Falha de rede NÃO aborta — runners do GitHub
+          #    às vezes não alcançam o HTTPS do domínio; aí cai no SSH.
           if [ -n "${DEPLOY_TOKEN:-}" ]; then
-            code=$(curl -sS -o /tmp/out -w '%{http_code}' -X POST \
+            set +e
+            code=$(curl -sS --connect-timeout 8 --max-time 15 -o /tmp/out -w '%{http_code}' -X POST \
               'https://xn--finanas-yxa.o5o.tech/__deploy__/deploy' \
               -H "X-Deploy-Token: ${DEPLOY_TOKEN}")
-            echo "hook_http=${code}"
-            cat /tmp/out; echo
-            if [ "${code}" = "202" ]; then
+            curl_rc=$?
+            set -e
+            echo "hook_curl_rc=${curl_rc} hook_http=${code:-n/a}"
+            if [ -f /tmp/out ]; then cat /tmp/out; echo; fi
+            if [ "${curl_rc}" -eq 0 ] && [ "${code}" = "202" ]; then
               echo "Deploy acionado via webhook."
               exit 0
             fi
-            echo "hook falhou; tentando SSH..."
+            echo "hook indisponível/falhou; tentando SSH..."
           else
             echo "DEPLOY_HOOK_TOKEN ausente; tentando SSH..."
           fi
