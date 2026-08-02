@@ -319,6 +319,8 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("true", "1", "yes")
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() in ("true", "1", "yes")
+# Timeout de conexão/IO SMTP (segundos). Sem isso, signin/2FA/reset podem pendurar.
+EMAIL_TIMEOUT = _env_int("EMAIL_TIMEOUT", 10)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "financas@o5o.tech")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:2488").rstrip("/")

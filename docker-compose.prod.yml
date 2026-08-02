@@ -54,10 +54,16 @@ services:
       EMAIL_USE_SSL: ${EMAIL_USE_SSL:-True}
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-financas@o5o.tech}
       FRONTEND_URL: ${FRONTEND_URL:-https://xn--finanas-yxa.o5o.tech}
+      # Evita hang eterno no signin/2FA/reset quando o SMTP está inacessível.
+      EMAIL_TIMEOUT: ${EMAIL_TIMEOUT:-10}
     volumes:
       - media_data:/app/api/media
     ports:
       - "127.0.0.1:8084:8000"
+    networks:
+      - default
+      # Mesma rede do docker-mailserver — evita hairpin NAT em mail.o5o.tech.
+      - mail
     depends_on:
       db:
         condition: service_healthy
@@ -76,7 +82,15 @@ services:
       - media_data:/var/www/media:ro
     ports:
       - "127.0.0.1:8083:80"
+    networks:
+      - default
 
 volumes:
   mysql_data:
   media_data:
+
+networks:
+  default:
+  mail:
+    external: true
+    name: mail-o5o_default
