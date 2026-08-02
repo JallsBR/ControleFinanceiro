@@ -215,11 +215,17 @@ export default {
       } catch (err) {
         this.pararProgresso()
         this.loading = false
-        if (err.response?.data?.detail) {
-          this.error = err.response.data.detail
-        } else if (typeof err.response?.data === 'object') {
-          const firstError = Object.values(err.response.data)[0]
+        const data = err.response?.data
+        if (data?.detail) {
+          this.error = data.detail
+        } else if (data && typeof data === 'object' && !Array.isArray(data)) {
+          const firstError = Object.values(data)[0]
           this.error = Array.isArray(firstError) ? firstError[0] : firstError
+        } else if (err.response?.status >= 500) {
+          this.error =
+            'Não foi possível concluir o cadastro no servidor. Tente novamente em instantes.'
+        } else if (err.request && !err.response) {
+          this.error = 'Sem resposta do servidor. Verifique sua conexão e tente novamente.'
         } else {
           this.error = 'Ocorreu um erro inesperado. Tente novamente.'
         }

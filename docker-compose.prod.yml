@@ -43,6 +43,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: db
       DB_PORT: "3306"
+      # Usado por ensure_db/migrate para GRANT CREATE/DROP + ALL em `{DB_NAME}_user_%`.
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       JWT_ACCESS_TOKEN_LIFETIME_MINUTES: ${JWT_ACCESS_TOKEN_LIFETIME_MINUTES:-25}
       JWT_REFRESH_TOKEN_LIFETIME_DAYS: ${JWT_REFRESH_TOKEN_LIFETIME_DAYS:-1}
       EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.smtp.EmailBackend}
