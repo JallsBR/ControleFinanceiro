@@ -2,7 +2,7 @@ from financas.models import Categoria
 
 
 def criar_categorias_iniciais(usuario):
-
+    """Cria o conjunto padrão de categorias do usuário (idempotente)."""
     categorias = [
         ("Salário", "E", 2),
         ("Freelance", "E", 75),
@@ -19,9 +19,11 @@ def criar_categorias_iniciais(usuario):
         ("Outros", "S", 88),
     ]
     for nome, tipo, icone_id in categorias:
-        Categoria.objects.create(
+        Categoria.objects.get_or_create(
             created_by=usuario,
             nome=nome,
-            tipo=tipo,
-            icone_id=icone_id,
+            defaults={
+                "tipo": tipo,
+                "icone_id": icone_id,
+            },
         )
